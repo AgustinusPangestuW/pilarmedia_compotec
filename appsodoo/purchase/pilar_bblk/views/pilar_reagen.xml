@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="pilar_reagen_tree">
+            <field name="name">pilar.reagen.tree</field>
+            <field name="model">pilar.reagen</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="tanggal"/>
+                    <field name="category_id"/>
+                    <field name="nomor_rka"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="pilar_reagen_form">
+            <field name="name">pilar.reagen.form</field>
+            <field name="model">pilar.reagen</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="set_draft" string="set Draft" type="object" attrs="{'invisible': [('state','in',['draft','lelang'])]}"/>
+                        <button name="set_validate" string="Validate" type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','draft')]}"/>
+                        <button name="set_ver" string="Pengajuan" type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','rencana')]}"/>
+                        <button name="set_klas" string="Verifikasi" type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','ver')]}"/>
+                        <button name="set_setuju" string="Klasifikasi" type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','klasifikasi')]}"/>
+                        <button name="set_lelang" string="Persetujuan" type="object" class="oe_highlight" attrs="{'invisible': [('state','!=','setuju')]}"/>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <h1>
+                            <field name="name" attrs="{'invisible': [('name','=','New')]}" readonly="1" />
+                        </h1>
+                        <group>
+                            <group>
+                                <field name="tanggal" attrs="{'readonly': [('state','!=','draft')]}" />
+                                <field name="category_id" attrs="{'readonly': [('state','!=','draft')]}" />
+                                <field name="nomor_rka" attrs="{'readonly': [('state','!=','draft')]}" />
+                                <field name="klasifikasi" attrs="{'invisible': [('state','in',['draft','rencana','ver'])],'readonly': [('state','!=','klasifikasi')]}" />
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Detail">
+                                <field name="reagen_lines" attrs="{'readonly': [('state','!=','draft')]}" >
+                                    <tree editable="bottom">
+                                        <field name="name"/>
+                                        <field name="merk"/>
+                                        <field name="spesifikasi" />
+                                        <field name="no_katalog" />
+                                        <field name="jumlah" />
+                                        <field name="satuan_id" />
+                                        <field name="keterangan"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>    
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="pilar_reagen_action">
+            <field name="name">Perencanaan Pengadaan</field>
+            <field name="res_model">pilar.reagen</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>

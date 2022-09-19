@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="view_rfq_order_tree" model="ir.ui.view">
+        <field name="name">view_rfq_order_tree</field>
+        <field name="model">rfq.order</field>
+        <field name="arch" type="xml">
+            <tree string="Vendor RFQ">
+                <field name="name"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+
+
+    <record id="view_rfq_order" model="ir.ui.view">
+        <field name="name">view_rfq_order</field>
+        <field name="model">rfq.order</field>
+        <field name="arch" type="xml">
+            <form string="Vendor RFQ">
+                <header>
+                    <button name="action_publish" states="draft" type="object"
+                            string="Confirm and Notify to Vendors" class="oe_highlight"/>
+                    <button name="action_create_quote" states="done" type="object"
+                            string="Create Quotation Against accepted Vendor" class="oe_highlight"/>
+                    <button name="action_cancel" states="publish" type="object"
+                            string="Cancel"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,publish,done,purchase,cancel"/>
+                </header>
+                <sheet>
+
+                    <div class="oe_button_box" name="button_box">
+                        <field name="rfq_purchase_count" invisible='1' />
+                        <button name="show_rfq_purchase_orders" class="oe_stat_button" type="object"
+                                icon='fa-shopping-cart' attrs="{'invisible': [('rfq_purchase_count', '&lt;', 1)]}">
+                                <field name="rfq_purchase_count" widget="statinfo" string="POs"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group string="Description">
+                        <field name="desc" nolabel='1' attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                    </group>
+                    <group col='4'>
+                        <field name="estimated_delivery" attrs="{'readonly': [('state', 'not in', ['draft'])]}"/>
+                        <field name="date"/>
+                    </group>
+                    <group string="Vendors">
+                        <field name="partner_ids" nolabel='1' widget='many2many_tags'
+                               attrs="{'readonly': [('state', 'not in', ['draft'])]}"
+                        />
+                    </group>
+
+
+                    <group string="Products">
+                        <field name="product_ids" nolabel='1' attrs="{'readonly': [('state', 'not in', ['draft'])]}">
+                            <tree>
+                                <field name="product_id"/>
+                                <field name="qty"/>
+                                <field name="uom"/>
+                            </tree>
+                            <form>
+                                <group>
+                                    <field name="product_id"/>
+                                    <field name="qty"/>
+                                    <field name="uom"/>
+                                </group>
+                            </form>
+                        </field>
+                    </group>
+
+
+                    <group string="Recieved Quotations">
+                        <field name="quote_ids" nolabel='1' readonly='1'>
+                            <tree>
+                                <field name="partner_id"/>
+                                <field name="vendor_estimated_date"/>
+                                <field name="state"/>
+                            </tree>
+                            <form>
+                                <field name="state" invisible='1'/>
+                                <header>
+                                    <button name="action_accept_quotation" states="draft"
+                                            type="object" string="Accept and Send Email" class="oe_highlight"/>
+
+                                </header>
+                                <group col='4'>
+                                    <field name="partner_id"/>
+                                    <field name="vendor_estimated_date"/>
+                                </group>
+
+                                <group>
+                                    <field name="sub_ids" nolabel='1'>
+                                        <tree>
+                                            <field name="product_id"/>
+                                            <field name="vendor_qty"/>
+                                            <field name="vendor_price"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                                <group>
+                                    <field name="note"/>
+                                </group>
+
+                            </form>
+                        </field>
+                    </group>
+
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_vendors" model="ir.actions.act_window">
+        <field name="name">Vendor RFQs</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">rfq.order</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Click Create to add new RFQ
+            </p>
+        </field>
+    </record>
+
+
+    <menuitem id="menu_vendor_rfq" parent="purchase.menu_purchase_root"
+              sequence="2" string="Vendor RFQ" name="Vendor RFQ"/>
+
+    <menuitem action="action_vendors" id="menu_vendor_rfq_rfq"
+              string="RFQs" name="RFQs" parent="menu_vendor_rfq" sequence="5"/>
+
+
+    <record id="view_accept_email" model="ir.ui.view">
+        <field name="name">Acceptance Email</field>
+        <field name="model">accept.email</field>
+        <field name="arch" type="xml">
+            <form string="Acceptance Email">
+                <sheet>
+                    <group string="Vendors">
+                        <field name="partner_id"/>
+                        <field name="subject"/>
+                        <field name="body"/>
+                    </group>
+                    <footer>
+                        <button name="send" string="Send" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-default" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_publish_email" model="ir.ui.view">
+        <field name="name">Notify to vendors</field>
+        <field name="model">publish.email</field>
+        <field name="arch" type="xml">
+            <form string="Notify to vendors">
+                <sheet>
+                    <group>
+                        <field name="subject"/>
+                        <field name="body"/>
+                    </group>
+                    <footer>
+                        <button name="send" string="Send Notification" type="object"
+                                class="oe_highlight"/>
+                        <button string="Cancel" class="btn btn-default" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="id_rfq_sequence" model="ir.sequence">
+        <field name="name">Vendor RFQ Sequence</field>
+        <field name="code">rfq.order</field>
+        <field name="prefix">RFQ</field>
+        <field name="padding">4</field>
+    </record>
+
+
+</odoo>
+            
+            
+       

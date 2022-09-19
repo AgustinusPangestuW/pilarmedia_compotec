@@ -1,0 +1,449 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+	<template id="assets_frontend1" inherit_id="website.assets_frontend">
+		<xpath expr="script[last()]" position="after">
+			<script type="text/javascript" src="/vendor_rfq/static/src/js/main.js"></script>
+		</xpath>
+	</template>
+
+
+	<template id="assets_frontend2" inherit_id="web.assets_frontend"
+		name="Website Assets">
+		<xpath expr="//link[last()]" position="after">
+			<link rel="stylesheet" type="text/scss"
+				href="/vendor_rfq/static/src/css/main.css" />
+		</xpath>
+	</template>
+
+	<template id="id_rfq_menu" name="Portal RFQs" inherit_id="portal.portal_my_home">
+		<xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+			<t t-call="portal.portal_docs_entry">
+				<t t-set="title">My RFQs</t>
+				<t t-set="url" t-value="'/my/rfqlist'" />
+				<t t-set="count" t-value="order_count1" />
+			</t>
+		</xpath>
+	</template>
+
+
+
+
+
+
+
+
+
+	<!-- RFQ LIST VIEW TEMPLATE -->
+	<template id="rfq_list" name="My RFQs">
+		<t t-call="portal.portal_layout">
+			<div class="row div-path">
+				<div class="column" style="width: 50%;">
+					<a href="/my/home" class="space">
+						<i class="fa fa-home"></i>
+					</a>
+					/
+					<span class="space">My RFQs</span>
+				</div>
+				<div class="column" style="width: 50%; text-align: right; ">
+					<form id="form-selection">
+						<input type='hidden' name='vendor_state' id="id_vendor_state"></input>
+						<span>
+							<select class="select-class">
+								<option value="all" t-att-selected="select_key == 'all'">
+									All
+								</option>
+								<option value="apply" t-att-selected="select_key == 'apply'">
+									Applied
+								</option>
+								<option value="open" t-att-selected="select_key == 'open'">
+									Open to apply
+								</option>
+								<option value="accept" t-att-selected="select_key == 'accept'">
+									Accepted
+								</option>
+								<option value="complete" t-att-selected="select_key == 'complete'">
+									Closed
+								</option>
+							</select>
+						</span>
+					</form>
+				</div>
+			</div>
+
+			<br></br>
+			<br></br>
+
+			<t t-if="not rfq_available">
+				<p>No RFQs available currently.</p>
+			</t>
+			<t t-if="rfq_available">
+				<div
+					t-attf-class="table-responsive border rounded border-top-0 #{classes if classes else ''} ">
+					<table class="table rounded mb-0 bg-white o_portal_my_doc_table">
+						<t t-raw="0" />
+						<thead>
+							<tr class="active">
+								<th>Reference #</th>
+								<th>Expected Delivery Date</th>
+								<th>Vendor Status</th>
+							</tr>
+						</thead>
+						<t t-foreach="rfqdata" t-as="rfq">
+							<tr>
+								<td>
+									<a t-attf-href="/my/rfqform/#{rfq.id}">
+										<t t-esc="rfq.name" />
+									</a>
+								</td>
+								<td>
+									<span t-field="rfq.estimated_delivery" />
+								</td>
+								<td>
+									<span t-field="rfq.partner_status" />
+								</td>
+							</tr>
+						</t>
+
+					</table>
+				</div>
+			</t>
+		</t>
+	</template>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- RFQ FORM VIEW TEMPLATE -->
+	<template id="rfq_form" name="RFQ">
+		<t t-call="portal.portal_layout">
+
+			<!-- SEARCH BAR AND VISITED PATH -->
+			<div class="row div-path">
+				<a href="/my/home" class="space">
+					<i class="fa fa-home"></i>
+				</a>
+				/
+				<a href="/my/rfqlist" class="space">My RFQs</a>
+				/
+				<p t-field='rfq.name' class="space"></p>
+			</div>
+			<br></br>
+			<br></br>
+
+
+
+			<div class='row'>
+				<div class="col-lg-12">
+					<div
+						style='text-align: center; border-bottom: 2px solid green; margin-bottom: 25px;'>
+						<strong>
+							<span t-field="rfq.name" style='font-size: 30px; color: green' />
+							<br></br>
+							Status:
+							<span t-field="rfq.state" style='font-size: 15;' />
+							<br></br>
+						</strong>
+					</div>
+
+					<t t-if="submitted == 1">
+						<div class="div-submited">
+
+							<t t-if="accepted == 0">
+								<span>
+									<i class='fa fa-check' style="font-size: 50px;"></i>
+								</span>
+								<span>Applied</span>
+								<button class="details-rfq">Click to see applied details
+								</button>
+							</t>
+							<t t-if="accepted == 1">
+								<span>
+									<i class='fa fa-check-circle' style="font-size: 50px;"></i>
+								</span>
+								<span>Accepted</span>
+								<button href="" class="details-rfq">Click to see applied
+									details
+								</button>
+							</t>
+						</div>
+					</t>
+					<t t-if="submitted != 1 and rfq.state in ['publish']">
+						<div class="div-apply">
+							<button class="button apply-rfq">Apply</button>
+						</div>
+					</t>
+
+
+					<div class="main-div">
+						<div class="column" style="width:27%">
+							<span>
+								<strong>
+									<span>Expected Delivery Date: </span>
+								</strong>
+							</span>
+							<span>
+								<span t-field='rfq.estimated_delivery' />
+							</span>
+						</div>
+						<br></br>
+						<div class="column" style="">
+							<span>
+								<h4>
+									<strong>RFQ Description</strong>
+								</h4>
+							</span>
+							<span>
+								<span t-field="rfq.desc" />
+							</span>
+						</div>
+					</div>
+
+
+					<div class="main-div">
+						<table class='table table-condensed'
+							style="max-width:100%!important; background-color: white;">
+
+							<tr>
+								<th></th>
+								<th>Product</th>
+								<th>Quantity</th>
+								<th>Unit of Measure</th>
+							</tr>
+							<t t-foreach="products" t-as="item">
+								<tr>
+									<td>
+										<div t-field='item.product_id.image_128' t-options="{'widget': 'image', style:'width=60px;'}"></div>
+									</td>
+									<td>
+										<span t-field="item.product_id" />
+									</td>
+									<td>
+										<span t-field="item.qty" />
+									</td>
+									<td>
+										<span t-field="item.uom" />
+									</td>
+								</tr>
+							</t>
+						</table>
+					</div>
+
+					<t t-if="submitted != 1 and rfq.state in ['publish']">
+						<div class="div-apply">
+							<button class="button apply-rfq">Apply</button>
+						</div>
+					</t>
+
+
+					<div class="error-msg" style="display: none">
+						<p>Please fill all the fields</p>
+						<span style="margin-top: -23px;">
+							<button class="button error-dissmiss">Ok</button>
+						</span>
+					</div>
+
+					<!-- SUBMIT/APPLY POPUP LIKE DIV -->
+					<!-- INITIALY DISPLAY IS 'NONE' -->
+					<div class="main-div div-submit" id="id-div-submit" style="display: none">
+						<div class='div-error' style="display: none">
+							<span>Fill all the Fields</span>
+						</div>
+
+						<div class="apply-main">
+							<div class="column"
+								style="width:100%; font-size: 30px; color: green; font-size: 30px; color: black; padding: 10px; border-radius: 5px; ">
+								<strong>
+									<span>Applying to: </span>
+									<span t-field='rfq.name' />
+								</strong>
+								<span style="float: right; margin-top: -16px;">
+									<i class='fa fa-close apply-rfq3'></i>
+								</span>
+							</div>
+							<br></br>
+							<br></br>
+
+							<input type="hidden" id="id" name="id" t-att-value="rfq.id" />
+							<label for="edate">My Estimated Delivery Date</label>
+							<br></br>
+							<input type="date" id="edate" name="edate" class="input-date"
+								required='1' />
+							<br></br>
+
+							<table class='table table-condensed'
+								style="max-width:100%!important; background-color: white;">
+								<tr>
+									<th>Product</th>
+									<th>Quantity</th>
+									<th>Unit of Measure</th>
+									<th>My Price(per Unit)</th>
+								</tr>
+								<t t-foreach="products" t-as="item">
+									<tr>
+										<td>
+											<span t-field="item.product_id" />
+										</td>
+										<td>
+											<span t-field="item.qty" />
+										</td>
+										<td>
+											<span t-field="item.uom" />
+										</td>
+										<td>
+
+											<input type='text' t-att-name="str(item.product_id.id)+':'+str(item.qty)"
+												class="input-qty" required='1'></input>
+										</td>
+									</tr>
+								</t>
+							</table>
+
+							<label for="Note">Note(optional)</label>
+							<textarea id="note" name="note" rows="5" class="input-note" />
+
+
+							<button class='button apply-rfq2'>Submit</button>
+							<button class='apply-rfq3'>Cancel</button>
+						</div>
+					</div>
+
+
+
+
+
+
+					<!-- SHOW DETAILS POPUP LIKE DIV -->
+					<!-- INITIALY DISPLAY IS 'NONE' -->
+					<div class="main-div div-details" style="display: none">
+						<div class="apply-main">
+							<div class="column"
+								style="width:100%; font-size: 30px; color: green; font-size: 30px; color: black; padding: 10px; border-radius: 5px; ">
+								<span style="float: right; margin-top: -16px;">
+									<i class='fa fa-close apply-rfq3'></i>
+								</span>
+							</div>
+							<br></br>
+							<t t-if="applied_details">
+								<input type="hidden" id="id" name="id" t-att-value="rfq.id" />
+								<label for="edate">My Estimated Delivery Date</label>
+								<br></br>
+								<span t-field="applied_details.vendor_estimated_date" />
+								<br></br>
+								<br></br>
+
+								<table class='table table-condensed'
+									style="max-width:100%!important; background-color: white;">
+									<tr>
+										<th>Product</th>
+										<th>Quantity</th>
+										<th>My Price(per Unit)</th>
+									</tr>
+									<t t-foreach="applied_details.sub_ids" t-as="item">
+										<tr>
+											<td>
+												<span t-field="item.product_id" />
+											</td>
+											<td>
+												<span t-field="item.vendor_qty" />
+											</td>
+											<td>
+												<span t-field="item.vendor_price" />
+											</td>
+										</tr>
+									</t>
+								</table>
+
+								<label for="Note">Note(optional)</label>
+								<textarea id="note" name="note" rows="5" class="input-note" />
+							</t>
+						</div>
+					</div>
+
+
+
+				</div>
+			</div>
+
+
+
+
+
+
+		</t>
+	</template>
+
+
+
+
+
+
+
+
+
+	<record id="product_template_public_rfq" model="ir.rule">
+		<field name="name">Public product template RFQ</field>
+		<field name="model_id" ref="product.model_product_template" />
+		<field name="domain_force">[("sale_ok", "=", True)]</field>
+		<field name="groups"
+			eval="[(4, ref('base.group_public')), (4, ref('base.group_portal'))]" />
+		<field name="perm_read" eval="True" />
+		<field name="perm_write" eval="False" />
+		<field name="perm_create" eval="False" />
+		<field name="perm_unlink" eval="False" />
+	</record>
+
+
+
+	<record id="accept_email" model="mail.template">
+		<field name="name">Quotation Accepted</field>
+		<field name="model_id" ref="base.model_res_users" />
+		<field name="subject">subject</field>
+		<field name="email_from">${user.email|safe}</field>
+		<field name="email_to">${user.email | safe}</field>
+		<field name="body_html" type="html">
+			<table border="0" cellpadding="0" cellspacing="0"
+				style="padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; 
+				width: 100%; border-collapse:separate;">
+
+			</table>
+		</field>
+		<field name="auto_delete" eval="True" />
+		<field name="user_signature" eval="False" />
+	</record>
+
+	<record id="publish_email" model="mail.template">
+		<field name="name">Notify to Vendors</field>
+		<field name="model_id" ref="base.model_res_users" />
+		<field name="subject">subject</field>
+		<field name="email_from">${user.email|safe}</field>
+		<field name="email_to">${user.email | safe}</field>
+		<field name="body_html" type="html">
+			<table border="0" cellpadding="0" cellspacing="0"
+				style="padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; 
+				width: 100%; border-collapse:separate;">
+
+			</table>
+		</field>
+		<field name="auto_delete" eval="True" />
+		<field name="user_signature" eval="False" />
+	</record>
+
+
+
+
+</odoo>
+            
+            
+       

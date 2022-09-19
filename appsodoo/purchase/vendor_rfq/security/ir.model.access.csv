@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_rfq_user,rfq1,model_rfq_order,purchase.group_purchase_user,1,1,1,1
+access_rfq_manager,rfq2,model_rfq_order,purchase.group_purchase_manager,1,1,1,1
+
+access_rfq_line_user,rfq3,model_rfq_order_line,purchase.group_purchase_user,1,1,1,1
+access_rfq_line_manager,rfq4,model_rfq_order_line,purchase.group_purchase_manager,1,1,1,1
+
+access_rfq_product_user,rfq5,model_rfq_order_product,purchase.group_purchase_user,1,1,1,1
+access_rfq_product_manager,rfq6,model_rfq_order_product,purchase.group_purchase_manager,1,1,1,1
+
+access_rfq_line_sub_user,rfq7,model_rfq_order_line_sub,purchase.group_purchase_user,1,1,1,1
+access_rfq_line_sub_manager,rfq8,model_rfq_order_line_sub,purchase.group_purchase_manager,1,1,1,1
+
+

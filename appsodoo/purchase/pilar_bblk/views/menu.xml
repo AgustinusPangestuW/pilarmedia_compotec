@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<odoo>
+    <data>
+        <menuitem 
+            id="main_pilar_reagen"
+            name="BBLK"
+        />
+
+        <menuitem 
+            id="menu_pilar_reagen"
+            name="Perencanaan"
+            parent="main_pilar_reagen"
+        />
+        <menuitem 
+            id="menu_pilar_categ_reagen"
+            name="Config"
+            parent="main_pilar_reagen"
+            groups="pilar_bblk.group_admin"
+        />
+        <menuitem 
+            id="submenu_pilar_categ_reagen"
+            name="Kategori"
+            parent="menu_pilar_categ_reagen"
+            action="pilar_categ_reagen_action"
+        />
+        <menuitem 
+            id="submenu_pilar_reagen"
+            name="Perencanaan Pengadaan"
+            parent="menu_pilar_reagen"
+            action="pilar_reagen_action"
+        />
+    </data>
+</odoo>

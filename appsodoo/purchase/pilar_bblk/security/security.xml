@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record model="ir.module.category" id="module_bblk">
+            <field name="name">Aplikasi BBLK</field>
+            <field name="sequence">1</field>
+        </record>
+        <!-- <record model="ir.default" id="default_user_val">
+            <field name="json_value">[30]</field>
+            <field name="field_id" id="field_res_users__groups_id"/>
+            <field name="field_id">1144</field>
+        </record> -->
+        <record model="res.groups" id="group_user">
+            <field name="name">User</field>
+            <field name="category_id" ref="module_bblk"/>
+        </record>
+        <record model="res.groups" id="group_admin">
+            <field name="name">Admin</field>
+            <field name="category_id" ref="module_bblk"/>
+        </record>
+    </data>
+</odoo>

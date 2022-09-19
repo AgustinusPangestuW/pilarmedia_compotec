@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pilar_reagen,access.pilar.reagen,model_pilar_reagen,pilar_bblk.group_user,1,1,1,1
+access_pilar_reagen_man,access.pilar.reagen.man,model_pilar_reagen,pilar_bblk.group_admin,1,1,1,1
+access_pilar_categ_reagan,access.pilar.categ.reagen,model_pilar_categ_reagen,pilar_bblk.group_user,1,0,0,0
+access_pilar_categ_reagan_man,access.pilar.categ.reagen.man,model_pilar_categ_reagen,pilar_bblk.group_admin,1,1,1,1
+access_pilar_reagen_line,access.pilar.reagen.line,model_pilar_reagen_line,pilar_bblk.group_user,1,1,1,1
+access_pilar_reagen_line_man,access.pilar.reagen.line.man,model_pilar_reagen_line,pilar_bblk.group_admin,1,1,1,1
+
+
+

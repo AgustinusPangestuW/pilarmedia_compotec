@@ -1,0 +1,9 @@
+<data noupdate='1'>
+    <record id="ir_sequence_pelintas" model="ir.sequence">
+        <field name="name">Nomor Pengajuan</field>
+        <field name="code">nomor.pengajuan</field>
+        <field name="number_next_actual" eval="1" />
+        <field name="prefix">BBLK/%(y)s/</field>
+        <field name="padding" eval="5" />
+    </record>
+</data>
