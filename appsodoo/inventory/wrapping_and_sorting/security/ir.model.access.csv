@@ -1,0 +1,9 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"access_shift","shift","model_shift","stock.group_stock_user",1,1,1,1
+"access_working_time","working_time","model_working_time","stock.group_stock_user",1,1,1,1
+"access_shift_deadline","shift_deadline","model_shift_deadline","stock.group_stock_user",1,1,1,1
+"access_wrapping","wrapping","model_wrapping","stock.group_stock_user",1,1,1,1
+"access_wrapping_deadline_line","wrapping_deadline_line","model_wrapping_deadline_line","stock.group_stock_user",1,1,1,1
+"access_wrapping_deadline_working_time_line","wrapping_deadline_working_time_line","model_wrapping_deadline_working_time_line","stock.group_stock_user",1,1,1,1
+"access_sorting","sorting","model_sorting","stock.group_stock_user",1,1,1,1
+"access_sorting_line","sorting_line","model_sorting_line","stock.group_stock_user",1,1,1,1

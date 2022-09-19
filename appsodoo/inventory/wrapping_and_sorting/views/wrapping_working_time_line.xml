@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="wrapping_deadline_working_time_line_tree">
+            <field name="name">sorting.tree</field>
+            <field name="model">wrapping.deadline.working.time.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="wrapping_deadline_working_time_id"/>
+                    <field name="working_time"/>
+                    <field name="output"/>
+                    <field name="break_time"/>
+                    <field name="rest_time"/>
+                    <field name="plastic_role_change_time"/>
+                    <field name="product_change_time"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="wrapping_deadline_working_time_line_form">
+            <field name="name">wrapping.deadline.working.time.line.form</field>
+            <field name="model">wrapping.deadline.working.time.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="working_time"/>
+                                <field name="output"/>
+                            </group>
+                            <group>
+                                <field name="break_time"/>
+                                <field name="rest_time"/>
+                                <field name="plastic_role_change_time"/>
+                                <field name="product_change_time"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="wrapping_deadline_working_time_line_action">
+            <field name="name">wrapping.deadline.working.time.line</field>
+            <field name="res_model">wrapping.deadline.working.time.line</field>
+            <field name="view_mode">tree,form</field>
+        </record>        
+        
+    </data>
+</odoo>

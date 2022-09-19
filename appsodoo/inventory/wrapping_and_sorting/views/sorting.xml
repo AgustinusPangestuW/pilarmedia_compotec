@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="sorting_tree">
+            <field name="name">sorting.tree</field>
+            <field name="model">sorting</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="date"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="sorting_form">
+            <field name="name">sorting.form</field>
+            <field name="model">sorting</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="date"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Sorting Detail">
+                                <field name="sorting_line" widget="section_and_note_one2many">
+                                    <tree editable="buttom">
+                                        <field name="user"/>
+                                        <field name="ok"/>
+                                        <field name="pinched"/>
+                                        <field name="dusty"/>
+                                        <field name="another"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- search view-->
+		<record model="ir.ui.view" id="view_sorting_search">
+			<field name="name">sorting.search</field>
+			<field name="model">sorting</field>
+			<field name="arch" type="xml">
+				<search>
+					<field name="name" string="name" filter_domain="[('name', 'ilike', self)]"/>
+                    <separator/>
+                    <filter string="Current User Creation" name="create_uid" domain="[('create_uid', '=', uid)]"/>
+                    <filter string="Today Creation" name="create_uid" domain="[('date', '=', current_date)]"/>
+                    <separator/>
+                    <group string="Group By">
+                        <filter string="Date Creation" name="date" context="{'group_by': 'date'}"/> 
+                    </group>
+				</search>
+			</field>
+		</record>
+
+        <record model="ir.actions.act_window" id="sorting_action">
+            <field name="name">Sorting</field>
+            <field name="res_model">sorting</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem 
+            id="main_sorting" 
+            name="Sorting" 
+            parent="stock.menu_stock_warehouse_mgmt" 
+            action="sorting_action"
+        />
+
+    </data>
+</odoo>
