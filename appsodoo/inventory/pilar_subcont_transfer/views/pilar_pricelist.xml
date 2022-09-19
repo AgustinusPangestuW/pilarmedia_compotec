@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="pilar_pricelist_tree">
+            <field name="name">pilar.pricelist.tree</field>
+            <field name="model">pilar.pricelist</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="partner_id"/>
+                    <field name="price"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="pilar_pricelist_form">
+            <field name="name">pilar.pricelist.form</field>
+            <field name="model">pilar.pricelist</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="product_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" required="1"/>
+                                <field name="partner_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" required="1"/>
+                                <field name="price"/>
+                            </group>
+                            <group>
+                            </group>
+                        </group>    
+                            <notebook>
+                                <page string="Detail">
+                                    <field name="pricelist_ids">
+                                        <tree editable="bottom">
+                                            <field name="product_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" required="1"/>
+                                            <field name="unit_price" required="1"/>  
+                                            <field name="uom_id" widget="selection" required="1"/>
+                                                  
+                                        </tree>
+                                    </field>
+                                </page>
+                            </notebook>
+                        
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="pilar_pricelist_action">
+            <field name="name">Pricelist Subcon</field>
+            <field name="res_model">pilar.pricelist</field>
+            <!-- <field name="view_type">form</field> -->
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem 
+            id="submenu_pilar_pricelist"
+            name="Pricelist Subcon"
+            parent="stock.menu_stock_config_settings"
+            action="pilar_pricelist_action"
+            sequence="390"
+        />
+
+    </data>
+</odoo>

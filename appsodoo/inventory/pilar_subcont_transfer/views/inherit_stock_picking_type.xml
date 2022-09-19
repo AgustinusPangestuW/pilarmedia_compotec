@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="inherit_stock_picking_type_form">
+            <field name="name">stock.picking.type.form</field>
+            <field name="model">stock.picking.type</field>
+            <field name="inherit_id" ref="stock.view_picking_type_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='default_location_dest_id']" position="after">
+                    <field name="is_subcon" attrs="{'invisible':[('code','!=','internal')]}" />
+                    <field name="transit_location_id" attrs="{'invisible':['|',('is_subcon','=',False),('code','!=','internal')]}"/>
+                </xpath>
+                <xpath expr="//field[@name='show_operations']" position="after">
+                    <field name="pricelist_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" />
+                </xpath>
+                <xpath expr="//field[@name='warehouse_id']" position="after">
+                    <field name="master_sj" attrs="{'invisible':[('code','!=','internal')]}"/>
+                </xpath>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="inherit_stock_picking_form">
+            <field name="name">stock.picking.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name="cek_master" invisible="1"/>
+                    <field name="cek_subcon" invisible="1"/>
+                    <field name="subkon_id" invisible="1" />
+                    <field name="surat_jalan_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'required':[('cek_master','=',False)],'invisible':[('cek_master','=',True)]}"/>
+                    <field name="vehicle_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('cek_subcon','=',False)]}"/>
+                    <field name="driver_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('cek_subcon','=',False)]}" domain="[('perusahaan_id','=',subkon_id)]" />
+                </xpath>
+                <xpath expr="/form/sheet/group/group/div[1]" position="attributes">
+                    <attribute name="attrs">{'invisible': [('picking_type_code', '=', 'internal')]}</attribute>
+                </xpath>
+                <field name="partner_id" position="attributes">
+                    <attribute name="attrs">{'invisible': [('picking_type_code', '=', 'internal')]}</attribute>
+                </field>
+                <field name="location_id" position="attributes">
+                    <attribute name="attrs">{'readonly':[('cek_master','=',False)]}</attribute>
+                </field>
+                <field name="location_dest_id" position="attributes">
+                    <attribute name="attrs">{'readonly':[('cek_master','=',False)]}</attribute>
+                </field>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="inherit_mrp_prduction_form">
+            <field name="name">mrp.production.form</field>
+            <field name="model">mrp.production</field>
+            <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='origin']" position="after">
+                    <field name="surat_jalan_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="inherit_product_template_form">
+            <field name="name">product.template.form</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='barcode']" position="after">
+                    <field name="nama_alias" />
+                </xpath>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="inherit_product_template_tree">
+            <field name="name">inherit.product.template.tree</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_tree_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="nama_alias" />
+                </xpath>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="inherit_product_product_tree">
+            <field name="name">inherit.product.product.tree</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="nama_alias" />
+                </xpath>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="inherit_product_product_search">
+            <field name="name">inherit.product.product.search</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_search_form_view"/>
+            <field name="arch" type="xml">
+                <field name="name" position="replace">
+                    <field name="name" string="Product" filter_domain="['|', '|','|', ('default_code', 'ilike', self), ('name', 'ilike', self), ('barcode', 'ilike', self), ('nama_alias', 'ilike', self)]"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>
