@@ -1,4 +1,4 @@
-import json, copy, werkzeug
+import json, copy
 from odoo import http, _
 from odoo.http import request
 
@@ -14,7 +14,7 @@ class ApiController(http.Controller):
         request.env.cr.savepoint()
 
         try:
-            if not kwargs.get('id_user'):
+            if not kwargs.get('uid') and (kwargs.get('db') and kwargs.get('login') and kwargs.get('password')):
                 self.authenticate(kwargs.get('db'), kwargs.get('login'), kwargs.get('password'), kwargs.get('base_location'))
 
             # hapus parameter untuk execute auth
@@ -53,7 +53,7 @@ class ApiController(http.Controller):
         request.env.cr.savepoint()
 
         try:
-            if not kwargs.get('id_user'):
+            if not kwargs.get('uid') and (kwargs.get('db') and kwargs.get('login') and kwargs.get('password')):
                 self.authenticate(kwargs.get('db'), kwargs.get('login'), kwargs.get('password'), kwargs.get('base_location'))
 
             # hapus parameter untuk execute auth
@@ -88,7 +88,7 @@ class ApiController(http.Controller):
         return request.env['ir.http'].session_info()
 
     def clear_param_auth(self, kwargs):
-        if 'id_user' in kwargs: del kwargs['id_user']
+        if 'uid' in kwargs: del kwargs['uid']
         if 'db' in kwargs: del kwargs['db']
         if 'login' in kwargs: del kwargs['login']
         if 'password' in kwargs: del kwargs['password']
