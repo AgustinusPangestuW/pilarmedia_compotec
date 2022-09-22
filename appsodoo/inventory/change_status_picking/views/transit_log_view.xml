@@ -48,7 +48,7 @@
         </record>
         
         <!-- for menu item configuration -->
-        <menuitem id="transit_config_menu" name="transit" parent="stock.menu_stock_config_settings" groups="stock.group_stock_manager"/>
+        <menuitem id="transit_config_menu" name="Transit" parent="stock.menu_stock_config_settings" groups="stock.group_stock_manager"/>
 
         <menuitem id="main_transit_log" name="Transit Log" parent="transit_config_menu" action="transit_log_action"/>
     </data>
