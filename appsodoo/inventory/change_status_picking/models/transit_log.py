@@ -6,7 +6,7 @@ class TransitLog(models.Model):
     _rec_name = "picking_id"
 
     picking_id = fields.Many2one('stock.picking', string='Stock Picking ID', required=True)
-    lang = fields.Char(string='Langitude')
+    long = fields.Char(string='Longitude')
     lat = fields.Char(string='Latitude')
     gps_id = fields.Char(string='GPS ID')
     datetime = fields.Datetime(string='Date', default=datetime.now(), required=True)

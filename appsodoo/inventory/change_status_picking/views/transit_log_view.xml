@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
                 <tree default_order="create_date desc">
                     <field name="picking_id"/>
-                    <field name="lang"/>
+                    <field name="long"/>
                     <field name="lat"/>
                     <field name="gps_id"/>
                     <field name="datetime"/>
@@ -28,7 +28,7 @@
                         <group>
                             <group>
                                 <field name="picking_id"/>
-                                <field name="lang"/>
+                                <field name="long"/>
                                 <field name="lat"/>
                             </group>
                             <group>
