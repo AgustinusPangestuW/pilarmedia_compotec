@@ -4,8 +4,8 @@ from odoo.http import request
 
 
 class ApiController(http.Controller):
-    @http.route(['/api/create_transit_log/'], type="json", auth="public", method=['POST'], csrf=False)
-    def create_transit_log(self, **kwargs):
+    @http.route(['/updateloc/'], type="json", auth="public", method=['POST'], csrf=False)
+    def updateloc(self, **kwargs):
         """
         REST API POST for create table transit_log
 
@@ -28,23 +28,16 @@ class ApiController(http.Controller):
                     temp_kwargs[d] = [(0,0, dl) for dl in temp_kwargs[d]]
 
             res = request.env['transit.log'].sudo().create(temp_kwargs)
-            request.env.cr.commit()
+            request.env.cr.commit()                
 
-            return {
-                'status': 200,
-                'message': 'success'
-            }
+            return self.response_sucess(res.id)
 
         except Exception as e:
-
             request.env.cr.rollback()
-            return {
-                'message': "Error",
-                'error-descrip': str(e)
-            }
+            return self.response_failed(e)
 
-    @http.route(['/api/update_status_picking/'], type="json", auth="public", method=['POST'], csrf=False)
-    def update_status_picking(self, **kwargs):
+    @http.route(['/updatepicking/'], type="json", auth="public", method=['POST'], csrf=False)
+    def updatepicking(self, **kwargs):
         """
         REST API POST for update state pada table `stock_picking`
 
@@ -64,28 +57,28 @@ class ApiController(http.Controller):
                     [('id', '=', kwargs['picking_id'])]).write({'state': kwargs['state']})
                 request.env.cr.commit()
 
-                return {
-                    'status': 200,
-                    'message': 'success'
-                }
+                return self.response_sucess(res)
             else:
-                return {
-                    'message': "Error",
-                    'error-descrip': str('can only update state to (in_transit / delivered)')
-                }
+                return self.response_failed('can only update state to (in_transit / delivered)')
 
         except Exception as e:
-
             request.env.cr.rollback()
-            return {
-                'error': "Error",
-                'error-descrip': str(e)
-            }
+            return self.response_failed(e)
 
-    @http.route('/web/session/authenticate', type='json', auth="public")
+    @http.route('/authenticate', type='json', auth="public")
     def authenticate(self, db, login, password, base_location=None):
-        request.session.authenticate(db, login, password)
-        return request.env['ir.http'].session_info()
+        try:
+            request.session.authenticate(db, login, password)
+            res = request.env['ir.http'].session_info()
+
+            # get warehouses in user
+            if 'uid' in res:
+                warehouses = request.env['res.users'].sudo().search([('id', '=', res['uid'])]).warehouses
+                res['warehouses'] =  [{w.id:w.name} for w in warehouses]
+
+            return self.response_sucess(res)
+        except Exception as e:
+            return self.response_failed(e)
 
     def clear_param_auth(self, kwargs):
         if 'uid' in kwargs: del kwargs['uid']
@@ -94,3 +87,16 @@ class ApiController(http.Controller):
         if 'password' in kwargs: del kwargs['password']
         if 'base_location' in kwargs: del kwargs['base_location']
         return kwargs
+
+    def response_sucess(self, res=''):
+        return {
+            'status': 200,
+            'response': 'sucess',
+            'message': res
+        }
+
+    def response_failed(self, res):
+        return {
+            'response': 'failed',
+            'error-descrip': str(res)
+        }
