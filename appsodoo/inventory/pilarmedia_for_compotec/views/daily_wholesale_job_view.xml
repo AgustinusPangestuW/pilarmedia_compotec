@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="daily_wholesale_job_tree">
+            <field name="name">daily.wholesale.job.tree</field>
+            <field name="model">daily.wholesale.job</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="date"/>
+                    <field name="daily_wholesale_job_line"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="daily_wholesale_job_form">
+            <field name="name">daily.wholesale.job.form</field>
+            <field name="model">daily.wholesale.job</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>     
+                                <field name="date"/>
+                                <field name="is_with_type" invisible="1"/>
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Detail Job">
+                                <field name="daily_wholesale_job_line" widget="section_and_note_one2many">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="type" attrs="{'column_invisible': [('parent.is_with_type', '=', False)]}"/>
+                                        <field name="job"/>
+                                        <field name="user"/>
+                                        <field name="ok"/>
+                                        <field name="ng"/>
+                                        <field name="verify_tim" attrs="{'column_invisible': [('parent.is_with_type', '=', True)]}"/>
+                                        <field name="description"/>
+                                    </tree>
+                                </field>
+                                <group>
+                                    <group>
+                                        <field name="total_ok"/>
+                                    </group>
+                                    <group>
+                                        <field name="total_ng"/>
+                                        <field name="total_ok_ng"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="daily_wholesale_job_action">
+            <field name="name">Form Pekerjaan Borongan Harian</field>
+            <field name="res_model">daily.wholesale.job</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="daily_wholesale_job_with_type_action">
+            <field name="name">Form Pekerjaan Borongan Harian berdasarkan Type</field>
+            <field name="res_model">daily.wholesale.job</field>
+            <field name="context">{'default_is_with_type': True}</field>
+            <field name="domain">[('is_with_type', '=', True)]</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="submenu_daily_wholesale_job" name="Form Pekerjaan Borongan Harian" parent="compotec_root_menu" action="daily_wholesale_job_action"/>
+        <menuitem id="submenu_daily_wholesale_job_with_type" name="Form Pekerjaan Borongan Harian berdasarkan Tipe" parent="compotec_root_menu" action="daily_wholesale_job_with_type_action"/>
+    </data>
+</odoo>

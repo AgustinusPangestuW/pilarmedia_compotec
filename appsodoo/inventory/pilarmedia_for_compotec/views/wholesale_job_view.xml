@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="wholesale_job_tree">
+            <field name="name">wholesale.job.tree</field>
+            <field name="model">wholesale.job</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="date"/>
+                    <field name="job"/>
+                    <field name="user"/>
+                    <field name="product"/>
+                    <field name="total_lot"/>
+                    <field name="checked_coordinator"/>
+                    <field name="checked_qc"/>
+                    <field name="lot_line"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="wholesale_job_form">
+            <field name="name">wholesale.job.form</field>
+            <field name="model">wholesale.job</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                                <field name="job"/>
+                                <field name="user"/>
+                            </group>
+                            <group>
+                                <field name="product"/>
+                                <field name="checked_coordinator"/>
+                                <field name="checked_qc"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Lot">
+                                <field name="lot_line">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="total_lot"/>
+                                    </tree>
+                                </field>
+                                <group>
+                                    <group></group>
+                                    <group>
+                                        <field name="total_lot"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="wholesale_job_action">
+            <field name="name">Check Sheet Hasil Borongan</field>
+            <field name="res_model">wholesale.job</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="main_wholesale_job" name="Check Sheet Hasil Borongan" parent="compotec_root_menu" action="wholesale_job_action"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="peel_diss_assy_tree">
+            <field name="name">peel.diss.assy.tree</field>
+            <field name="model">peel.diss.assy</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="date"/>
+                    <field name="peel_diss_assy_line"/>
+                    <field name="total_ok"/>
+                    <field name="total_ng"/>
+                    <field name="total_ok_ng"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="peel_diss_assy_form">
+            <field name="name">peel.diss.assy.form</field>
+            <field name="model">peel.diss.assy</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet> 
+                        <group>
+                            <group>
+                                <field name="date"/>
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Detail">
+                                <field name="peel_diss_assy_line">
+                                    <tree editable="bottom">
+                                        <field name="job"/>
+                                        <field name="user"/>
+                                        <field name="product"/>
+                                        <field name="peeled_total"/>
+                                        <field name="ok"/>
+                                        <field name="ng"/>
+                                        <field name="description"/>
+                                    </tree>
+                                </field>
+                                <group>
+                                    <group>
+                                        <field name="total_ok"/>
+                                    </group>
+                                    <group>
+                                        <field name="total_ng"/>
+                                        <field name="total_ok_ng"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="peel_diss_assy_action">
+            <field name="name">Form Kupas Diss Assy</field>
+            <field name="res_model">peel.diss.assy</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="main_peel_diss_assy" name="Form Kupas Diss Assy" parent="compotec_root_menu" action="peel_diss_assy_action"/>
+
+    </data>
+</odoo>

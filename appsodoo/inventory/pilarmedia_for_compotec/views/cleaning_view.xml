@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="cleaning_tree">
+            <field name="name">cleaning.tree</field>
+            <field name="model">cleaning</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="datetime"/>
+                    <field name="user"/>
+                    <field name="product"/>
+                    <field name="res_ok"/>
+                    <field name="res_ng"/>
+                    <field name="rework"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="cleaning_form">
+            <field name="name">cleaning.form</field>
+            <field name="model">cleaning</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="datetime"/>
+                                <field name="user"/>
+                                <field name="product"/>
+                            </group>
+                            <group>
+                                <field name="res_ok"/>
+                                <field name="res_ng"/>
+                                <field name="rework"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="cleaning_action">
+            <field name="name">Cleaning</field>
+            <field name="res_model">cleaning</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem 
+            id="main_cleaning"
+            name="Cleaning"
+        />
+
+        <menuitem 
+            id="menu_cleaning"
+            name="Cleaning"
+            parent="main_cleaning"
+        />
+
+        
+        <menuitem id="compotec_root_menu" name="Compotec" parent="stock.menu_stock_root" action="cleaning_action"/>
+
+        <menuitem id="cleaning_root_menu" name="Cleaning" parent="compotec_root_menu" action="cleaning_action"/>
+        
+
+    </data>
+</odoo>
