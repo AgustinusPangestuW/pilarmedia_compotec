@@ -18,6 +18,7 @@
     'data': [
         "security/ir.model.access.csv",
         "views/inherit_inventory_overview.xml",
+        "views/inherit_res_users_view.xml",
         "views/transit_log_view.xml",
         "views/stock_picking_type_for_transit_view.xml"
     ],
