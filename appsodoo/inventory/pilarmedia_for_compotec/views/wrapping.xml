@@ -100,7 +100,7 @@
         <menuitem id="wrapping_root_menu" name="Wrapping" parent="compotec_root_menu" action="wrapping_action"/>
 
         <!-- for menu item configuration -->
-        <menuitem id="wrapping_config_menu" name="Wrapping Configuration" parent="compotec_root_menu" action="wrapping_action" groups="stock.group_stock_manager"/>
+        <menuitem id="wrapping_config_menu" name="Wrapping" parent="stock.menu_stock_config_settings" action="wrapping_action" groups="stock.group_stock_manager"/>
 
     </data>
 </odoo>
