@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="employee_custom_tree">
+            <field name="name">employee.custom.tree</field>
+            <field name="model">employee.custom</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="position"/>
+                    <field name="vendor"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="employee_custom_form">
+            <field name="name">employee.custom.form</field>
+            <field name="model">employee.custom</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="position"/>
+                            </group>
+                            <group>
+                                <field name="vendor"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="employee_custom_action">
+            <field name="name">Employee</field>
+            <field name="res_model">employee.custom</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- for menu item configuration -->
+        <menuitem id="employee_custom_root_menu" name="Employee" parent="stock.menu_stock_config_settings" action="employee_custom_action" groups="stock.group_stock_manager"/>
+
+    </data>
+</odoo>

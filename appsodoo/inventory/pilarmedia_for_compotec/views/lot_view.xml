@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="lot_tree">
+            <field name="name">lot.tree</field>
+            <field name="model">lot</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sequence" widget="handle"/>
+                    <field name="name"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="lot_form">
+            <field name="name">lot.form</field>
+            <field name="model">lot</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                            </group>
+                            <group>
+                                <field name="description"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="lot_action">
+            <field name="name">Lot</field>
+            <field name="res_model">lot</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <!-- for menu item configuration -->
+        <menuitem id="lot_config_menu" name="Check Sheet" parent="stock.menu_stock_config_settings" action="lot_action" groups="stock.group_stock_manager"/>
+        <menuitem id="lot_root_menu" name="Lot" parent="lot_config_menu" action="lot_action"/>
+    </data>
+</odoo>

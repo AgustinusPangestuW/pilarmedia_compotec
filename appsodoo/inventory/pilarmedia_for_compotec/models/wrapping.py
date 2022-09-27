@@ -1,5 +1,7 @@
+from dbm import dumb
 from email.policy import default
 from odoo import models, fields, api, _
+import json
 
 class Shift(models.Model):
     _name = "shift"
@@ -8,9 +10,19 @@ class Shift(models.Model):
     name = fields.Char(string='Shift name', required='1')
     description = fields.Text(string='Description')
     active = fields.Boolean(string='Active', default="1")
+    shift_line = fields.One2many('shift.line', 'shift_id', 'Line')
 
     def name_get(self):
         return _show_description(self)
+
+
+class ShiftLine(models.Model):
+    _name = "shift.line"
+    _description = "Shift Template"
+
+    shift_id = fields.Many2one('shift', 'Shift Template ID')
+    sequence = fields.Integer(string='Sequence')
+    working_time = fields.Many2one('working.time', string='Working Time', domain=[('active', '=', True)], required=True)
 
 
 class ShiftDeadline(models.Model):
@@ -45,18 +57,18 @@ class Wrapping(models.Model):
     sequence = fields.Integer(string='Sequence', default=10)
     shift = fields.Many2one('shift', string='Shift', required=True, domain="[('active', '=', '1')]")
     date = fields.Date(string='Date', default=fields.Date.today(), required=True)
-    keeper = fields.Many2one('res.partner', string='Line Keeper', required=True)
+    keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True)
     operator_absent_ids = fields.Many2many(
-        comodel_name='res.partner', 
+        comodel_name='employee.custom', 
         relation='res_partner_wrapping_rel',
         string='Operator Tidak Masuk'
     )
     backup_ids = fields.Many2many(
-        comodel_name='res.partner', 
+        comodel_name='employee.custom', 
         relation='res_partner_backup_rel',
         string='Backup'
     )
-    leader = fields.Many2one('res.partner', string='Leader')
+    leader = fields.Many2one('employee.custom', string='Leader')
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
@@ -86,10 +98,16 @@ class WrappingDeadlineLine(models.Model):
     _rec_name = "shift_deadline"
 
     shift_deadline = fields.Many2one('shift.deadline', string='Shift Deadline', required=True)
-    wrapping_deadline_id = fields.Integer(string='Wrapping Deadline Id')
+    wrapping_deadline_id = fields.Many2one(
+        'wrapping', 
+        string='Wrapping Deadline Id', 
+        ondelete='cascade', 
+        index=1, 
+        copy=False
+    )
     product = fields.Many2one('product.product', string='Product')
     operator_ids = fields.Many2many(
-        comodel_name='res.partner', 
+        comodel_name='employee.custom', 
         relation='res_partner_operator_rel',
         string='Operator Name'
     )
@@ -107,6 +125,7 @@ class WrappingDeadlineLine(models.Model):
         copy=True, 
         auto_join=True
     )
+    list_id_wt = fields.Char(string='List ID Working Time can access base on Shift', readonly=True, store=False)
 
     @api.depends('product')
     def _product_change(self):
@@ -115,6 +134,8 @@ class WrappingDeadlineLine(models.Model):
         """
         for rec in self:
             rec.ng_uom = rec.total_output_uom = rec.total_oke_uom = rec.product.product_tmpl_id.uom_id.id
+
+        
 
     @api.depends('wrapping_deadline_working_time_line.output')
     def _calculate_total_output(self):
@@ -138,13 +159,55 @@ class WrappingDeadlineLine(models.Model):
                 'total_oke': wrapping_deadline_line.total_output - wrapping_deadline_line.ng
             })
 
+    @api.onchange('list_id_wt')
+    def set_context(self):
+        self.env.context = dict(self.env.context)
+        self.env.context.update({
+            'allowed_company_ids': [],
+        })
+
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        
+        shift_id = self.env.context.get('shift')
+        if shift_id:
+            dict_wt_base_shift = self.env['shift.line'].sudo().search([('shift_id', '=', shift_id)])
+            list_id_wt_base_shift = [v.id for v in dict_wt_base_shift]
+            wrapping_deadline_working_time_line_list = [[0,0, {
+                'wrapping_deadline_working_time_id': self.id,
+                'working_time': wt.id
+            }] for wt in dict_wt_base_shift]
+            res.update({
+                'wrapping_deadline_working_time_line' : wrapping_deadline_working_time_line_list,
+                'list_id_wt': json.dumps([('id', 'in', list_id_wt_base_shift)])
+            })
+
+            # self.env.context.update({'list_id_wt': list_id_wt_base_shift})
+            dict(self.env.context).update({'list_id_wt':list_id_wt_base_shift})
+            self.env.context = dict(self.env.context)
+            self.env.context.update({
+                'allowed_company_ids': [],
+            })
+
+            self = self.with_context({
+                'allowed_company_ids': []
+            })
+        return res
+
 
 class WrappingDeadlineWorkingtimeLine(models.Model):
     _name = "wrapping.deadline.working.time.line"
     _description = "Wrapping Deadline Working time Line"
 
     name = fields.Char(string='Name', copy=False, default='New', compute="_set_name", readonly=False)
-    wrapping_deadline_working_time_id = fields.Many2one('wrapping.deadline.line', string='Wrapping Deadline Working time Id', copy=False)
+    wrapping_deadline_working_time_id = fields.Many2one(
+        'wrapping.deadline.line', 
+        string='Wrapping Deadline Working time Id', 
+        copy=False, 
+        ondelete='cascade', 
+        index=1
+    )
     working_time = fields.Many2one('working.time', string='Working time', required=True)
     output = fields.Integer(string='Output')
     break_time = fields.Char(string='Jam Break')

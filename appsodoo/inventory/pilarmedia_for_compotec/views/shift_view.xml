@@ -32,6 +32,16 @@
                                 <field name="description"/>
                             </group>
                         </group>
+                        <notebook>
+                            <page string="Working Time">
+                                <field name="shift_line" widget="section_and_note_one2many">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="working_time"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
                     </sheet>
                 </form>
             </field>

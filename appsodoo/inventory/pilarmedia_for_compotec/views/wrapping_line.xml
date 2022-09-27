@@ -34,6 +34,7 @@
                             <group>
                                 <field name="operator_ids" widget="many2many_tags"/>
                                 <field name="note"/>
+                                <field name="list_id_wt" />
                             </group>
                         </group>
                         <notebook>

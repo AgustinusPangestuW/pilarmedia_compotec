@@ -28,8 +28,15 @@ class SortingLines(models.Model):
     _description = "Sorting Line"
     _rec_name = "user"
 
-    sorting_line_id = fields.Many2one('sorting', string='Sorting Reference', required=True, ondelete='cascade', index=True, copy=False)
-    user = fields.Many2one('res.partner', string='Nama')
+    sorting_line_id = fields.Many2one(
+        'sorting',
+        string='Sorting Reference', 
+        required=True, 
+        ondelete='cascade', 
+        index=True, 
+        copy=False
+    )
+    user = fields.Many2one('employee.custom', string='Nama')
     ok = fields.Integer(string='Oke')
     pinched = fields.Integer(string='Terjepit')
     dusty = fields.Integer(string='Debu')

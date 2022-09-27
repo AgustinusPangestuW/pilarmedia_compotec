@@ -49,9 +49,15 @@ class DailyWholesaleJobLine(models.Model):
     _description = "List of job in current date"
     _rec_name = "job"
 
-    daily_wholesale_job_line_id = fields.Many2one('daily.wholesale.job', 'Daily Wholesale Job Line ID')
+    daily_wholesale_job_line_id = fields.Many2one(
+        'daily.wholesale.job', 
+        'Daily Wholesale Job Line ID', 
+        ondelete="cascade", 
+        index=1, 
+        copy=False
+    )
     job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', True)])
-    user = fields.Many2one('res.partner', string='User', required=True)
+    user = fields.Many2one('employee.custom', string='User', required=True)
     ok = fields.Float(string='Ok')
     ng = fields.Float(string='NG')  
     verify_tim = fields.Char(string='Verifikasi Tim Random')

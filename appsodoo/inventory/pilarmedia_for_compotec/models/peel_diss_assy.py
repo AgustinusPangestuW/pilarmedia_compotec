@@ -53,9 +53,15 @@ class PeelDissAssyLine(models.Model):
     _name = "peel.diss.assy.line"
     _description = "Detail Job of Peel Diss Assy"
 
-    peel_diss_assy_line_id = fields.Many2one('peel.diss.assy', 'Peel Diss Assy Line ID')
+    peel_diss_assy_line_id = fields.Many2one(
+        'peel.diss.assy', 
+        'Peel Diss Assy Line ID', 
+        ondelete='cascade', 
+        index=True, 
+        copy=False
+    )
     job = fields.Many2one('job', string='Job', required=True)
-    user = fields.Many2one('res.partner', string='Nama', required=True)
+    user = fields.Many2one('employee.custom', string='Nama', required=True)
     product = fields.Many2one('product.product', string='Produk', required=True)
     peeled_total = fields.Float(string="Total yang dikupas")
     ok = fields.Float(string='OK')
