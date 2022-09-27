@@ -3,7 +3,7 @@
 
 
 # from . import controllers
-from . import models
+from . import models, wizard
 # from . import report
 # pop up
 # from . import wizard

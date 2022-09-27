@@ -1,0 +1,1 @@
+from . import wholesale_job_report_wizz

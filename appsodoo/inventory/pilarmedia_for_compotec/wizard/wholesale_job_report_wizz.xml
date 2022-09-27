@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="wholesale_job_report_wizard_form" model="ir.ui.view">
+        <field name="name">Laporan Harian Check</field>
+        <field name="model">wholesale.job.report.wizzard</field>
+        <field name="arch" type="xml">
+		<form>
+			<group>
+				<field name="date_start"/>
+				<field name="date_end"/>
+			</group>
+			<footer>
+				<button name='call_wholesale_job_report' string='Submit' type='object' class='btn-primary'/>
+				<button string='Cancel' class='btn-secondary' special='cancel'/>
+			</footer>
+		</form>
+	</field>
+    </record>
+
+    <record id="wholesale_job_report_wizard_action" model="ir.actions.act_window">
+        <field name="name">Masukan Periode</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">wholesale.job.report.wizzard</field>
+        <field name="view_id" ref='wholesale_job_report_wizard_form'/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="wholesale_job_report_menu_item" name="Checksheet Harian Borongan Report" parent="report_conpotec_menu_root"  groups="stock.group_stock_user"
+			  action="wholesale_job_report_wizard_action"/>
+</odoo>

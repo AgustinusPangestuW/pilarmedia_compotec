@@ -35,8 +35,11 @@
         "views/wholesale_job_line_view.xml",
         "views/daily_wholesale_job_view.xml",
         "views/lot_view.xml",
+        "views/wholesale_job_view_report.xml",
+        "wizard/wholesale_job_report_wizz.xml",
         "data/ir_sequence_wrapping.xml",
         "data/ir_sequence_sorting.xml"
+        "data/ir_sequence_wholesale_job.xml",
     ],
     # 'demo': ['data/sale_order_demo.xml'],
     # report

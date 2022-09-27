@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="wholesale_job_report_tree" model="ir.ui.view">
+		<field name="name">Laporan Harian Check Tree</field>
+		<field name="model">wholesale.job.report</field>
+		<field name="arch" type="xml">
+			<tree string="Laporan Harian Check" create="0" edit="0">
+				<field name="id_wj"/>
+				<field name="date"/>
+				<field name="job_ids"/>
+				<field name="product_ids"/>
+				<field name="user_ids"/>
+				<field name="factor"/>
+				<field name="total_lot"/>
+				<field name="total_ng"/>
+				<field name="total_ok"/>
+				<field name="total_ok_ng"/>
+				<field name="checked_coordinator"/>
+				<field name="checked_qc"/>
+			</tree>
+		</field>
+	</record> 
+
+	<record id="wholesale_job_report_form" model="ir.ui.view">
+		<field name="name">Laporan Harian Check Form</field>
+		<field name="model">wholesale.job.report</field>
+		<field name="arch" type="xml">
+			<form create="0" edit="0">
+				<group>
+					<group>
+                        <field name="id"/>
+                        <field name="date"/>
+                        <field name="job_ids"/>
+                        <field name="product_ids"/>
+                        <field name="user_ids"/>
+                        <field name="checked_coordinator"/>
+                        <field name="checked_qc"/>
+					</group>
+					<group>
+						<field name="factor"/>
+                        <field name="total_lot"/>
+                        <field name="total_ng"/>
+                        <field name="total_ok"/>
+						<field name="total_ok_ng"/>
+					</group>
+				</group>
+			</form>
+		</field>
+	</record>
+
+	<record id="wholesale_job_report_action" model="ir.actions.act_window">
+		<field name="name">Laporan Harian Check</field>
+		<field name="type">ir.actions.act_window</field>
+		<field name="res_model">wholesale.job.report</field>
+		<field name="view_mode">tree,form</field>
+	</record>
+</odoo>

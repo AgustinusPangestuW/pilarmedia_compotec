@@ -16,4 +16,5 @@
 "access_wholesale_job_lot_line","wholesale_job_lot_line","model_wholesale_job_lot_line","stock.group_stock_user",1,1,1,1
 "access_lot","lot","model_lot","stock.group_stock_user",1,1,1,1
 "access_daily_wholesale_job","daily_wholesale_job","model_daily_wholesale_job","stock.group_stock_user",1,1,1,1
-"access_daily_wholesale_job_line","daily_wholesale_job_line","model_daily_wholesale_job_line","stock.group_stock_user",1,1,1,1
+"access_daily_wholesale_job_line","daily_wholesale_job_line","model_daily_wholesale_job_line","stock.group_stock_user",1,1,1,1"access_wholesale_job_report","wholesale_job_report","model_wholesale_job_report","stock.group_stock_user",1,1,1,1
+"access_wholesale_job_report_wizzard","wholesale_job_report_wizzard","model_wholesale_job_report_wizzard","stock.group_stock_user",1,1,1,1
