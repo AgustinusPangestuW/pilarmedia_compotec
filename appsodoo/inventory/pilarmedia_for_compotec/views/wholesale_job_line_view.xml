@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="wholesale_job_line_tree">
+            <field name="name">wholesale.job.line.tree</field>
+            <field name="model">wholesale.job.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sequence"/>
+                    <field name="job_ids"/>
+                    <field name="product_ids"/>
+                    <field name="user_ids"/>
+                    <field name="total_lot"/>
+                    <field name="wholesale_job_lot_lines"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="wholesale_job_line_form">
+            <field name="name">wholesale.job.line.form</field>
+            <field name="model">wholesale.job.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="job_ids"/>
+                                <field name="product_ids"/>
+                                <field name="user_ids"/>
+                                <field name="biggest_lot"/>
+                            </group>
+                            <group>
+                                <field name="factor" attrs="{'invisible': [('is_check', '=', False)]}"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="is_check" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
+                                <button name="add_job_lot_lines" context="{'biggest_lot':biggest_lot}" type="object" string=" Add" icon="fa-plus-square" class="oe_highlight oe_edit_only" />
+                                <button name="remove_job_lot_lines" context="{'biggest_lot':biggest_lot}" type="object" string=" Remove" icon="fa-minus-square" class="oe_highlight oe_edit_only" />
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Detail">
+                                <field name="wholesale_job_lot_lines" widget="section_and_note_one2many">
+                                    <tree create="0" delete="0" editable="bottom">
+                                        <field name="lot_ids"/>
+                                        <field name="ok" attrs="{'column_invisible': [('parent.is_check', '=', True)]}"/>
+                                        <field name="ng" attrs="{'column_invisible': [('parent.is_check', '=', True)]}"/>
+                                    </tree>
+                                </field>
+                                <group>
+                                    <group>
+                                        <field name="total_ok" attrs="{'invisible': [('is_check', '!=', False)]}"/>
+                                        <field name="total_ng" attrs="{'invisible': [('is_check', '!=', False)]}"/>
+                                        <field name="total_ok_ng" attrs="{'invisible': [('is_check', '!=', False)]}"/>
+                                    </group>
+                                    <group>
+                                        <field name="total_lot" attrs="{'invisible': [('is_check', '=', False)]}"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="wholesale_job_line_action">
+            <field name="name">Wholesale Job Line</field>
+            <field name="res_model">wholesale.job.line</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>

@@ -7,14 +7,10 @@
             <field name="model">wholesale.job</field>
             <field name="arch" type="xml">
                 <tree>
+                    <field name="name"/>
                     <field name="date"/>
-                    <field name="job"/>
-                    <field name="user"/>
-                    <field name="product"/>
-                    <field name="total_lot"/>
-                    <field name="checked_coordinator"/>
-                    <field name="checked_qc"/>
-                    <field name="lot_line"/>
+                    <field name="job_ids"/>
+                    <field name="lot_lines"/>
                 </tree>
             </field>
         </record>
@@ -31,29 +27,25 @@
                         <group>
                             <group>
                                 <field name="date"/>
-                                <field name="job"/>
-                                <field name="user"/>
                             </group>
                             <group>
-                                <field name="product"/>
+                                <field name="job_ids"/>
                                 <field name="checked_coordinator"/>
                                 <field name="checked_qc"/>
                             </group>
                         </group>
                         <notebook>
                             <page string="Lot">
-                                <field name="lot_line">
-                                    <tree editable="bottom">
+                                <field name="lot_lines" context="{'job_id': job_ids}" attrs="{'readonly': [('job_ids', '=', False)]}">
+                                    <tree>
                                         <field name="sequence" widget="handle"/>
+                                        <field name="job_ids"/>
+                                        <field name="product_ids"/>
+                                        <field name="user_ids"/>
                                         <field name="total_lot"/>
+                                        <field name="wholesale_job_lot_lines"/>
                                     </tree>
                                 </field>
-                                <group>
-                                    <group></group>
-                                    <group>
-                                        <field name="total_lot"/>
-                                    </group>
-                                </group>
                             </page>
                         </notebook>
                     </sheet>
@@ -68,6 +60,8 @@
         </record>
 
         <menuitem id="main_wholesale_job" name="Check Sheet Hasil Borongan" parent="compotec_root_menu" action="wholesale_job_action"/>
+
+        <menuitem id="report_conpotec_menu_root" name="Report" parent="compotec_root_menu"/>
 
     </data>
 </odoo>
