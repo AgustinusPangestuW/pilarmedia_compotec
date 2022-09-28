@@ -84,9 +84,11 @@ class WholesaleJobLine(models.Model):
         # get list data `job_lot_line`
         if len(self.wholesale_job_lot_lines) > 0:
             biggest_lot_id = self.wholesale_job_lot_lines[-1].lot_ids.id
-        else:
+        elif len(list_lots) > 0:
             # isikan lot pertama
             next_lot_id = list_lots[0].id 
+        else:
+            raise exceptions.ValidationError(_("System don't have master Lot, please insert master Lot."))
 
         if biggest_lot_id:
             # ambil urutan lot setelahnya untuk set lot id saat ini
