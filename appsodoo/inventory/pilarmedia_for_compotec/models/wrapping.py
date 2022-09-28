@@ -108,7 +108,7 @@ class WrappingDeadlineLine(models.Model):
     product = fields.Many2one('product.product', string='Product')
     operator_ids = fields.Many2many(
         comodel_name='employee.custom', 
-        relation='res_partner_operator_rel',
+        relation='employee_custom_operator_rel',
         string='Operator Name'
     )
     total_output = fields.Integer(string='Total Output', compute="_calculate_total_output", store=True)
