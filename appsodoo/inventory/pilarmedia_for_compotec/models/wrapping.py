@@ -115,8 +115,8 @@ class WrappingDeadlineLine(models.Model):
     total_output_uom = fields.Many2one('uom.uom', string='Total Output UOM', compute="_product_change", store=True)
     ng = fields.Integer(string='NG')
     ng_uom = fields.Many2one('uom.uom', string='NG UOM', compute="_product_change", store=True)
-    total_oke = fields.Integer(string='Total Oke', readonly=True, compute="_calculate_total_output_oke")
-    total_oke_uom = fields.Many2one('uom.uom', string='Total Oke UOM', compute="_product_change", store=True)
+    total_ok = fields.Integer(string='Total OK', readonly=True, compute="_calculate_total_output_ok")
+    total_ok_uom = fields.Many2one('uom.uom', string='Total OK UOM', compute="_product_change", store=True)
     note = fields.Text(string='Catatan')
     wrapping_deadline_working_time_line = fields.One2many(
         'wrapping.deadline.working.time.line', 
@@ -133,7 +133,7 @@ class WrappingDeadlineLine(models.Model):
         fetch value UOM when field product change 
         """
         for rec in self:
-            rec.ng_uom = rec.total_output_uom = rec.total_oke_uom = rec.product.product_tmpl_id.uom_id.id
+            rec.ng_uom = rec.total_output_uom = rec.total_ok_uom = rec.product.product_tmpl_id.uom_id.id
 
     @api.depends('wrapping_deadline_working_time_line.output')
     def _calculate_total_output(self):
@@ -148,13 +148,13 @@ class WrappingDeadlineLine(models.Model):
             self.total_output = total_output
 
     @api.depends('total_output', 'ng')
-    def _calculate_total_output_oke(self):
+    def _calculate_total_output_ok(self):
         """
         Calculate the total output of the wrapping_deadline_working total_output - ng.
         """
         for wrapping_deadline_line in self:
             wrapping_deadline_line.update({
-                'total_oke': wrapping_deadline_line.total_output - wrapping_deadline_line.ng
+                'total_ok': wrapping_deadline_line.total_output - wrapping_deadline_line.ng
             })
 
     @api.onchange('list_id_wt')

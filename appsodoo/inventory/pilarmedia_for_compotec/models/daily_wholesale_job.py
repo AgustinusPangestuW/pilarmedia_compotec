@@ -13,7 +13,7 @@ class DailyWholesaleJob(models.Model):
         'daily_wholesale_job_line_id', 
         'Daily Wholesale Job Line'
     )
-    total_ok = fields.Float(string='Total Ok', readonly=True, compute="_calculate_total_ok", store=True)
+    total_ok = fields.Float(string='Total OK', readonly=True, compute="_calculate_total_ok", store=True)
     total_ng = fields.Float(string='Total NG', readonly=True, compute="_calculate_total_ng", store=True)
     total_ok_ng = fields.Float(string='Total (OK and NG)', readonly=True, compute="_calculate_total_ok_ng", store=True)
 
@@ -58,7 +58,7 @@ class DailyWholesaleJobLine(models.Model):
     )
     job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', True)])
     user = fields.Many2one('employee.custom', string='User', required=True)
-    ok = fields.Float(string='Ok')
+    ok = fields.Float(string='OK')
     ng = fields.Float(string='NG')  
     verify_tim = fields.Char(string='Verifikasi Tim Random')
     description = fields.Text(string='Description')

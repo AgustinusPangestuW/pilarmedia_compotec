@@ -8,7 +8,7 @@ class PeelDissAssy(models.Model):
 
     date = fields.Date(string='Tangal',default=datetime.now().date(), required=True)
     total_ok = fields.Float(
-        string='Total Ok', 
+        string='Total OK', 
         readonly=True, 
         compute="_calculate_total_ok", 
         store=True

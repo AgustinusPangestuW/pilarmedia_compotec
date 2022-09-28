@@ -37,7 +37,7 @@ class SortingLines(models.Model):
         copy=False
     )
     user = fields.Many2one('employee.custom', string='Nama')
-    ok = fields.Integer(string='Oke')
+    ok = fields.Integer(string='OK')
     pinched = fields.Integer(string='Terjepit')
     dusty = fields.Integer(string='Debu')
     another = fields.Integer(string='Lain - Lain')
