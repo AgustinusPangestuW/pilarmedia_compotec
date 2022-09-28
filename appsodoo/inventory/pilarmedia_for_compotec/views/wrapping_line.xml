@@ -13,7 +13,7 @@
                     <field name="product"/>
                     <field name="total_output"/>
                     <field name="ng"/>
-                    <field name="total_oke"/>
+                    <field name="total_ok"/>
                     <field name="note"/>
                 </tree>
             </field>
@@ -55,12 +55,12 @@
                                     <group>
                                         <field name="total_output"/>
                                         <field name="ng"/>
-                                        <field name="total_oke"/>
+                                        <field name="total_ok"/>
                                     </group>
                                     <group>
                                         <field name="total_output_uom"/>
                                         <field name="ng_uom"/>
-                                        <field name="total_oke_uom"/>
+                                        <field name="total_ok_uom"/>
                                     </group>
                                 </group>
                             </page>

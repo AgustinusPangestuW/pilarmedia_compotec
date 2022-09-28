@@ -52,18 +52,9 @@
                                         <!-- <field name="total_output_uom"/> -->
                                         <field name="ng"/>
                                         <!-- <field name="ng_uom"/> -->
-                                        <field name="total_oke" readonly="1"/>
-                                        <field name="total_oke_uom"/>
+                                        <field name="total_ok" readonly="1"/>
+                                        <field name="total_ok_uom"/>
                                         <field name="note"/>
-                                        <field name="wrapping_deadline_working_time_line" >
-                                            <!-- <tree>
-                                                <field name="name"/>
-                                                <field name="working_time"/>
-                                                <field name="output"/>
-                                            </tree> -->
-                                        </field>
-                                        <!-- <button name="open_working_time_form" type="object" string="add" icon="fa-plus-square" class="oe_highlight" context="{'wrapping_deadline_working_time_id': active_id}" attrs="{'invisible':[('write_date','=',None)]}" />
-                                        <field name="write_date" invisible="1"/> -->
                                     </tree>
                                 </field>
                             </page>
