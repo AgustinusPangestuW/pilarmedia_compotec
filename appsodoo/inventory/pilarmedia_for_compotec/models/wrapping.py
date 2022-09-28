@@ -111,8 +111,8 @@ class WrappingDeadlineLine(models.Model):
         relation='employee_custom_operator_rel',
         string='Operator Name'
     )
-    total_output = fields.Integer(string='Total Output', compute="_calculate_total_output", store=True)
-    total_output_uom = fields.Many2one('uom.uom', string='Total Output UOM', compute="_product_change", store=True)
+    total_output = fields.Integer(string='Total', compute="_calculate_total_output", store=True, help="Result Calculation from total output in Wrapping Working time")
+    total_output_uom = fields.Many2one('uom.uom', string='Total UOM', compute="_product_change", store=True, help="UOM for total output")
     ng = fields.Integer(string='NG')
     ng_uom = fields.Many2one('uom.uom', string='NG UOM', compute="_product_change", store=True)
     total_ok = fields.Integer(string='Total OK', readonly=True, compute="_calculate_total_output_ok")
