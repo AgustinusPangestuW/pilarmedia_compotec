@@ -28,7 +28,11 @@
                         <group>
                             <field name="name"/>
                             <field name="date"/>
-                            <field name="shift" domain="[('active', '=', '1')]" context="{'show_description':'1'}" />
+                            <field name="shift_active" invisible="True"/>
+                            <field name="shift" 
+                                domain="[('active', '=', '1')]" 
+                                context="{'show_description':'1'}" 
+                                attrs="{'readonly': [('shift_active', '=', False)]}" />
                         </group>
                         <group>
                             <group>
@@ -42,7 +46,9 @@
                         </group>
                         <notebook>
                             <page string="Wrapping Detail">
-                                <field name="wrapping_deadline_line" context="{'shift':shift, 'active_id': active_id}" attrs="{'readonly': [('shift', '=', False)]}">
+                                <field name="wrapping_deadline_line" context="{'shift':shift, 'active_id': active_id}" 
+                                    attrs="{'readonly': [('shift', '=', False)]}">
+                                    
                                     <tree>
                                         <field name="wrapping_deadline_id" invisible="1"/>
                                         <field name="shift_deadline"/>

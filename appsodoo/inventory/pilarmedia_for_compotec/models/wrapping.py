@@ -56,6 +56,7 @@ class Wrapping(models.Model):
     name = fields.Char(string='Wrapping Name', select=True, copy=False, default='New')
     sequence = fields.Integer(string='Sequence', default=10)
     shift = fields.Many2one('shift', string='Shift', required=True, domain="[('active', '=', '1')]")
+    shift_active = fields.Boolean(string='Shift Active?', readonly=True, compute="_change_active_shift", store=False)
     date = fields.Date(string='Date', default=fields.Date.today(), required=True)
     keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True)
     operator_absent_ids = fields.Many2many(
@@ -89,8 +90,15 @@ class Wrapping(models.Model):
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('wrapping', sequence_date=seq_date) or _('New')
 
-        return super(Wrapping, self).create(vals)            
-    
+        return super(Wrapping, self).create(vals)         
+
+    @api.onchange('wrapping_deadline_line')
+    def _change_active_shift(self):
+        for rec in self:
+            rec.shift_active = 1
+            if len(rec.wrapping_deadline_line) > 0:
+                rec.shift_active = 0
+
     
 class WrappingDeadlineLine(models.Model):
     _name = "wrapping.deadline.line"
