@@ -16,7 +16,7 @@ class WholesaleJobReport(models.TransientModel):
     @api.onchange('date_start', 'date_end')
     def onchange_date(self):
         res={}
-        if self.date_start > self.date_end:
+        if (self.date_start and self.date_end) and self.date_start > self.date_end:
             res = {'warning':{
                 'title':('Warning'),
                 'message':('Tanggal Akhir Lebih Kecil Dari Tanggal Mulai')}}
