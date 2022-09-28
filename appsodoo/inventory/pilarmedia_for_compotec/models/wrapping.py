@@ -60,12 +60,12 @@ class Wrapping(models.Model):
     keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True)
     operator_absent_ids = fields.Many2many(
         comodel_name='employee.custom', 
-        relation='res_partner_wrapping_rel',
+        relation='employee_custom_wrapping_rel',
         string='Operator Tidak Masuk'
     )
     backup_ids = fields.Many2many(
         comodel_name='employee.custom', 
-        relation='res_partner_backup_rel',
+        relation='employee_custom_backup_rel',
         string='Backup'
     )
     leader = fields.Many2one('employee.custom', string='Leader')
@@ -134,8 +134,6 @@ class WrappingDeadlineLine(models.Model):
         """
         for rec in self:
             rec.ng_uom = rec.total_output_uom = rec.total_oke_uom = rec.product.product_tmpl_id.uom_id.id
-
-        
 
     @api.depends('wrapping_deadline_working_time_line.output')
     def _calculate_total_output(self):
