@@ -79,7 +79,7 @@ class WholesaleJobLine(models.Model):
         fucntion for create wholesale_job_lot_lines in different lot ID (unique)
         """
         biggest_lot_id, next_lot_id = "", ""
-        list_lots = self.env['lot'].sudo().search([]).sorted('name')
+        list_lots = self.env['lot'].sudo().search([]).sorted(key=lambda r: int(r.name))
 
         # get list data `job_lot_line`
         if len(self.wholesale_job_lot_lines) > 0:
@@ -91,7 +91,7 @@ class WholesaleJobLine(models.Model):
         if biggest_lot_id:
             # ambil urutan lot setelahnya untuk set lot id saat ini
             for idx_l, l in enumerate(list_lots):
-                if str(l.id) == str(biggest_lot_id) and len(list_lots) > idx_l+1:
+                if int(l.id) == int(biggest_lot_id) and len(list_lots) > idx_l+1:
                     next_lot_id = list_lots[idx_l+1].id
                     break
 
