@@ -9,6 +9,15 @@
 				<field name="date_start"/>
 				<field name="date_end"/>
 			</group>
+			<group>
+                <group>
+                    <field name="company"/>
+                </group>
+                <group>
+                    <field name="job"/>
+                    <field name="shift"/>
+                </group>
+			</group>
 			<footer>
 				<button name='call_wholesale_job_report' string='Submit' type='object' class='btn-primary'/>
 				<button string='Cancel' class='btn-secondary' special='cancel'/>
