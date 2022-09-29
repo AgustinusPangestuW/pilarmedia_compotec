@@ -16,6 +16,7 @@ class Lot(models.Model):
 
 class WholesaleJob(models.Model):
     _name = 'wholesale.job'
+    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Wholesale Job Name', required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     sequence = fields.Integer(string='Sequence', default=10)
