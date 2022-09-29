@@ -32,6 +32,11 @@ class WholesaleJob(models.Model):
     checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator')
     checked_qc = fields.Many2one('employee.custom', string='Checked QC')
     shift = fields.Many2one('shift', string='Shift')
+    state = fields.Selection([
+        ("draft","Draft"),
+        ("submit","Submited"), 
+        ('cancel', "Canceled")], string='State', tracking=True)
+    custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
 
     @api.model
     def create(self, vals):
@@ -44,8 +49,18 @@ class WholesaleJob(models.Model):
                     'wholesale_job', sequence_date=seq_date) or _('New')
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('wholesale_job', sequence_date=seq_date) or _('New')
+        
+        vals['state'] = 'draft'
 
         return super().create(vals)  
+
+    @api.depends('state')
+    def _compute_css(self):
+        for rec in self:
+            if rec.state != 'draft':
+                rec.custom_css = '<style>.o_form_button_edit {display: none !important;}</style>'
+            else:
+                rec.custom_css = False
 
     @api.depends('lot_lines')
     def _set_job_id_active(self):
@@ -53,6 +68,30 @@ class WholesaleJob(models.Model):
             if len(rec.lot_lines) > 0: rec.job_ids_active = 1
             else: rec.job_ids_active = 0
 
+    def validate_wj_lines(self):
+        for rec in self:
+            if not rec.lot_lines:
+                raise ValidationError(_("You must fill Lot Lines." ))
+
+    def action_submit(self):
+        self.state = "submit"
+        self.validate_wj_lines()
+
+    def action_cancel(self):
+        self.state = "cancel"
+
+    def action_draft(self):
+        self.state = "draft"
+
+    def unlink(self):
+        if self.state == 'submit':
+            raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, self.state)))
+        return super(WholesaleJob, self).unlink()
+
+    def remove(self):
+        if self.state not in ['draft', 'cancel']:
+            raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, (self.state))))
+        return super(WholesaleJob, self).remove()
 
 class WholesaleJobLine(models.Model):
     _name = "wholesale.job.line"

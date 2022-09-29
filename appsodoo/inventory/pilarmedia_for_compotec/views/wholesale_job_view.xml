@@ -24,6 +24,19 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
+                        <button id="button_submit" name="action_submit" string="Submit" class="btn-primary" states="draft" 
+                            confirm="Are you sure that you need to confirm ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'submit', 'cancel'])]}"/>
+                        <button id="button_cancel" name="action_cancel" string="Cancel" class="btn-danger" states="submit"
+                            confirm="Are you sure that you need to cancel ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'cancel'])]}"/>
+                        <button id="button_draft" name="action_draft" string="Draft" class="btn-primary" states="cancel" 
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
+                        <field name="state" widget="statusbar"/>
+                        <field name="custom_css" invisible="1"/>    
+
+                        <button string="Create Stock Move" name="create_stock_move" class="btn-primary"
+                            attrs="{'invisible':[('state', 'not in', ['submit'])]}" type="object" />
                     </header>
                     <sheet>
                         <group>
