@@ -9,8 +9,10 @@
                 <tree>
                     <field name="name"/>
                     <field name="date"/>
+                    <field name="shift"/>
                     <field name="job_ids"/>
-                    <field name="lot_lines"/>
+                    <field name="checked_coordinator"/>
+                    <field name="checked_qc"/>
                 </tree>
             </field>
         </record>
@@ -27,9 +29,11 @@
                         <group>
                             <group>
                                 <field name="date"/>
+                                <field name="shift"/>
                             </group>
                             <group>
-                                <field name="job_ids"/>
+                                <field name="job_ids" attrs="{'readonly': [('job_ids_active', '!=', False)]}"/>
+                                <field name="job_ids_active" invisible="True"/>
                                 <field name="checked_coordinator"/>
                                 <field name="checked_qc"/>
                             </group>
@@ -42,8 +46,11 @@
                                         <field name="job_ids"/>
                                         <field name="product_ids"/>
                                         <field name="user_ids"/>
-                                        <field name="total_lot"/>
-                                        <field name="wholesale_job_lot_lines"/>
+                                        <field name="total_ok"/>
+                                        <field name="total_ng"/>
+                                        <field name="biggest_lot"/>
+                                        <field name="total_set"/>
+                                        <field name="total_pcs"/>
                                     </tree>
                                 </field>
                             </page>
