@@ -7,5 +7,6 @@ from . import (
     wholesale_job, 
     wholesale_job_report,
     daily_wholesale_job,
-    employee_custom
+    employee_custom,
+    inherit_stock_picking
 )

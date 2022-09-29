@@ -1,6 +1,7 @@
 from enum import unique
 from odoo import models, fields, api, _, exceptions
 from datetime import datetime
+from odoo.exceptions import ValidationError
 
 
 class Lot(models.Model):
@@ -21,7 +22,7 @@ class WholesaleJob(models.Model):
     name = fields.Char(string='Wholesale Job Name', required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
     sequence = fields.Integer(string='Sequence', default=10)
     date = fields.Date(string="Date", required=True, default=datetime.now().date())
-    job_ids_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=False)
+    job_ids_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)
     job_ids = fields.Many2one(
         'job', 
         string='Job', 
@@ -37,6 +38,9 @@ class WholesaleJob(models.Model):
         ("submit","Submited"), 
         ('cancel', "Canceled")], string='State', tracking=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
+    operation_type_id_ng = fields.Many2one('stock.picking.type', string='Operation Type for NG', required=True)
+    operation_type_id_ok = fields.Many2one('stock.picking.type', string='Operation Type for OK', required=True)
+    count_stock_picking = fields.Integer(string='Count Stock Picking', compute="_count_stock_picking", store=True, readonly=True)
 
     @api.model
     def create(self, vals):
@@ -93,6 +97,66 @@ class WholesaleJob(models.Model):
             raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, (self.state))))
         return super(WholesaleJob, self).remove()
 
+    def _count_stock_picking(self):
+        for rec in self:
+            rec.count_stock_picking = rec.env['stock.picking'].sudo().search_count([('wholesale_job_id', '=', rec.id)])
+
+    def action_see_stock_picking(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            list_domain.append(('wholesale_job_id', '=', self.env.context['active_id']))
+        
+        return {
+            'name':_('Transfers'),
+            'domain':list_domain,
+            'res_model':'stock.picking',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
+
+    def create_stock_move(self):
+        self.validate_wj_lines()
+
+        sm_ng, sm_ok = {}, {}
+        for rec in self:
+            det_picking_type_ng = self.env['stock.picking.type'].sudo().search([('id', '=', rec.operation_type_id_ng.id)])
+            sm_ng['picking_type_id'] = rec.operation_type_id_ng.id
+            sm_ng['location_id'] = det_picking_type_ng.default_location_src_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sm_ng['location_dest_id'] = det_picking_type_ng.default_location_dest_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sm_ng['wholesale_job_id'] = self.id
+
+            det_picking_type_ok = self.env['stock.picking.type'].sudo().search([('id', '=', rec.operation_type_id_ok.id)])
+            sm_ok['picking_type_id'] = rec.operation_type_id_ok.id
+            sm_ok['location_id'] = det_picking_type_ok.default_location_src_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sm_ok['location_dest_id'] = det_picking_type_ok.default_location_dest_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sm_ok['wholesale_job_id'] = self.id
+
+            sm_ng['move_lines'], sm_ok['move_lines'] = [], []
+            for line in self.lot_lines:
+                product = line.product_ids.with_context(lang=self.env.user.lang)
+                name_desc = product.partner_ref
+                sm_ng['move_lines'].append((0,0, {
+                    'product_id': line.product_ids.id,
+                    'product_uom_qty': line.total_ng,
+                    'description_picking': name_desc,
+                    'product_uom': line.product_ids.uom_id.id,
+                    'name': name_desc
+                }))
+
+                sm_ok['move_lines'].append((0,0, {
+                    'product_id': line.product_ids.id, 
+                    'product_uom_qty': line.total_ok,
+                    'description_picking': name_desc,
+                    'product_uom': line.product_ids.uom_id.id,
+                    'name': name_desc
+                }))
+            
+            sm_ng = self.env['stock.picking'].sudo().create(sm_ng)
+            sm_ok = self.env['stock.picking'].sudo().create(sm_ok)
+
+            self._count_stock_picking()
+
+
 class WholesaleJobLine(models.Model):
     _name = "wholesale.job.line"
     _description = "Wholesale Job Line"
@@ -119,7 +183,7 @@ class WholesaleJobLine(models.Model):
         domain=[('active', '=', 1)]
     )
     product_ids = fields.Many2one('product.product', string='Produk', required=True)
-    user_ids = fields.Many2one('employee.custom', string='Nama', required=True)
+    user_ids = fields.Many2one('employee.custom', string='Operator', required=True)
     total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_set", store=True)
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)

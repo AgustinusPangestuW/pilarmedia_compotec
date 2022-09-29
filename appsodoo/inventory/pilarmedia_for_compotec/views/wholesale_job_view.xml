@@ -39,16 +39,30 @@
                             attrs="{'invisible':[('state', 'not in', ['submit'])]}" type="object" />
                     </header>
                     <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_see_stock_picking" type="object" class="oe_stat_button" 
+                                icon="fa-truck" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_stock_picking" widget="statinfo" string="Move"/>
+                            </button>
+                        </div>
                         <group>
                             <group>
                                 <field name="date"/>
                                 <field name="shift"/>
                             </group>
                             <group>
-                                <field name="job_ids" attrs="{'readonly': [('job_ids_active', '!=', False)]}"/>
+                                <field name="job_ids" attrs="{'readonly': [('job_ids_active', '!=', False)]}" force_save="1"/>
                                 <field name="job_ids_active" invisible="True"/>
                                 <field name="checked_coordinator"/>
                                 <field name="checked_qc"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="operation_type_id_ng"/>
+                            </group>
+                            <group>
+                                <field name="operation_type_id_ok"/>
                             </group>
                         </group>
                         <notebook>

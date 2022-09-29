@@ -37,6 +37,7 @@
         "views/lot_view.xml",
         "views/employee_custom_view.xml",
         "views/wholesale_job_view_report.xml",
+        "views/inherit_stock_picking_view.xml",
         "wizard/wholesale_job_report_wizz.xml",
         "data/ir_sequence_wrapping.xml",
         "data/ir_sequence_sorting.xml",
