@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="stock_picking_subcont_ref_id"/>
+            </xpath>
+
+             <xpath expr="//field[@name='location_dest_id']" position="after">
+                <field name="location_dest_id_subcon"/>
+            </xpath>
+
+            <xpath expr="//field[@name='has_scrap_move']" position="before">
+                <button name="action_see_stock_move_created" type="object" class="oe_stat_button" 
+                    icon="fa-list-alt" attrs="{'invisible': [('location_dest_id_subcon', '=', False)]}" context="{'active_id': id}">
+                    <field name="count_stock_picking_created" widget="statinfo" string="Subcon Created"/>
+                </button>    
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>
