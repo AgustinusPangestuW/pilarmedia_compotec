@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <report
+            string="Surat Jalan"
+            id="action_report_delivery"
+            model="stock.picking"
+            report_type="qweb-pdf"
+            name="pilarmedia_for_compotec.report_suratjalan"
+            file="pilarmedia_for_compotec.report_suratjalan"
+            print_report_name="'Surat Jalan - %s - %s' % (object.partner_id.name or '', object.name)"
+        />
+    </data>
+
+    <template id="report_suratjalan_document">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="wrapper" style="width: 215mm; height: 160mm; font-size:10pt !important;">
+                    <div class="header" style="margin:5px;">
+
+                        <div style="width:100%; display:flex;">
+                            <div style="width:30%;">
+                            <!-- LOGO -->
+                            </div>
+                            <div style="width:70%;">
+                                <h2>SURAT JALAN</h2>
+                            </div>
+                        </div>
+                        
+                        <table border="1" style="width:100%; !important">
+                            <tr>
+                                <td style="width=60%;">
+                                    <div>
+                                        <p>Kepada Yth,</p>
+                                        <p></p>
+                                        <p></p>
+                                    </div>
+                                    <div style="border-top:1px solid black; display:flex;">
+                                        <div>
+                                            <p style="font-size: 0.7em;"> Berikut kami kirimkan barang-barang tersebut dibawah ini, dengan kendaraan : </p>
+                                        </div>
+                                        <div>
+                                            <!-- informasi kendaraan -->
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="width=40%;">
+                                    <div>
+                                        Tanggal: <p t-field="o.date_done"/>
+                                    </div>
+                                    <div>   
+                                        No SJ : <p t-field="o.name"/>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="page" style="margin:5px !important;">
+                        <table border="1" class="table table-sm mt48" name="stock_move_line_table">
+                            <thead>
+                                <tr>
+                                    <th name="th_sm_product"><strong>Jo SJ / PO</strong></th>
+                                    <th name="th_sm_quantity"><strong>Nama Barang</strong></th>
+                                    <th name="th_sm_quantity"><strong>Jumlah</strong></th>
+                                    <th name="th_sm_quantity"><strong>Detail</strong></th>
+                                    <th name="th_sm_quantity"><strong>Jasa / Ketarangan</strong></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="o.move_lines" t-as="move">
+                                    <td> <p t-field="o.surat_jalan_id"/> </td>
+                                    <td>  <p t-field="move.product_id"/> </td>
+                                    <td></td>
+                                    <td> x <span t-field="move.product_uom_qty"/></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">JUMLAH</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="footer" style="margin:5px; !important">
+                        <div style="width:100%;">
+                            <div style="width:60%; display:flex; justify-content:space-between;">
+                                <div style="width:calc(100%/3);">
+                                    <span>Diterima oleh</span>
+                                    <br/>
+                                    <br/>
+                                    <br/>
+                                    (................)
+                                </div>
+                                <div style="width:calc(100%/3);">
+                                    <span>Driver</span>
+                                    <br/>
+                                    <br/>
+                                    <br/>
+                                    (................)
+                                </div>
+                                <div style="width:calc(100%/3);">
+                                    <span>Hormat Kami</span>
+                                    <br/>
+                                    <br/>
+                                    <br/>
+                                    (................)
+                                </div>
+                            </div>
+                            <div style="width:40%;">
+
+                            </div>
+                        </div>
+                        <div style="width:100%; display:flex; justify-content:space-between;">
+                            <div style="width:calc(100%/3); font-size:0.8em;">
+                                <p>Note : Lembar 1 ( Putih ) : Accounting, Lembar 2 ( merah ) : Customer, Lembar 3 ( Kuning ) Adm</p>
+                            </div>
+                            <div style="width:calc(100%/3); font-size:0.8em;">
+                                printed by <p> </p> 
+                            </div>
+                            <div style="width:calc(100%/3); font-size:0.8em;">
+                                <p> </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+         </t>
+    </template>
+
+    <template id="report_suratjalan">
+        <t t-foreach="docs" t-as="o">
+            <t t-call="pilarmedia_for_compotec.report_suratjalan_document" t-lang="o.partner_id.lang"/>
+        </t>
+    </template>
+
+</odoo>
