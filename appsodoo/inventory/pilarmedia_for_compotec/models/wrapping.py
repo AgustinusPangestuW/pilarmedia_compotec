@@ -78,6 +78,14 @@ class Wrapping(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
+    operation_type_id_ng = fields.Many2one(
+        'stock.picking.type', 
+        string='Operation Type for NG'
+    )
+    operation_type_id_ok = fields.Many2one(
+        'stock.picking.type', 
+        string='Operation Type for OK'
+    )
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
