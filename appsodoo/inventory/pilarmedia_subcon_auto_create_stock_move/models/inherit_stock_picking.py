@@ -50,11 +50,12 @@ class StockPicking(models.Model):
                         'product_uom': line.product_uom.id,
                         'name': line.name
                     }))    
-            
-        st_subcon_created = self.env['stock.picking'].sudo().create(new_sm)
-        st_subcon_created.action_confirm()
-        st_subcon_created.action_assign()
         
+        if new_sm:
+            st_subcon_created = self.env['stock.picking'].sudo().create(new_sm)
+            st_subcon_created.action_confirm()
+            st_subcon_created.action_assign()
+            
         self._count_stock_picking_created()
         self = super(StockPicking, self).button_validate()
 
