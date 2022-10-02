@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0"> 
+        <record model="ir.sequence" id="seq_peel_diss_assy" >
+            <field name="name">Peel Diss Assy</field>
+            <field name="code">peel_diss_assy</field>
+            <field name="prefix">PDA-</field>
+            <field name="padding">5</field>
+            <field name="suffix"></field>
+        </record>
+    </data>
+</odoo>

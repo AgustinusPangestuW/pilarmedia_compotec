@@ -14,6 +14,7 @@
                     <field name="operator_absent_ids"/>
                     <field name="backup_ids"/>
                     <field name="leader"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -24,7 +25,28 @@
             <field name="model">wrapping</field>
             <field name="arch" type="xml">
                 <form>
+                    <header>
+                        <button id="button_submit" name="action_submit" string="Submit" class="btn-primary" states="draft" 
+                            confirm="Are you sure that you need to confirm ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'submit', 'cancel'])]}"/>
+                        <button id="button_cancel" name="action_cancel" string="Cancel" class="btn-danger" states="submit"
+                            confirm="Are you sure that you need to cancel ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'cancel'])]}"/>
+                        <button id="button_draft" name="action_draft" string="Draft" class="btn-primary" states="cancel" 
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
+                        <field name="state" widget="statusbar"/>
+                        <field name="custom_css" invisible="1"/>    
+
+                        <button string="Create Manufacturing Order" name="create_mo" class="btn-primary"
+                            attrs="{'invisible':[('state', 'not in', ['submit'])]}" type="object" />
+                    </header>
                     <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_see_mo" type="object" class="oe_stat_button" 
+                                icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_mo" widget="statinfo" string="+ MO"/>
+                            </button>
+                        </div>
                         <group>
                             <field name="name"/>
                             <field name="date"/>
@@ -32,7 +54,7 @@
                             <field name="shift" 
                                 domain="[('active', '=', '1')]" 
                                 context="{'show_description':'1'}" 
-                                attrs="{'readonly': [('shift_active', '=', False)]}" />
+                                attrs="{'readonly': [('shift_active', '=', False)]}" force_save="1"/>
                         </group>
                         <group>
                             <group>
@@ -66,6 +88,11 @@
                             </page>
                         </notebook>
                     </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>

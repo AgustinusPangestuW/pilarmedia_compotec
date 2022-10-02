@@ -8,5 +8,6 @@ from . import (
     wholesale_job_report,
     daily_wholesale_job,
     employee_custom,
-    inherit_stock_picking
+    inherit_stock_picking,
+    inherit_mrp_production
 )

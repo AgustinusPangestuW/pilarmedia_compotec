@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="peel_diss_assy_line_tree">
+            <field name="name">peel.diss.assy.line.tree</field>
+            <field name="model">peel.diss.assy.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="user"/>
+                    <field name="product_id"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="peel_diss_assy_line_form">
+            <field name="name">peel.diss.assy.line.form</field>
+            <field name="model">peel.diss.assy.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="user"/>
+                                <field name="product_id"/>
+                            </group>
+                            <group>
+                                <field name="bom_id" force_save="1"/>
+                                <field name="description"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Component List">
+                                <field name="peel_diss_assy_component_line">
+                                    <tree create="0" delete="0" editable="bottom">
+                                        <field name="product_id" force_save="1"/>
+                                        <field name="peeled_total"/>
+                                        <field name="ok" readonly="False"/>
+                                        <field name="ng" readonly="False"/>
+                                    </tree>
+                                </field>    
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="peel_diss_assy_line_action">
+            <field name="name">Kupas Diss Assy Line</field>
+            <field name="res_model">peel.diss.assy.line</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>

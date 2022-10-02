@@ -5,10 +5,14 @@
         <record model="ir.ui.view" id="job_tree">
             <field name="name">job.tree</field>
             <field name="model">job</field>
-            <field name="domain">[("active", "=", True)]</field>
+            <!-- <field name="domain">[("active", "=", True)]</field> -->
             <field name="arch" type="xml">
                 <tree>
                     <field name="name"/>
+                    <field name="active"/>
+                    <field name="description"/>
+                    <field name="op_type_ng"/>
+                    <field name="op_type_ok"/>
                 </tree>
             </field>
         </record>
@@ -25,8 +29,16 @@
                         <group>
                             <group>
                                 <field name="name"/>
+                                <field name="active"/>
                             </group>
                             <group>
+                                <field name="op_type_ng"/>
+                                <field name="op_type_ok"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <field name="description"/>
                             </group>
                         </group>
                     </sheet>
@@ -34,31 +46,18 @@
             </field>
         </record>
 
-        <record model="ir.actions.act_window" id="job_action">
+        <record model="ir.actions.act_window" id="job_compotec_action">
             <field name="name">Job</field>
             <field name="res_model">job</field>
-            <field name="view_type">form</field>
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem 
-            id="main_job"
-            name="Job"
-        />
-
-        <menuitem 
-            id="menu_job"
-            name="Job"
-            parent="main_job"
-        />
-
-        <menuitem 
-            id="submenu_job"
-            name="Job"
-            parent="menu_job"
-
-            action="job_action"
-        />
+        <!-- for menu item configuration -->
+        <menuitem id="main_job_compotec" 
+            name="Job Compotec" 
+            parent="stock.menu_stock_config_settings" 
+            action="job_compotec_action" 
+            groups="stock.group_stock_manager"/>
 
     </data>
 </odoo>

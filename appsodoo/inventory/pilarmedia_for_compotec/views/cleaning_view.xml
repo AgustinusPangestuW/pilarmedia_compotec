@@ -7,6 +7,7 @@
             <field name="model">cleaning</field>
             <field name="arch" type="xml">
                 <tree>
+                    <field name="name"/>
                     <field name="datetime"/>
                     <field name="user"/>
                     <field name="product"/>
@@ -14,6 +15,7 @@
                     <field name="res_ng"/>
                     <field name="rework"/>
                     <field name="description"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -25,6 +27,15 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
+                        <button id="button_submit" name="action_submit" string="Submit" class="btn-primary" states="draft" 
+                            confirm="Are you sure that you need to confirm ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'submit', 'cancel'])]}"/>
+                        <button id="button_cancel" name="action_cancel" string="Cancel" class="btn-danger" states="submit"
+                            confirm="Are you sure that you need to cancel ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'cancel'])]}"/>
+                        <button id="button_draft" name="action_draft" string="Draft" class="btn-primary" states="cancel" 
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
+                        <field name="state" widget="statusbar"/>
                     </header>
                     <sheet>
                         <group>
@@ -43,6 +54,11 @@
                             <field name="description"/>
                         </group>
                     </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>

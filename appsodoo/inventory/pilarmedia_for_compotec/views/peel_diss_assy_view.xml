@@ -7,11 +7,10 @@
             <field name="model">peel.diss.assy</field>
             <field name="arch" type="xml">
                 <tree>
+                    <field name="name"/>
                     <field name="date"/>
-                    <field name="peel_diss_assy_line"/>
-                    <field name="total_ok"/>
-                    <field name="total_ng"/>
-                    <field name="total_ok_ng"/>
+                    <field name="job"/>
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -23,40 +22,53 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
+                        <button id="button_submit" name="action_submit" string="Submit" class="btn-primary" states="draft" 
+                            confirm="Are you sure that you need to confirm ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'submit', 'cancel'])]}"/>
+                        <button id="button_cancel" name="action_cancel" string="Cancel" class="btn-danger" states="submit"
+                            confirm="Are you sure that you need to cancel ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'cancel'])]}"/>
+                        <button id="button_draft" name="action_draft" string="Draft" class="btn-primary" states="cancel" 
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
+                        <field name="state" widget="statusbar"/>
+                        <field name="custom_css" invisible="1"/>    
+
+                        <button string="Create Manufacturing Order" name="create_mo" class="btn-primary"
+                            attrs="{'invisible':[('state', 'not in', ['submit'])]}" type="object" />
                     </header>
                     <sheet> 
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_see_mo" type="object" class="oe_stat_button" 
+                                icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_mo" widget="statinfo" string="+ MO"/>
+                            </button>
+                        </div>
                         <group>
                             <group>
                                 <field name="date"/>
                             </group>
                             <group>
+                                <field name="job"/>
                             </group>
                         </group>
                         <notebook>
                             <page string="Detail">
                                 <field name="peel_diss_assy_line">
-                                    <tree editable="bottom">
-                                        <field name="job"/>
+                                    <tree>
                                         <field name="user"/>
-                                        <field name="product"/>
-                                        <field name="peeled_total"/>
-                                        <field name="ok"/>
-                                        <field name="ng"/>
+                                        <field name="product_id"/>
                                         <field name="description"/>
                                     </tree>
                                 </field>
-                                <group>
-                                    <group>
-                                        <field name="total_ok"/>
-                                    </group>
-                                    <group>
-                                        <field name="total_ng"/>
-                                        <field name="total_ok_ng"/>
-                                    </group>
-                                </group>
                             </page>
                         </notebook>
                     </sheet>
+                    
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>

@@ -74,7 +74,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem id="submenu_daily_wholesale_job" name="Form Pekerjaan Borongan Harian" parent="compotec_root_menu" action="daily_wholesale_job_action"/>
-        <menuitem id="submenu_daily_wholesale_job_with_type" name="Form Pekerjaan Borongan Harian berdasarkan Tipe" parent="compotec_root_menu" action="daily_wholesale_job_with_type_action"/>
+        <!-- <menuitem id="submenu_daily_wholesale_job" name="Form Pekerjaan Borongan Harian" parent="compotec_root_menu" action="daily_wholesale_job_action"/>
+        <menuitem id="submenu_daily_wholesale_job_with_type" name="Form Pekerjaan Borongan Harian berdasarkan Tipe" parent="compotec_root_menu" action="daily_wholesale_job_with_type_action"/> -->
     </data>
 </odoo>

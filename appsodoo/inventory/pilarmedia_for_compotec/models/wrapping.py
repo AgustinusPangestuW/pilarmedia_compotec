@@ -52,6 +52,7 @@ class WorkingTime(models.Model):
 class Wrapping(models.Model):
     _name = 'wrapping'
     _description = "Wrapping"
+    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Wrapping Name', select=True, copy=False, default='New')
     sequence = fields.Integer(string='Sequence', default=10)
@@ -70,6 +71,13 @@ class Wrapping(models.Model):
         string='Backup'
     )
     leader = fields.Many2one('employee.custom', string='Leader')
+    state = fields.Selection([
+        ("draft","Draft"),
+        ("submit","Submited"), 
+        ('cancel', "Canceled")], string='State', tracking=True)
+    company_id = fields.Many2one('res.company', string='Company', required=True)
+    custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
+    count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
@@ -90,6 +98,9 @@ class Wrapping(models.Model):
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('wrapping', sequence_date=seq_date) or _('New')
 
+        vals['company_id'] = self.env.company.id
+        vals['state'] = 'draft'
+
         return super(Wrapping, self).create(vals)         
 
     @api.onchange('wrapping_deadline_line')
@@ -98,6 +109,97 @@ class Wrapping(models.Model):
             rec.shift_active = 1
             if len(rec.wrapping_deadline_line) > 0:
                 rec.shift_active = 0
+
+    @api.depends('state')
+    def _compute_css(self):
+        for rec in self:
+            if rec.state != 'draft':
+                rec.custom_css = '<style>.o_form_button_edit {display: none !important;}</style>'
+            else:
+                rec.custom_css = False
+
+    def action_submit(self):
+        self.state = "submit"
+        self.create_mo()
+
+    def write(self, vals):  
+        # if self.state in ['submit']:
+        #     raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, self.state)))
+
+        vals = super().write(vals)
+
+        return vals
+        
+    def action_cancel(self):
+        self.state = "cancel"
+
+    def action_draft(self):
+        self.state = "draft"
+
+    def unlink(self):
+        if self.state == 'submit':
+            raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, self.state)))
+        return super().unlink()
+
+    def remove(self):
+        if self.state not in ['draft', 'cancel']:
+            raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, (self.state))))
+        return super().remove()
+
+    def _count_mo(self):
+        for rec in self:
+            rec.count_mo = rec.env['mrp.production'].sudo().search_count([('wrapping_id', '=', rec.id)])
+
+    def action_see_mo(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            list_domain.append(('wrapping_id', '=', self.env.context['active_id']))
+        
+        return {
+            'name':_('Manufacturing Order'),
+            'domain':list_domain,
+            'res_model':'mrp.production',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
+
+    def create_mo(self):
+        for rec in self:
+            arr_total_per_product = {}
+            for line in rec.wrapping_deadline_line:
+                arr_total_per_product[line.product.id] = arr_total_per_product.get(line.product.id, 0) + line.total_output
+
+            product_done_to_process = []
+            for line in rec.wrapping_deadline_line:
+                # hanya proses item yang berbeda saja
+                if line.product.id not in product_done_to_process:
+                    product_done_to_process.append(line.product.id)
+                else:
+                    continue
+
+                bom_line = self.env['mrp.bom.line'].sudo().search([('product_id', '=', line.product.id)])
+                if bom_line:
+                    bom = bom_line[0].bom_id
+                    new_mo = {
+                        "product_id": bom.product_tmpl_id.id,
+                        "bom_id": bom.id,
+                        "product_qty": bom.product_qty,
+                        "product_uom_id": bom.product_uom_id.id,
+                        "company_id": self.env.company.id,
+                        "wrapping_id": rec.id,
+                        "move_raw_ids": [[0,0, {
+                            "product_id": line.product.id,
+                            "product_uom": line.total_output_uom.id,
+                            "product_uom_qty": arr_total_per_product[line.product.id],
+                            "name": "New",
+                            "location_id": self.env['mrp.production'].sudo()._get_default_location_src_id(),
+                            "location_dest_id": line.product.with_context(force_company=self.company_id.id).property_stock_production.id
+                        }]]
+                    }
+
+                    if new_mo:
+                        self.env['mrp.production'].sudo().create(new_mo)
+                        self._count_mo()
 
     
 class WrappingDeadlineLine(models.Model):
@@ -113,7 +215,7 @@ class WrappingDeadlineLine(models.Model):
         index=1, 
         copy=False
     )
-    product = fields.Many2one('product.product', string='Product')
+    product = fields.Many2one('product.product', string='Product', required=True)
     operator_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_operator_rel',
@@ -133,7 +235,7 @@ class WrappingDeadlineLine(models.Model):
         copy=True, 
         auto_join=True
     )
-    list_id_wt = fields.Char(string='List ID Working Time can access base on Shift', readonly=True, store=False)
+    list_id_wt = fields.Html(string='List ID Working Time can access base on Shift', compute="_set_list_id_wj", readonly=True, store=False)
 
     @api.depends('product')
     def _product_change(self):
@@ -165,13 +267,6 @@ class WrappingDeadlineLine(models.Model):
                 'total_ok': wrapping_deadline_line.total_output - wrapping_deadline_line.ng
             })
 
-    @api.onchange('list_id_wt')
-    def set_context(self):
-        self.env.context = dict(self.env.context)
-        self.env.context.update({
-            'allowed_company_ids': [],
-        })
-
     @api.model
     def default_get(self, fields_list):
         res = super().default_get(fields_list)
@@ -186,7 +281,7 @@ class WrappingDeadlineLine(models.Model):
             }] for wt in dict_wt_base_shift]
             res.update({
                 'wrapping_deadline_working_time_line' : wrapping_deadline_working_time_line_list,
-                'list_id_wt': json.dumps([('id', 'in', list_id_wt_base_shift)])
+                'list_id_wt': [('id', 'in', list_id_wt_base_shift)]
             })
 
             # self.env.context.update({'list_id_wt': list_id_wt_base_shift})

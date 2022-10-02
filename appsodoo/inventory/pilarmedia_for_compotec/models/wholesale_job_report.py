@@ -27,8 +27,8 @@ class WholesaleJobReport(models.Model):
     def init(self):
         self.env.cr.execute("""
         DROP FUNCTION IF EXISTS wholesale_job_report(DATE, DATE, CHAR, CHAR, CHAR);
-        CREATE OR REPLACE FUNCTION wholesale_job_report(date_start DATE, date_end DATE, company CHAR, job CHAR, shift CHAR)
-        RETURNS VOID AS $BODY$
+        CREATE OR REPLACE FUNCTION wholesale_job_report(date_start DATE, date_end DATE, input_company CHAR, input_job CHAR, input_shift CHAR)
+        RETURNS VOID AS $BODY$ 
         DECLARE
             
             csr cursor for
@@ -42,9 +42,10 @@ class WholesaleJobReport(models.Model):
             -- LEFT JOIN product_template pt ON pt.id = p.product_tmpl_id
             LEFT JOIN res_partner u ON u.id = wjl.user_ids
             WHERE 
-                wj.date BETWEEN date_start AND date_end AND 
-                    IF(job IS NOT NULL, CAST(j.id AS TEXT) = job, TRUE) AND 
-                    IF(shift IS NOT NULL, CAST(wj.shift AS TEXT) = shift, TRUE)
+                wj.date BETWEEN date_start AND date_end 
+                    AND input_job in ('', CAST(j.id AS CHAR))
+                    AND input_shift in ('', CAST(wj.shift AS CHAR))
+                    AND input_company in ('', CAST(wj.company_id AS CHAR))
             ORDER BY wj.date;
 
         BEGIN

@@ -70,12 +70,12 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem 
+        <!-- <menuitem 
             id="main_sorting" 
             name="Sorting" 
             parent="compotec_root_menu" 
             action="sorting_action"
-        />
+        /> -->
 
     </data>
 </odoo>

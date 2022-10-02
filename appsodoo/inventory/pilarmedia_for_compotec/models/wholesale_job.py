@@ -17,9 +17,10 @@ class Lot(models.Model):
 
 class WholesaleJob(models.Model):
     _name = 'wholesale.job'
+    _description = "Wholesale Job"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Wholesale Job Name', required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
+    name = fields.Char(string='Wholesale Job Name', required=True, readonly=True, index=True, default=lambda self: _('New'))
     sequence = fields.Integer(string='Sequence', default=10)
     date = fields.Date(string="Date", required=True, default=datetime.now().date())
     job_ids_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)
@@ -38,9 +39,22 @@ class WholesaleJob(models.Model):
         ("submit","Submited"), 
         ('cancel', "Canceled")], string='State', tracking=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
-    operation_type_id_ng = fields.Many2one('stock.picking.type', string='Operation Type for NG', required=True)
-    operation_type_id_ok = fields.Many2one('stock.picking.type', string='Operation Type for OK', required=True)
+    operation_type_id_ng = fields.Many2one(
+        'stock.picking.type', 
+        string='Operation Type for NG', 
+        required=True, 
+        compute="_get_op_type_from_job", 
+        store=True
+    )
+    operation_type_id_ok = fields.Many2one(
+        'stock.picking.type', 
+        string='Operation Type for OK', 
+        required=True, 
+        compute="_get_op_type_from_job", 
+        store=True
+    )
     count_stock_picking = fields.Integer(string='Count Stock Picking', compute="_count_stock_picking", store=True, readonly=True)
+    company_id = fields.Many2one('res.company', string='Company', readonly=True)
 
     @api.model
     def create(self, vals):
@@ -54,9 +68,18 @@ class WholesaleJob(models.Model):
             else:
                 vals['name'] = self.env['ir.sequence'].next_by_code('wholesale_job', sequence_date=seq_date) or _('New')
         
+        vals['company_id'] = self.env.company.id
         vals['state'] = 'draft'
 
         return super().create(vals)  
+
+    @api.depends('job_ids')
+    def _get_op_type_from_job(self):
+        if self.job_ids:
+            self.operation_type_id_ok = self.job_ids.op_type_ok or ''
+            self.operation_type_id_ng = self.job_ids.op_type_ng or ''
+        else:
+            self.operation_type_id_ng = self.operation_type_id_ok = ""
 
     @api.depends('state')
     def _compute_css(self):
@@ -79,8 +102,17 @@ class WholesaleJob(models.Model):
 
     def action_submit(self):
         self.state = "submit"
-        self.validate_wj_lines()
+        # self.validate_wj_lines()
+        self.create_stock_move()
 
+    def write(self, vals):  
+        # if self.state in ['submit']:
+        #     raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, self.state)))
+
+        vals = super().write(vals)
+
+        return vals
+        
     def action_cancel(self):
         self.state = "cancel"
 
@@ -166,8 +198,7 @@ class WholesaleJobLine(models.Model):
         'wholesale.job', 
         'wholesale job ids', 
         index=1, 
-        ondelete="cascade", 
-        copy=False
+        ondelete="cascade"
     )
     is_set = fields.Boolean(
         string='Is Set', 

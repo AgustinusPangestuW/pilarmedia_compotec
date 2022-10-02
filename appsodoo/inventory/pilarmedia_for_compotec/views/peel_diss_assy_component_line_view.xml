@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="peel_diss_assy_component_tree">
+            <field name="name">peel_diss_assy_component_line.tree</field>
+            <field name="model">peel.diss.assy.component.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="peeled_total"/>
+                    <field name="ok"/>
+                    <field name="ng"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="peel_diss_assy_component_form">
+            <field name="name">peel_diss_assy_component_line.form</field>
+            <field name="model">peel.diss.assy.component.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="product_id"/>
+                                <field name="peeled_total"/>
+                            </group>
+                            <group>   
+                                <field name="ok" readonly="False"/>
+                                <field name="ng" readonly="False"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="peel_diss_assy_component_action">
+            <field name="name">Component Kupas Diss Assy</field>
+            <field name="res_model">peel.diss.assy.component.line</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>
