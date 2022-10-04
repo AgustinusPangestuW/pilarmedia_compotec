@@ -8,6 +8,17 @@
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="wholesale_job_id"/>
             </xpath>
+            <xpath expr="//page[@name='extra']" position="before">
+                <page string="Remaining Qty base on Surat Jalan">
+                    <field name="log_outstanding_qty_line">
+                        <tree>
+                            <field name="product_id"/>
+                            <field name="done_qty"/>
+                            <field name="remaining_qty"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
         </field>
     </record>
 </odoo>
