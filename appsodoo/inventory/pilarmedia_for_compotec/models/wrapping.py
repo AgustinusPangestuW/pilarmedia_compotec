@@ -1,6 +1,7 @@
 from dbm import dumb
 from email.policy import default
 from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
 import json
 
 class Shift(models.Model):
@@ -78,14 +79,7 @@ class Wrapping(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    operation_type_id_ng = fields.Many2one(
-        'stock.picking.type', 
-        string='Operation Type for NG'
-    )
-    operation_type_id_ok = fields.Many2one(
-        'stock.picking.type', 
-        string='Operation Type for OK'
-    )
+    job = fields.Many2one('job', string='Job', required=True)
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
@@ -191,17 +185,20 @@ class Wrapping(models.Model):
                     new_mo = {
                         "product_id": bom.product_tmpl_id.id,
                         "bom_id": bom.id,
-                        "product_qty": bom.product_qty,
+                        "product_qty": arr_total_per_product[line.product.id],
                         "product_uom_id": bom.product_uom_id.id,
                         "company_id": self.env.company.id,
                         "wrapping_id": rec.id,
+                        "picking_type_id": rec.job.op_type_ok.id,
+                        "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
+                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
                         "move_raw_ids": [[0,0, {
                             "product_id": line.product.id,
                             "product_uom": line.total_output_uom.id,
                             "product_uom_qty": arr_total_per_product[line.product.id],
                             "name": "New",
-                            "location_id": self.env['mrp.production'].sudo()._get_default_location_src_id(),
-                            "location_dest_id": line.product.with_context(force_company=self.company_id.id).property_stock_production.id
+                            "location_id": rec.job.op_type_ok.default_location_src_id.id,
+                            "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
                         }]]
                     }
 

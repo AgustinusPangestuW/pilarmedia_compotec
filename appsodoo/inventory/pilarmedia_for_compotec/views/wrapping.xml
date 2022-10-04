@@ -44,12 +44,13 @@
                         <div class="oe_button_box" name="button_box">
                             <button name="action_see_mo" type="object" class="oe_stat_button" 
                                 icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
-                                <field name="count_mo" widget="statinfo" string="+ MO"/>
+                                <field name="count_mo" widget="statinfo" string=" MO"/>
                             </button>
                         </div>
                         <group>
                             <field name="name"/>
                             <field name="date"/>
+                            <field name="job"/>
                             <field name="shift_active" invisible="True"/>
                             <field name="shift" 
                                 domain="[('active', '=', '1')]" 
@@ -64,14 +65,6 @@
                             <group>
                                 <field name="operator_absent_ids" widget="many2many_tags"/>
                                 <field name="backup_ids" widget="many2many_tags"/>
-                            </group>
-                        </group>
-                        <group>
-                            <group>
-                                <field name="operation_type_id_ok"/>
-                            </group>
-                            <group>
-                                <field name="operation_type_id_ng"/>
                             </group>
                         </group>
                         <notebook>
