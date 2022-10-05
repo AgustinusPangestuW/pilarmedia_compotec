@@ -23,6 +23,7 @@ class PricelistSubconBaseonStockMove(models.Model):
         compute="_calculate_total_price",
         store=True
     )
+    vendor = fields.Many2one('res.partner', string='Vendor', compute="_onchange_vendor", store=True)
     lines = fields.One2many('pricelist.subcon.baseon.stockmove.line', 'pricelist_subcon_id', 'Line')
    
     @api.depends('lines.price_total')
@@ -33,7 +34,15 @@ class PricelistSubconBaseonStockMove(models.Model):
             for line in rec.lines:
                 price_total += line.price_total
         
-            rec.update({'price_total': price_total})
+            rec.update({'price_total': price_total})    
+
+    @api.depends('picking_id.vendor')
+    def _onchange_vendor(self):
+        vendor = ""
+        for rec in self:
+            if rec.picking_id.vendor:
+                vendor = rec.picking_id.vendor
+            rec.update({'vendor': vendor})
 
 
 class PricelistSubconBaseonStockMoveLine(models.Model):

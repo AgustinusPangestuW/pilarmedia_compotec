@@ -21,6 +21,7 @@ class StockPicking(models.Model):
         store=True,
         copy=False
     )
+    vendor = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor", stored=True)
 
     def button_validate(self):
         self._get_outstanding_qty()
@@ -31,7 +32,7 @@ class StockPicking(models.Model):
         for sm in self.move_ids_without_package:
             exists = False
             for ps in self.pricelist_subcons:
-                if ps.picking_id.id == self.id and ps.move_id.id == sm.id:
+                if ps.picking_id.id == self.id and (ps.move_id.id == sm.id or sm.product_id.id == ps.product_id.id):
                     exists = True
                     break
             
@@ -41,6 +42,7 @@ class StockPicking(models.Model):
                     'move_id': sm.id,
                     'product_id': sm.product_id.id,
                     'price_total': 0,
+                    'vendor': self.vendor.id,
                     'lines': []
                 }])
 
@@ -48,6 +50,16 @@ class StockPicking(models.Model):
             vals.update({'pricelist_subcons': list_res})
     
         return super().write(vals)
+
+    @api.depends('location_dest_id')
+    def _fill_vendor(self):
+        vendor = None
+        for rec in self:
+            if rec.location_dest_id:
+                warehouse = self.get_warehouse(rec.location_dest_id)
+                if warehouse:
+                    vendor = warehouse.vendor.id
+            rec.vendor = vendor
 
     @api.depends('surat_jalan_id')
     def _get_outstanding_qty(self):
@@ -104,3 +116,19 @@ class StockPicking(models.Model):
             return res['used_qty']
         else:
             return 0
+
+    def get_warehouse(self, location):
+        parent_loc = location.location_id
+
+        wrh_in_currenct_loc = self.env['stock.warehouse'].sudo().search([('view_location_id', '=', location.id)])
+        if wrh_in_currenct_loc:
+            return wrh_in_currenct_loc
+        
+        if parent_loc:
+            wrh_in_parent_loc = self.env['stock.warehouse'].sudo().search([('view_location_id', '=', parent_loc.id)])
+            if wrh_in_parent_loc:
+                return wrh_in_parent_loc
+            else:
+                self.get_warehouse(parent_loc)
+
+        return ""
