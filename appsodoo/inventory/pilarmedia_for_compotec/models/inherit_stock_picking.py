@@ -14,11 +14,41 @@ class StockPicking(models.Model):
         store=True,
         copy=False
     )
+    pricelist_subcons = fields.One2many(
+        'pricelist.subcon.baseon.stockmove', 
+        'picking_id', 
+        string='Pricelist subcon',
+        store=True,
+        copy=False
+    )
 
     def button_validate(self):
         self._get_outstanding_qty()
         return super().button_validate()
+
+    def write(self, vals):
+        list_res = []
+        for sm in self.move_ids_without_package:
+            exists = False
+            for ps in self.pricelist_subcons:
+                if ps.picking_id.id == self.id and ps.move_id.id == sm.id:
+                    exists = True
+                    break
+            
+            if not exists:
+                list_res.append([0,0, {
+                    'picking_id': self.id,
+                    'move_id': sm.id,
+                    'product_id': sm.product_id.id,
+                    'price_total': 0,
+                    'lines': []
+                }])
+
+        if list_res:
+            vals.update({'pricelist_subcons': list_res})
     
+        return super().write(vals)
+
     @api.depends('surat_jalan_id')
     def _get_outstanding_qty(self):
         # reset to null
@@ -53,7 +83,7 @@ class StockPicking(models.Model):
             WHERE sp.id = %s and sm.product_id = %s
         """ % (sj, product_id))
         res = self.env.cr.dictfetchone()
-        
+
         if res == None:
             return res
         elif 'done_qty' in res:

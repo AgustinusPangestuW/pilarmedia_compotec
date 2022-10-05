@@ -12,5 +12,6 @@ from . import (
     inherit_mrp_production,
     inherit_stock_warehouse,
     inherit_res_users,
-    log_outstanding_qty_by_sj
+    log_outstanding_qty_by_sj,
+    pricelist_subcon_base_on_stock_move
 )

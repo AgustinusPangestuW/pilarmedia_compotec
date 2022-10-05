@@ -19,6 +19,34 @@
                     </field>
                 </page>
             </xpath>
+            <xpath expr="//button[@name='put_in_pack']" position="after">
+                <field name="pricelist_subcons">
+                    <tree create="0" delete="0">
+                        <field name="product_id"/>
+                        <field name="price_total"/>
+                    </tree>
+                    <form string="Pricelist Subcons">
+                        <group>
+                            <field name="product_id"/>
+                        </group>
+                        <group>
+                            <field name="price_total"/>
+                        </group>
+                        <notebook>
+                            <page>
+                                <field name="lines">
+                                    <tree editable="bottom">
+                                        <field name="pricelist_id"/>
+                                        <field name="price"/>
+                                        <field name="qty"/>
+                                        <field name="price_total"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </form>
+                </field>
+            </xpath>
         </field>
     </record>
 </odoo>
