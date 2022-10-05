@@ -34,7 +34,7 @@
                             <group>
                                 <field name="operator_ids" widget="many2many_tags"/>
                                 <field name="note"/>
-                                <!-- <field name="list_id_wt" /> -->
+                                <field name="list_id_wt" invisible="1"/>
                             </group>
                         </group>
                         <notebook>
@@ -43,7 +43,7 @@
                                     <tree editable="bottom">
                                         <field name="sequence" widget="handle"/>
                                         <!-- <field name="name"/> -->
-                                        <field name="working_time" domain="[('active', '=', '1')]"/>
+                                        <field name="working_time" domain="[('active', '=', '1'), ('id', 'in', parent.list_id_wt)]"/>
                                         <field name="output"/>
                                         <field name="break_time"/>
                                         <field name="rest_time"/>

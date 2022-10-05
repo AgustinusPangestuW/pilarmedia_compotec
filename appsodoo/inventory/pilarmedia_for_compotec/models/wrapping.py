@@ -240,7 +240,7 @@ class WrappingDeadlineLine(models.Model):
         copy=True, 
         auto_join=True
     )
-    list_id_wt = fields.Html(string='List ID Working Time can access base on Shift', compute="_set_list_id_wj", readonly=True, store=False)
+    list_id_wt = fields.Char(string='List ID Working Time can access base on Shift', readonly=True, store=False)
 
     @api.depends('product')
     def _product_change(self):
@@ -286,7 +286,7 @@ class WrappingDeadlineLine(models.Model):
             }] for wt in dict_wt_base_shift]
             res.update({
                 'wrapping_deadline_working_time_line' : wrapping_deadline_working_time_line_list,
-                'list_id_wt': [('id', 'in', list_id_wt_base_shift)]
+                'list_id_wt': list_id_wt_base_shift
             })
 
             # self.env.context.update({'list_id_wt': list_id_wt_base_shift})
