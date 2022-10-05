@@ -17,7 +17,7 @@
     'maintainer': 'Pilarmedia',
     'license': 'OPL-1',
     'support':'info@solog.id',
-    'depends': ['base', 'stock'],
+    'depends': ['base', 'stock', 'pilar_subcont_transfer'],
     'data': [
         "security/ir.model.access.csv",
         "views/cleaning_view.xml",
