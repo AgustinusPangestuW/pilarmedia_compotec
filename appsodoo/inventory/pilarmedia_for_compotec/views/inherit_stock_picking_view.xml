@@ -19,7 +19,7 @@
                     </field>
                 </page>
             </xpath>
-            <xpath expr="//button[@name='put_in_pack']" position="after">
+            <xpath expr="//field[@name='move_ids_without_package']" position="after">
                 <field name="pricelist_subcons">
                     <tree create="0" delete="0">
                         <field name="product_id"/>
@@ -33,7 +33,7 @@
                             <field name="price_total"/>
                         </group>
                         <notebook>
-                            <page>
+                            <page string="Pricelist Subcon">
                                 <field name="lines">
                                     <tree editable="bottom">
                                         <field name="pricelist_id"/>
@@ -46,6 +46,17 @@
                         </notebook>
                     </form>
                 </field>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock_picking_type_kanban_inherit" model="ir.ui.view">
+        <field name="name">stock.picking.type.kanban.inherit</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.stock_picking_type_kanban" />
+        <field name="arch" type="xml">
+            <xpath expr="/kanban/templates/t/div/div/div[3]/div/div[2]/div[2]" position="replace">
+                <!-- remove button transfer immediate -->
             </xpath>
         </field>
     </record>
