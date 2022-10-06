@@ -100,13 +100,13 @@
                                     
                                     <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
                                     <td>  <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
-                                    <td style="text-align:right;"> <p t-esc="round(move.quantity_done * price_total, 2)"/> </td>
-                                    <td> <t t-esc="price_total"/> x <p t-esc="move.quantity_done"/> </td>
+                                    <td style="text-align:right;"> <t t-esc="round(move.quantity_done * price_total, 2)"/> </td>
+                                    <td> <t t-esc="price_total"/> x <t t-esc="move.quantity_done"/> </td>
                                     <td> <p t-esc="information"/></td>
                                 </tr>
                                 <tr>
                                     <td colspan="2" style="text-align:center;">JUMLAH</td>
-                                    <td style="text-align:right;"><p t-esc="round(total_qty_done, 2)"/> </td>
+                                    <td style="text-align:right;"><t t-esc="round(total_qty_done, 2)"/> </td>
                                     <td/>
                                     <td/>
                                 </tr>
