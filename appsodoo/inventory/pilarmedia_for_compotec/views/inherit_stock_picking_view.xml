@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="stock.view_picking_form" />
         <field name="arch" type="xml">
             <xpath expr="//field[@name='origin']" position="after">
-                <field name="wholesale_job_id"/>
+                <field name="wholesale_job_id" invisible="1"/>
                 <field name="vendor" invisible="1"/>
             </xpath>
             <xpath expr="//page[@name='extra']" position="before">
