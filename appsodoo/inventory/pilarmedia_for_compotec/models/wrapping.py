@@ -182,8 +182,9 @@ class Wrapping(models.Model):
                 bom_line = self.env['mrp.bom.line'].sudo().search([('product_id', '=', line.product.id)])
                 if bom_line:
                     bom = bom_line[0].bom_id
+                    product_id_from_bom = self.env['product.product'].sudo().search([('product_tmpl_id', '=', bom.product_tmpl_id.id)])
                     new_mo = {
-                        "product_id": bom.product_tmpl_id.id,
+                        "product_id": product_id_from_bom.id,
                         "bom_id": bom.id,
                         "product_qty": arr_total_per_product[line.product.id],
                         "product_uom_id": bom.product_uom_id.id,
