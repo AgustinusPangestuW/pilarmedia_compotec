@@ -77,7 +77,7 @@
                                         <field name="shift_deadline"/>
                                         <field name="product"/>
                                         <field name="operator_ids" widget="many2many_tags"/>
-                                        <field name="total_output" readonly="1"/>
+                                        <field name="total" readonly="1"/>
                                         <!-- <field name="total_output_uom"/> -->
                                         <field name="ng"/>
                                         <!-- <field name="ng_uom"/> -->

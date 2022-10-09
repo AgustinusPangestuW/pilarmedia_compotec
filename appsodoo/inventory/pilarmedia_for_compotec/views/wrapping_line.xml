@@ -11,7 +11,7 @@
                     <field name="shift_deadline" context="{'show_description':'1'}"/>
                     <field name="operator_ids"/>
                     <field name="product"/>
-                    <field name="total_output"/>
+                    <field name="total"/>
                     <field name="ng"/>
                     <field name="total_ok"/>
                     <field name="note"/>
@@ -53,9 +53,9 @@
                                 </field>
                                 <group>
                                     <group>
-                                        <field name="total_output"/>
-                                        <field name="ng"/>
                                         <field name="total_ok"/>
+                                        <field name="ng"/>
+                                        <field name="total"/>
                                     </group>
                                     <group>
                                         <field name="total_output_uom"/>

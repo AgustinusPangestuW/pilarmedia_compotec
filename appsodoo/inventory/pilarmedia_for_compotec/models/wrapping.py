@@ -227,11 +227,11 @@ class WrappingDeadlineLine(models.Model):
         relation='employee_custom_operator_rel',
         string='Operator Name'
     )
-    total_output = fields.Integer(string='Total', compute="_calculate_total_output", store=True, help="Result Calculation from total output in Wrapping Working time")
+    total_ok = fields.Integer(string='Total OK', compute="_calculate_total_ok", store=True, help="Result Calculation from total output in Wrapping Working time")
     total_output_uom = fields.Many2one('uom.uom', string='Total UOM', compute="_product_change", store=True, help="UOM for total output")
     ng = fields.Integer(string='NG')
     ng_uom = fields.Many2one('uom.uom', string='NG UOM', compute="_product_change", store=True)
-    total_ok = fields.Integer(string='Total OK', readonly=True, compute="_calculate_total_output_ok")
+    total = fields.Integer(string='Total', readonly=True, compute="_calculate_total")
     total_ok_uom = fields.Many2one('uom.uom', string='Total OK UOM', compute="_product_change", store=True)
     note = fields.Text(string='Catatan')
     wrapping_deadline_working_time_line = fields.One2many(
@@ -252,25 +252,25 @@ class WrappingDeadlineLine(models.Model):
             rec.ng_uom = rec.total_output_uom = rec.total_ok_uom = rec.product.product_tmpl_id.uom_id.id
 
     @api.depends('wrapping_deadline_working_time_line.output')
-    def _calculate_total_output(self):
+    def _calculate_total_ok(self):
         """
         Calculate the total output of the wrapping_deadline_working output.
         """
-        total_output = 0.0
+        total_ok = 0.0
         for rec in self:
             for line in rec.wrapping_deadline_working_time_line:
-                total_output += line.output
+                total_ok += line.output
 
-            self.total_output = total_output
+            self.total_ok = total_ok
 
-    @api.depends('total_output', 'ng')
-    def _calculate_total_output_ok(self):
+    @api.depends('total_ok', 'ng')
+    def _calculate_total(self):
         """
-        Calculate the total output of the wrapping_deadline_working total_output - ng.
+        Calculate the total output of the wrapping_deadline_working total_ok + ng.
         """
         for wrapping_deadline_line in self:
             wrapping_deadline_line.update({
-                'total_ok': wrapping_deadline_line.total_output - wrapping_deadline_line.ng
+                'total': wrapping_deadline_line.total_ok + wrapping_deadline_line.ng
             })
 
     @api.model
@@ -283,7 +283,7 @@ class WrappingDeadlineLine(models.Model):
             list_id_wt_base_shift = [v.id for v in dict_wt_base_shift]
             wrapping_deadline_working_time_line_list = [[0,0, {
                 'wrapping_deadline_working_time_id': self.id,
-                'working_time': wt.id
+                'working_time': wt.working_time.id
             }] for wt in dict_wt_base_shift]
             res.update({
                 'wrapping_deadline_working_time_line' : wrapping_deadline_working_time_line_list,
