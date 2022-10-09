@@ -43,7 +43,7 @@
                             <group>
                                 <button name="add_job_lot_lines" context="{'biggest_lot':biggest_lot}" 
                                     type="object" string=" Add" icon="fa-plus-square" 
-                                    class="oe_highlight oe_edit_only" attrs="{'invisible': [('is_set', '=', True), ('factor', '&lt;', 0)]}"/>
+                                    class="oe_highlight oe_edit_only" attrs="{'invisible': [('is_set', '=', True), ('factor', '&lt;', 1)]}"/>
                                 <button name="remove_job_lot_lines" context="{'biggest_lot':biggest_lot}" 
                                     type="object" string=" Remove" icon="fa-minus-square" 
                                     class="oe_highlight oe_edit_only" />
