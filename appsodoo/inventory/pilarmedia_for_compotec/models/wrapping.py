@@ -1,7 +1,7 @@
 from dbm import dumb
 from email.policy import default
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError 
 import json
 
 class Shift(models.Model):
@@ -179,10 +179,9 @@ class Wrapping(models.Model):
                 else:
                     continue
 
-                bom_line = self.env['mrp.bom.line'].sudo().search([('product_id', '=', line.product.id)])
-                if bom_line:
-                    bom = bom_line[0].bom_id
-                    product_id_from_bom = self.env['product.product'].sudo().search([('product_tmpl_id', '=', bom.product_tmpl_id.id)])
+                bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', line.product.product_tmpl_id.id)])
+                if bom:
+                    product_id_from_bom = self.env['product.product'].sudo().search([('product_tmpl_id', '=', line.product.product_tmpl_id.id)])
                     new_mo = {
                         "product_id": product_id_from_bom.id,
                         "bom_id": bom.id,
@@ -192,20 +191,65 @@ class Wrapping(models.Model):
                         "wrapping_id": rec.id,
                         "picking_type_id": rec.job.op_type_ok.id,
                         "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
-                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
-                        "move_raw_ids": [[0,0, {
-                            "product_id": line.product.id,
-                            "product_uom": line.total_output_uom.id,
-                            "product_uom_qty": arr_total_per_product[line.product.id],
-                            "name": "New",
-                            "location_id": rec.job.op_type_ok.default_location_src_id.id,
-                            "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
-                        }]]
+                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
                     }
 
                     if new_mo:
-                        self.env['mrp.production'].sudo().create(new_mo)
+                        finished_lot_id = ""
+                        mo = self.env['mrp.production'].sudo().create(new_mo)
+                        mo._onchange_move_raw()
+                        mo.action_confirm()
+                        mo.action_assign()
+                        for rec in mo:
+                            if mo.reservation_state == "waiting":
+                                raise UserError(_('stock is not enough.'))
+                        else:
+                            finished_lot_id = self.env['stock.production.lot'].create({
+                                'product_id': rec.product_id.id,
+                                'company_id': rec.company_id.id
+                            })
+                            # create produce
+                            todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
+                            prod = mo.env['mrp.product.produce'].sudo().create({
+                                'production_id': rec.id,
+                                'product_id': rec.product_id.id,
+                                'qty_producing': todo_qty,
+                                'product_uom_id': todo_uom,
+                                'finished_lot_id': finished_lot_id.id,
+                                'consumption': bom.consumption,
+                                'serial': bool(serial_finished)
+                            })
+                            prod._compute_pending_production()
+                            prod.do_produce()
+
+                        # set done qty in stock move line
+                        # HACK: cause qty done doesn't change / trigger when execute do_produce
+                        for rec in mo.move_raw_ids:
+                            rec.quantity_done = rec.reserved_availability
+                            for line in rec.move_line_ids:
+                                line.qty_done = rec.product_uom_qty
+                                line.lot_produced_ids = finished_lot_id
+
+                        mo.button_mark_done()
                         self._count_mo()
+
+
+def _get_todo(self, production):
+    """ This method will return remaining todo quantity of production. """
+    todo_uom = production.product_uom_id.id
+
+    main_product_moves = production.move_finished_ids.filtered(lambda x: x.product_id.id == production.product_id.id)
+    todo_quantity = production.product_qty - sum(main_product_moves.mapped('quantity_done'))
+    todo_quantity = todo_quantity if (todo_quantity > 0) else 0
+
+    serial_finished = production.product_id.tracking == 'serial'
+
+    if serial_finished:
+        todo_quantity = 1.0
+        if production.product_uom_id.uom_type != 'reference':
+            todo_uom = self.env['uom.uom'].search([('category_id', '=', production.product_uom_id.category_id.id), ('uom_type', '=', 'reference')]).id
+    
+    return todo_quantity, todo_uom, serial_finished
 
     
 class WrappingDeadlineLine(models.Model):
