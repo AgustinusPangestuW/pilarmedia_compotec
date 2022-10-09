@@ -27,7 +27,7 @@ class WholesaleJob(models.Model):
     job_ids = fields.Many2one(
         'job', 
         string='Job', 
-        domain=[('active', '=', 1)], 
+        domain=[('active', '=', 1), ('for_form', '=', 'wholesale_job')], 
         required=True
     )
     lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_ids', 'Lot Line', auto_join=True)

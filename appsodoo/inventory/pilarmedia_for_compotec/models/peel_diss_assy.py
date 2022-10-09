@@ -10,7 +10,7 @@ class PeelDissAssy(models.Model):
     sequence = fields.Integer(string='Sequence')
     name = fields.Char(string='Name', readonly=True)
     date = fields.Date(string='Tangal',default=datetime.now().date(), required=True)
-    job = fields.Many2one('job', string='Job', required=True)
+    job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', 1), ('for_form', '=', 'peel_diss_assy')])
     state = fields.Selection([
         ("draft","Draft"),
         ("submit","Submited"), 

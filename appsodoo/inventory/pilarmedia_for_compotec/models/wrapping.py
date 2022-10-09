@@ -79,7 +79,7 @@ class Wrapping(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    job = fields.Many2one('job', string='Job', required=True)
+    job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', 1), ('for_form', '=', 'wrapping')])
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
