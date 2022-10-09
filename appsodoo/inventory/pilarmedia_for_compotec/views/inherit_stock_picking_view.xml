@@ -9,7 +9,7 @@
                 <field name="wholesale_job_id" invisible="1"/>
             </xpath>
             <xpath expr="//page[@name='extra']" position="before">
-                <page string="Remaining Qty base on Surat Jalan">
+                <page string="Remaining Qty base on Surat Jalan" attrs="{'invisible': [('surat_jalan_id', '=', False)]}">
                     <field name="log_outstanding_qty_line">
                         <tree>
                             <field name="product_id"/>
@@ -20,10 +20,10 @@
                 </page>
             </xpath>
             <xpath expr="//field[@name='move_ids_without_package']" position="after">
-                <div class="oe_title">
+                <div class="oe_title" attrs="{'invisible': [('surat_jalan_id', '=', False)]}">
                     <h3>Pricelist Subcont</h3>
                 </div>
-                <field name="pricelist_subcons">
+                <field name="pricelist_subcons" attrs="{'invisible': [('surat_jalan_id', '=', False)]}">
                     <tree create="0" delete="0">
                         <field name="product_id"/>
                         <field name="price_total"/>
