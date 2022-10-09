@@ -38,7 +38,7 @@ class PricelistSubconBaseonStockMove(models.Model):
 
     @api.depends('picking_id.vendor')
     def _onchange_vendor(self):
-        vendor = ""
+        vendor = None
         for rec in self:
             if rec.picking_id.vendor:
                 vendor = rec.picking_id.vendor
