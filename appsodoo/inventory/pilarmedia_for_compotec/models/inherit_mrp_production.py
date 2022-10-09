@@ -14,10 +14,9 @@ class MRPProduction(models.Model):
             op_type_ng = self.wrapping_id.job.op_type_ng
             total_ng = 0    
 
-            for c in self.move_raw_ids:
-                for wl in self.wrapping_id.wrapping_deadline_line:
-                    if wl.product == c.product_id:
-                        total_ng += wl.ng
+            for wl in self.wrapping_id.wrapping_deadline_line:
+                if wl.product.id == self.product_id.id:
+                    total_ng += wl.ng
 
             if total_ng:
                 new_scrap = {
