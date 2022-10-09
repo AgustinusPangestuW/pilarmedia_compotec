@@ -11,7 +11,7 @@ class Shift(models.Model):
     name = fields.Char(string='Shift name', required='1')
     description = fields.Text(string='Description')
     active = fields.Boolean(string='Active', default="1")
-    shift_line = fields.One2many('shift.line', 'shift_id', 'Line')
+    shift_line = fields.One2many('shift.line', 'shift_id', 'Line', copy=True, auto_join=True)
 
     def name_get(self):
         return _show_description(self)
@@ -21,7 +21,7 @@ class ShiftLine(models.Model):
     _name = "shift.line"
     _description = "Shift Template"
 
-    shift_id = fields.Many2one('shift', 'Shift Template ID')
+    shift_id = fields.Many2one('shift', 'Shift Template ID', ondelete="cascade", index=True)
     sequence = fields.Integer(string='Sequence')
     working_time = fields.Many2one('working.time', string='Working Time', domain=[('active', '=', True)], required=True)
 
@@ -213,7 +213,7 @@ class WrappingDeadlineLine(models.Model):
     _description = "Wrapping Deadline Line"
     _rec_name = "shift_deadline"
 
-    shift_deadline = fields.Many2one('shift.deadline', string='Shift Deadline', required=True)
+    shift_deadline = fields.Many2one('shift.deadline', string='Shift Deadline', required=True, ondelete="cascade", index=True)
     wrapping_deadline_id = fields.Many2one(
         'wrapping', 
         string='Wrapping Deadline Id', 
