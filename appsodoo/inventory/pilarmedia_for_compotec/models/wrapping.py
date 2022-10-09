@@ -169,7 +169,7 @@ class Wrapping(models.Model):
         for rec in self:
             arr_total_per_product = {}
             for line in rec.wrapping_deadline_line:
-                arr_total_per_product[line.product.id] = arr_total_per_product.get(line.product.id, 0) + line.total_output
+                arr_total_per_product[line.product.id] = arr_total_per_product.get(line.product.id, 0) + line.total_ok
 
             product_done_to_process = []
             for line in rec.wrapping_deadline_line:
