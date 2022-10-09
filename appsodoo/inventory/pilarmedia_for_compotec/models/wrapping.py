@@ -169,7 +169,7 @@ class Wrapping(models.Model):
         for rec in self:
             arr_total_per_product = {}
             for line in rec.wrapping_deadline_line:
-                arr_total_per_product[line.product.id] = arr_total_per_product.get(line.product.id, 0) + line.total_ok
+                arr_total_per_product[line.product.id] = arr_total_per_product.get(line.product.id, 0) + line.total
 
             product_done_to_process = []
             for line in rec.wrapping_deadline_line:
@@ -203,24 +203,24 @@ class Wrapping(models.Model):
                         for rec in mo:
                             if mo.reservation_state == "waiting":
                                 raise UserError(_('stock is not enough.'))
-                        else:
-                            finished_lot_id = self.env['stock.production.lot'].create({
-                                'product_id': rec.product_id.id,
-                                'company_id': rec.company_id.id
-                            })
-                            # create produce
-                            todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
-                            prod = mo.env['mrp.product.produce'].sudo().create({
-                                'production_id': rec.id,
-                                'product_id': rec.product_id.id,
-                                'qty_producing': todo_qty,
-                                'product_uom_id': todo_uom,
-                                'finished_lot_id': finished_lot_id.id,
-                                'consumption': bom.consumption,
-                                'serial': bool(serial_finished)
-                            })
-                            prod._compute_pending_production()
-                            prod.do_produce()
+                            else:
+                                finished_lot_id = self.env['stock.production.lot'].create({
+                                    'product_id': rec.product_id.id,
+                                    'company_id': rec.company_id.id
+                                })
+                                # create produce
+                                todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
+                                prod = mo.env['mrp.product.produce'].sudo().create({
+                                    'production_id': rec.id,
+                                    'product_id': rec.product_id.id,
+                                    'qty_producing': todo_qty,
+                                    'product_uom_id': todo_uom,
+                                    'finished_lot_id': finished_lot_id.id,
+                                    'consumption': bom.consumption,
+                                    'serial': bool(serial_finished)
+                                })
+                                prod._compute_pending_production()
+                                prod.do_produce()
 
                         # set done qty in stock move line
                         # HACK: cause qty done doesn't change / trigger when execute do_produce
