@@ -217,7 +217,7 @@ class WholesaleJobLine(models.Model):
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
     total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
-    factor = fields.Float(string='Isi Kantong')
+    factor = fields.Float(string='Isi Kantong', compute="_get_pocket_factor_in_product", store=True, readonly=False)
     biggest_lot = fields.Many2one(
         'lot', 
         string='Last Lot', 
@@ -343,6 +343,14 @@ class WholesaleJobLine(models.Model):
     def validate_factor(self):
         if self.is_set and (self.factor or 0) <= 0:
             raise ValidationError(_("field isi kantong tidak boleh <= 0" )) 
+
+    @api.depends('product_ids')
+    def _get_pocket_factor_in_product(self):
+        new_factor = 0
+        if self.is_set and self.product_ids:
+            new_factor = self.product_ids.product_tmpl_id.pocket_factor
+        self.factor = new_factor
+
 
 class WholesaleJobLotLine(models.Model):
     _name = "wholesale.job.lot.line"
