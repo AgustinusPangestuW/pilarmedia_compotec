@@ -98,7 +98,7 @@ class WholesaleJob(models.Model):
     def validate_wj_lines(self):
         for rec in self:
             if not rec.lot_lines:
-                raise ValidationError(_("You must fill Lot Lines." ))
+                raise ValidationError(_("Detail kantong masih kosong, harap isikan terlebih dahulu." ))
 
     def action_submit(self):
         self.state = "submit"
@@ -201,9 +201,7 @@ class WholesaleJobLine(models.Model):
         ondelete="cascade"
     )
     is_set = fields.Boolean(
-        string='Is Set', 
-        readonly=True, 
-        compute="_get_detail_product", 
+        string='Kantong?', 
         store=True,
         help="This field will be True when product UOM = `set`"
     )
@@ -219,7 +217,7 @@ class WholesaleJobLine(models.Model):
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
     total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
-    factor = fields.Float(string='Factor')
+    factor = fields.Float(string='Isi Kantong')
     biggest_lot = fields.Many2one(
         'lot', 
         string='Last Lot', 
@@ -254,7 +252,7 @@ class WholesaleJobLine(models.Model):
             # isikan lot pertama
             next_lot_id = list_lots[0].id 
         else:
-            raise exceptions.ValidationError(_("System don't have master Lot, please insert master Lot."))
+            raise exceptions.ValidationError(_("Template data Kantong belum tersedia, silahkan tambahkan data pada Configuration Kantong"))
 
         if biggest_lot_id:
             # ambil urutan lot setelahnya untuk set lot id saat ini
@@ -266,7 +264,7 @@ class WholesaleJobLine(models.Model):
         biggest_lot_id = next_lot_id
 
         if not biggest_lot_id:
-            raise exceptions.ValidationError(_("cur lots is out of range, please add new lots in configuration."))
+            raise exceptions.ValidationError(_("Kantong melebihi batas yang ditentukan, silahkan sesuaikan dengan kantong yang tersedia."))
         
         self.update({
             'wholesale_job_lot_lines': [[0,0,{ 'lot_ids': biggest_lot_id, 'wholesale_job_line_ids': self.id }]],
@@ -297,7 +295,7 @@ class WholesaleJobLine(models.Model):
 
             return self
         else:
-            raise exceptions.ValidationError(_("cur Job Lot Line is null."))
+            raise exceptions.ValidationError(_("Kantong saat ini belum tersedia."))
 
     @api.depends('is_set', 'wholesale_job_lot_lines.ng', 'wholesale_job_lot_lines.ok', \
         'total_set', 'total_ng')
@@ -350,16 +348,11 @@ class WholesaleJobLine(models.Model):
                 new_total_lot = 0
         rec.total_set = new_total_lot
 
-    @api.depends('product_ids')
-    def _get_detail_product(self):
-        new_is_set = 0
-        for rec in self:
-            if rec.product_ids: 
-                uom = rec.product_ids.product_tmpl_id.uom_id.name
-                if uom.lower() == "set":
-                    new_is_set = 1
-            
-            rec.is_set = new_is_set
+   
+    @api.onchange('factor')
+    def validate_factor(self):
+        if (self.factor or 0) <= 0:
+            raise ValidationError(_("field isi kantong tidak boleh <= 0" )) 
 
 class WholesaleJobLotLine(models.Model):
     _name = "wholesale.job.lot.line"
