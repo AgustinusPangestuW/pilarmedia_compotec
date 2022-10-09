@@ -51,12 +51,12 @@ class StockPicking(models.Model):
     
         return super().write(vals)
 
-    @api.depends('location_dest_id')
+    @api.depends('location_id')
     def _fill_vendor(self):
         vendor = None
         for rec in self:
-            if rec.location_dest_id:
-                warehouse = self.get_warehouse(rec.location_dest_id)
+            if rec.location_id:
+                warehouse = self.get_warehouse(rec.location_id)
                 if warehouse:
                     vendor = warehouse.vendor.id
             rec.vendor = vendor
