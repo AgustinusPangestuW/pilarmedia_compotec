@@ -11,8 +11,8 @@
                     <field name="job_ids"/>
                     <field name="product_ids"/>
                     <field name="user_ids"/>
-                    <field name="total_ng"/>
                     <field name="total_ok"/>
+                    <field name="total_ng"/>
                     <field name="biggest_lot"/>
                     <field name="total_set"/>
                     <field name="total_pcs"/>
@@ -34,17 +34,19 @@
                                 <field name="job_ids"/>
                                 <field name="product_ids" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
                                 <field name="user_ids"/>
-                                <field name="biggest_lot"/>
-                            </group>
-                            <group>
+                                <field name="biggest_lot" invisible="1"/>
                                 <field name="factor" attrs="{'invisible': [('is_set', '=', False)]}"/>
+                                <field name="is_set" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
                             </group>
                         </group>
                         <group>
                             <group>
-                                <field name="is_set"/>
-                                <button name="add_job_lot_lines" context="{'biggest_lot':biggest_lot}" type="object" string=" Add" icon="fa-plus-square" class="oe_highlight oe_edit_only" />
-                                <button name="remove_job_lot_lines" context="{'biggest_lot':biggest_lot}" type="object" string=" Remove" icon="fa-minus-square" class="oe_highlight oe_edit_only" />
+                                <button name="add_job_lot_lines" context="{'biggest_lot':biggest_lot}" 
+                                    type="object" string=" Add" icon="fa-plus-square" 
+                                    class="oe_highlight oe_edit_only" attrs="{'invisible': [('is_set', '=', True), ('factor', '&lt;', 0)]}"/>
+                                <button name="remove_job_lot_lines" context="{'biggest_lot':biggest_lot}" 
+                                    type="object" string=" Remove" icon="fa-minus-square" 
+                                    class="oe_highlight oe_edit_only" />
                             </group>
                         </group>
                         <notebook>
