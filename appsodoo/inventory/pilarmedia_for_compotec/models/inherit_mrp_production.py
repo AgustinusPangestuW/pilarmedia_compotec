@@ -18,15 +18,21 @@ class MRPProduction(models.Model):
                 if wl.product.id == self.product_id.id:
                     total_ng += wl.ng
 
+            lot_id = ""
+            for f in self.finished_move_line_ids:
+                lot_id = f.lot_id
+
             if total_ng:
                 new_scrap = {
                     'product_id': self.product_id.id,
                     'scrap_qty': total_ng,
-                    'product_uom_id': c.product_id.uom_id.id,
+                    'product_uom_id': self.product_id.uom_id.id,
                     'location_id': op_type_ng.default_location_src_id.id,
                     'scrap_location_id': op_type_ng.default_location_dest_id.id,
-                    'production_id': self.id
+                    'production_id': self.id,
+                    'lot_id': lot_id.id
                 }
                 new_scrap = self.env['stock.scrap'].sudo().create(new_scrap)
 
                 new_scrap.action_validate()
+                return new_scrap.action_validate()
