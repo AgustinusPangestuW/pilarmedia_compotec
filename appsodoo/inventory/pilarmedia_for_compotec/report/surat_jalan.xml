@@ -44,11 +44,13 @@
                                     <div>
                                         <p style="font-size: 0.8em; margin:0px !important;"> Berikut kami kirimkan barang-barang tersebut dibawah ini, dengan kendaraan : </p>
                                     </div>
-                                    <div>
+                                    <div style="display:flex; font-size:0.8em;">
                                         <!-- informasi kendaraan -->
-                                        <p t-field="o.driver_id.name"/>
-                                        <p t-field="o.vehicle_id.name"/>
-                                        <p t-field="o.vehicle_id.pemilik_id.name"/>
+                                        <p t-field="o.driver_id.name" style="padding:0px !important; margin:0px !important;"/>
+                                        <t t-if="o.vehicle_id.name and o.driver_id.name"> - </t>
+                                        <p t-field="o.vehicle_id.name" style="padding:0px !important; margin:0px !important;"/>
+                                        <t t-if="o.vehicle_id.pemilik_id.name and (o.driver_id.name or o.vehicle_id.name)"> - </t>
+                                        <p t-field="o.vehicle_id.pemilik_id.name" style="padding:0px !important; margin:0px !important;"/>
                                     </div>
                                 </div>
                             </div>
@@ -78,8 +80,8 @@
                             </thead>
                             <tbody>
                                 <t t-set="total_qty_done" t-value="0"/>
-                                <t t-set="information" t-value=""/>
                                 <tr t-foreach="o.move_ids_without_package" t-as="move">
+                                    <t t-set="information" t-value=""/>
                                     <t t-set="price_total" t-value="0"/>
                                     
                                     <t t-foreach="o.pricelist_subcons" t-as="ps">
@@ -99,7 +101,7 @@
                                     <t t-set="total_qty_done" t-value="total_qty_done + (move.quantity_done * price_total)"/>
                                     
                                     <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
-                                    <td>  <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
+                                    <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
                                     <td style="text-align:right;"> <t t-esc="round(move.quantity_done * price_total, 2)"/> </td>
                                     <td> <t t-esc="price_total"/> x <t t-esc="move.quantity_done"/> </td>
                                     <td> <p t-esc="information"/></td>
