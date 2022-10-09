@@ -213,7 +213,7 @@ class WholesaleJobLine(models.Model):
     )
     product_ids = fields.Many2one('product.product', string='Produk', required=True)
     user_ids = fields.Many2one('employee.custom', string='Operator', required=True)
-    total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_set", store=True)
+    total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True)
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
     total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
@@ -271,7 +271,6 @@ class WholesaleJobLine(models.Model):
             'biggest_lot': biggest_lot_id
         })
 
-        self._calc_total_set()
         self._calc_total_ng_ok()
 
         return self
@@ -290,7 +289,6 @@ class WholesaleJobLine(models.Model):
                 'biggest_lot': biggest_lot
             })
 
-            self._calc_total_set()
             self._calc_total_ng_ok()
 
             return self
@@ -307,7 +305,7 @@ class WholesaleJobLine(models.Model):
 
             # calculation NG & OK when is_set = TRUE
             else:
-                self._calc_ok()
+                self._calc_total_ok_n_set()
 
 
     def _calculate_ok_ng_pcs(self):
@@ -324,18 +322,9 @@ class WholesaleJobLine(models.Model):
                     'total_ok': total_ok,
                     'total_pcs': total_pcs
                 }) 
-
-    @api.onchange('total_ng', 'total_set')
-    def _calc_ok(self):
-        for rec in self:
-            # calculation NG & OK when is_set = TRUE
-            if rec.is_set:
-                rec.update({
-                    'total_ok': rec.total_set - rec.total_ng
-                })
             
-    @api.depends('factor', 'is_set')
-    def _calc_total_set(self):
+    @api.depends('factor', 'is_set', 'total_ng')
+    def _calc_total_ok_n_set(self):
         new_total_lot = 0
         for rec in self:
             if rec.is_set:
@@ -346,12 +335,13 @@ class WholesaleJobLine(models.Model):
                     new_total_lot = int(rec.factor) * int(last_lot_name)
             else:
                 new_total_lot = 0
-        rec.total_set = new_total_lot
+                    
+            rec.total_ok = new_total_lot
+            rec.total_set = rec.total_ok + rec.total_ng
 
-   
     @api.onchange('factor')
     def validate_factor(self):
-        if (self.factor or 0) <= 0:
+        if self.is_set and (self.factor or 0) <= 0:
             raise ValidationError(_("field isi kantong tidak boleh <= 0" )) 
 
 class WholesaleJobLotLine(models.Model):
