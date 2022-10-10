@@ -2,6 +2,7 @@ from enum import unique
 from odoo import models, fields, api, _, exceptions
 from datetime import datetime
 from odoo.exceptions import ValidationError
+from .employee_custom import _get_domain_user
 
 
 class Lot(models.Model):
@@ -31,8 +32,8 @@ class WholesaleJob(models.Model):
         required=True
     )
     lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_ids', 'Lot Line', auto_join=True)
-    checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator')
-    checked_qc = fields.Many2one('employee.custom', string='Checked QC')
+    checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
+    checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
     shift = fields.Many2one('shift', string='Shift')
     state = fields.Selection([
         ("draft","Draft"),
@@ -212,7 +213,7 @@ class WholesaleJobLine(models.Model):
         domain=[('active', '=', 1)]
     )
     product_ids = fields.Many2one('product.product', string='Produk', required=True)
-    user_ids = fields.Many2one('employee.custom', string='Operator', required=True)
+    user_ids = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_set", store=True)
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)

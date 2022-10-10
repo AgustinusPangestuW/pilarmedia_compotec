@@ -1,4 +1,5 @@
 from odoo import models, fields, api, _
+from .employee_custom import _get_domain_user
 
 class Sorting(models.Model):
     _name = 'sorting'
@@ -36,7 +37,7 @@ class SortingLines(models.Model):
         index=True, 
         copy=False
     )
-    user = fields.Many2one('employee.custom', string='Nama')
+    user = fields.Many2one('employee.custom', string='Nama', domain=_get_domain_user)
     ok = fields.Integer(string='OK')
     pinched = fields.Integer(string='Terjepit')
     dusty = fields.Integer(string='Debu')

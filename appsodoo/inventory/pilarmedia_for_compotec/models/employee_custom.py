@@ -11,3 +11,7 @@ class EmployeeCustom(models.Model):
         domain=[('is_subcon', '=', 1)], 
         help="relation with res parner, with is_subcon = 1"
     )
+
+
+def _get_domain_user(self):
+    return [('vendor', '=', self.env.user.vendor.id)]

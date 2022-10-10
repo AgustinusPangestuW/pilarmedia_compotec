@@ -1,6 +1,7 @@
 import logging
 
 from odoo import models, fields, api
+from .employee_custom import _get_domain_user
 
 _logger = logging.getLogger(__name__)
 
@@ -14,15 +15,15 @@ class WholesaleJobReport(models.Model):
     date = fields.Date(string='Date')
     job_ids = fields.Many2one('job', string='Job')
     product_ids = fields.Many2one('product.product', string='Product')
-    user_ids = fields.Many2one('employee.custom', string='User')
+    user_ids = fields.Many2one('employee.custom', string='User', domain=_get_domain_user)
     factor = fields.Float(string='Factor')
     total_ng = fields.Float(string='Total NG')
     total_ok = fields.Float(string='Total OK')
     biggest_lot = fields.Many2one('lot', string="Last Lot")
     total_set = fields.Float(string='Total Set')
     total_pcs= fields.Float(string='Total Pcs')
-    checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator')
-    checked_qc = fields.Many2one('employee.custom', string='Checked QC')
+    checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
+    checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
 
     def init(self):
         self.env.cr.execute("""

@@ -1,6 +1,7 @@
 from email.policy import default
 from odoo import models, fields, api
 from datetime import datetime
+from .employee_custom import _get_domain_user
 
 class DailyWholesaleJob(models.Model):
     _name = 'daily.wholesale.job'
@@ -57,7 +58,7 @@ class DailyWholesaleJobLine(models.Model):
         copy=False
     )
     job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', True)])
-    user = fields.Many2one('employee.custom', string='User', required=True)
+    user = fields.Many2one('employee.custom', string='User', required=True, domain=_get_domain_user)
     ok = fields.Float(string='OK')
     ng = fields.Float(string='NG')  
     verify_tim = fields.Char(string='Verifikasi Tim Random')

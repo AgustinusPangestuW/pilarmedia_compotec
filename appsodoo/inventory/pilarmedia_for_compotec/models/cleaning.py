@@ -1,6 +1,7 @@
 from datetime import datetime
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+from .employee_custom import _get_domain_user
 
 class Cleaning(models.Model):
     _name = 'cleaning'
@@ -10,7 +11,7 @@ class Cleaning(models.Model):
     name = fields.Char(string='Name')
     sequence = fields.Integer(string='Sequence')
     datetime = fields.Datetime(string="Tanggal dan Waktu", default=datetime.now())
-    user = fields.Many2one('employee.custom', string='Nama User', required=True)
+    user = fields.Many2one('employee.custom', string='Nama User', required=True, domain=_get_domain_user)
     product = fields.Many2one('product.product', string='Product', domain=[('active', '=', True)], required=True)
     res_ok = fields.Integer(string='Hasil OK')
     res_ng = fields.Integer(string='Hasil NG') 

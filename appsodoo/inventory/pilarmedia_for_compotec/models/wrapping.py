@@ -3,6 +3,7 @@ from email.policy import default
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError 
 import json
+from .employee_custom import _get_domain_user
 
 class Shift(models.Model):
     _name = "shift"
@@ -60,18 +61,20 @@ class Wrapping(models.Model):
     shift = fields.Many2one('shift', string='Shift', required=True, domain="[('active', '=', '1')]")
     shift_active = fields.Boolean(string='Shift Active?', readonly=True, compute="_change_active_shift", store=False)
     date = fields.Date(string='Date', default=fields.Date.today(), required=True)
-    keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True)
+    keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True, domain=_get_domain_user)
     operator_absent_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_wrapping_rel',
-        string='Operator Tidak Masuk'
+        string='Operator Tidak Masuk',
+        domain=_get_domain_user
     )
     backup_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_backup_rel',
-        string='Backup'
+        string='Backup',
+        domain=_get_domain_user
     )
-    leader = fields.Many2one('employee.custom', string='Leader')
+    leader = fields.Many2one('employee.custom', string='Leader', domain=_get_domain_user)
     state = fields.Selection([
         ("draft","Draft"),
         ("submit","Submited"), 
@@ -203,24 +206,24 @@ class Wrapping(models.Model):
                         for rec in mo:
                             if mo.reservation_state == "waiting":
                                 raise UserError(_('stock is not enough.'))
-                        else:
-                            finished_lot_id = self.env['stock.production.lot'].create({
-                                'product_id': rec.product_id.id,
-                                'company_id': rec.company_id.id
-                            })
-                            # create produce
-                            todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
-                            prod = mo.env['mrp.product.produce'].sudo().create({
-                                'production_id': rec.id,
-                                'product_id': rec.product_id.id,
-                                'qty_producing': todo_qty,
-                                'product_uom_id': todo_uom,
-                                'finished_lot_id': finished_lot_id.id,
-                                'consumption': bom.consumption,
-                                'serial': bool(serial_finished)
-                            })
-                            prod._compute_pending_production()
-                            prod.do_produce()
+                            else:
+                                finished_lot_id = self.env['stock.production.lot'].create({
+                                    'product_id': rec.product_id.id,
+                                    'company_id': rec.company_id.id
+                                })
+                                # create produce
+                                todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
+                                prod = mo.env['mrp.product.produce'].sudo().create({
+                                    'production_id': rec.id,
+                                    'product_id': rec.product_id.id,
+                                    'qty_producing': todo_qty,
+                                    'product_uom_id': todo_uom,
+                                    'finished_lot_id': finished_lot_id.id,
+                                    'consumption': bom.consumption,
+                                    'serial': bool(serial_finished)
+                                })
+                                prod._compute_pending_production()
+                                prod.do_produce()
 
                         # set done qty in stock move line
                         # HACK: cause qty done doesn't change / trigger when execute do_produce
@@ -269,7 +272,8 @@ class WrappingDeadlineLine(models.Model):
     operator_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_operator_rel',
-        string='Operator Name'
+        string='Operator Name',
+        domain=_get_domain_user
     )
     total_ok = fields.Integer(string='Total OK', compute="_calculate_total_ok", store=True, help="Result Calculation from total output in Wrapping Working time")
     total_output_uom = fields.Many2one('uom.uom', string='Total UOM', compute="_product_change", store=True, help="UOM for total output")

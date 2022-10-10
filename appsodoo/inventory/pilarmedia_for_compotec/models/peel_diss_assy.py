@@ -1,6 +1,7 @@
 from odoo import models, fields, api, _
 from datetime import datetime
 from odoo.exceptions import ValidationError
+from .employee_custom import _get_domain_user
 
 class PeelDissAssy(models.Model):
     _name = 'peel.diss.assy'
@@ -128,7 +129,7 @@ class PeelDissAssyLine(models.Model):
         ondelete='cascade', 
         index=True
     )
-    user = fields.Many2one('employee.custom', string='Operator', required=True)
+    user = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     product_id = fields.Many2one('product.product', string='Produk', required=True)
     bom_id = fields.Many2one(
         'mrp.bom', 
