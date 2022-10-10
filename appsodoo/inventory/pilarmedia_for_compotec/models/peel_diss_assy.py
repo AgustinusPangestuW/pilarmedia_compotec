@@ -2,6 +2,7 @@ from odoo import models, fields, api, _
 from datetime import datetime
 from odoo.exceptions import ValidationError
 from .employee_custom import _get_domain_user
+from .wrapping import _get_todo
 
 class PeelDissAssy(models.Model):
     _name = 'peel.diss.assy'
@@ -11,7 +12,7 @@ class PeelDissAssy(models.Model):
     sequence = fields.Integer(string='Sequence')
     name = fields.Char(string='Name', readonly=True)
     date = fields.Date(string='Tangal',default=datetime.now().date(), required=True)
-    job = fields.Many2one('job', string='Job', required=True)
+    job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', 1), ('for_form', '=', 'peel_diss_assy')])
     state = fields.Selection([
         ("draft","Draft"),
         ("submit","Submited"), 
@@ -19,7 +20,7 @@ class PeelDissAssy(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    peel_diss_assy_line = fields.One2many('peel.diss.assy.line', 'peel_diss_assy_id', 'Line')
+    peel_diss_assy_line = fields.One2many('peel.diss.assy.line', 'peel_diss_assy_id', 'Line', copy=True)
 
     @api.model
     def create(self, vals):
@@ -101,23 +102,64 @@ class PeelDissAssy(models.Model):
                     "product_uom_id": line.bom_id.product_uom_id.id,
                     "company_id": self.env.company.id,
                     "peel_diss_assy_id": rec.id,
+                    "picking_type_id": rec.job.op_type_ok.id,
+                    "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
+                    "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
                     "move_raw_ids": []
                 }
+                sum_peeled_total = 0
+                total_row = 0
                 for c in line.peel_diss_assy_component_line:
                     new_mo['move_raw_ids'].append([0,0, {
                         "product_id": c.product_id.id,
                         "product_uom": c.product_id.uom_id.id,
-                        "product_uom_qty": c.peeled_total,
+                        "product_uom_qty": float(c.peeled_total),
                         "name": "New",
-                        "location_id": self.env['mrp.production'].sudo()._get_default_location_src_id(),
-                        "location_dest_id": c.product_id.with_context(force_company=self.company_id.id).property_stock_production.id
+                        "picking_type_id": rec.job.op_type_ok.id,
+                        "location_id": rec.job.op_type_ok.default_location_src_id.id,
+                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
                     }])
+                    sum_peeled_total += c.peeled_total
+                    total_row += 1
 
                 if new_mo:
-                    self.env['mrp.production'].sudo().create(new_mo)
+                    new_mo.update({'product_qty': int(sum_peeled_total/total_row)})
+                    mo = self.env['mrp.production'].sudo().create(new_mo)
+                    mo.action_confirm()
+                    mo.action_assign()
+                    for rec in mo:
+                        if mo.reservation_state == "waiting":
+                            raise UserError(_('stock is not enough.'))
+                        else:
+                            finished_lot_id = self.env['stock.production.lot'].create({
+                                'product_id': rec.product_id.id,
+                                'company_id': rec.company_id.id
+                            })
+                            # create produce
+                            todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
+                            prod = mo.env['mrp.product.produce'].sudo().create({
+                                'production_id': rec.id,
+                                'product_id': rec.product_id.id,
+                                'qty_producing': todo_qty,
+                                'product_uom_id': todo_uom,
+                                'finished_lot_id': finished_lot_id.id,
+                                'consumption': line.bom_id.consumption,
+                                'serial': bool(serial_finished)
+                            })
+                            prod._compute_pending_production()
+                            prod.do_produce()
+
+                    # set done qty in stock move line
+                    # HACK: cause qty done doesn't change / trigger when execute do_produce
+                    for rec in mo.move_raw_ids:
+                        rec.quantity_done = rec.reserved_availability
+                        for line in rec.move_line_ids:
+                            line.qty_done = rec.product_uom_qty
+                            line.lot_produced_ids = finished_lot_id
+
+                    mo.button_mark_done()
                     self._count_mo()
                     
-
 
 class PeelDissAssyLine(models.Model):
     _name = "peel.diss.assy.line"
@@ -136,7 +178,8 @@ class PeelDissAssyLine(models.Model):
         string='BOM', 
         readonly=True, 
         compute='_fetch_component_from_bom', 
-        store=True
+        store=True,
+        copy=True
     )
     description = fields.Text(string="Description")
     peel_diss_assy_component_line = fields.One2many(
@@ -145,7 +188,8 @@ class PeelDissAssyLine(models.Model):
         'Peel Diss Assy Componen Line',
         compute="_fetch_component_from_bom",
         store=True,
-        readonly=False
+        readonly=False,
+        copy=True
     )
 
     @api.onchange('product_id')

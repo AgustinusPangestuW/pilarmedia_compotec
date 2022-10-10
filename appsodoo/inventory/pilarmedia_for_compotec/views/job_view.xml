@@ -30,6 +30,7 @@
                             <group>
                                 <field name="name"/>
                                 <field name="active"/>
+                                <field name="for_form"/>
                             </group>
                             <group>
                                 <field name="op_type_ng"/>

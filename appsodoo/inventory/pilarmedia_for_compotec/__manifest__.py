@@ -43,6 +43,7 @@
         "views/inherit_stock_warehouse_view.xml",
         "views/inherit_res_users_view.xml",
         "views/job_view.xml",
+        "views/inherit_product_template_view.xml",
         "wizard/wholesale_job_report_wizz.xml",
         "data/ir_sequence_wrapping.xml",
         "data/ir_sequence_sorting.xml",
