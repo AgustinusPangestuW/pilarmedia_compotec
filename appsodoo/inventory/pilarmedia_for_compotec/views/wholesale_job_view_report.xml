@@ -12,8 +12,8 @@
 				<field name="user_ids"/>
 				<field name="factor"/>
 				<field name="biggest_lot"/>
-				<field name="total_ng"/>
 				<field name="total_ok"/>
+				<field name="total_ng"/>
 				<field name="total_set"/>
 				<field name="total_pcs"/>
 				<field name="checked_coordinator"/>
@@ -40,8 +40,8 @@
 					<group>
 						<field name="factor"/>
 						<field name="biggest_lot"/>
-                        <field name="total_ng"/>
                         <field name="total_ok"/>
+                        <field name="total_ng"/>
                         <field name="total_set"/>
 						<field name="total_pcs"/>
 					</group>

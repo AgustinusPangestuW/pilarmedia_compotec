@@ -12,8 +12,8 @@
                     <field name="operator_ids"/>
                     <field name="product"/>
                     <field name="total"/>
-                    <field name="ng"/>
                     <field name="total_ok"/>
+                    <field name="ng"/>
                     <field name="note"/>
                 </tree>
             </field>
@@ -58,9 +58,9 @@
                                         <field name="total"/>
                                     </group>
                                     <group>
-                                        <field name="total_output_uom"/>
-                                        <field name="ng_uom"/>
                                         <field name="total_ok_uom"/>
+                                        <field name="ng_uom"/>
+                                        <field name="total_output_uom"/>
                                     </group>
                                 </group>
                             </page>

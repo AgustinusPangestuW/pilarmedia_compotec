@@ -60,10 +60,10 @@
                         </group>
                         <group>
                             <group>
-                                <field name="operation_type_id_ng"/>
+                                <field name="operation_type_id_ok"/>
                             </group>
                             <group>
-                                <field name="operation_type_id_ok"/>
+                                <field name="operation_type_id_ng"/>
                             </group>
                         </group>
                         <notebook>

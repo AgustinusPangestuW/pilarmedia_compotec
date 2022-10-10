@@ -79,10 +79,10 @@
                                         <field name="operator_ids" widget="many2many_tags"/>
                                         <field name="total" readonly="1"/>
                                         <!-- <field name="total_output_uom"/> -->
-                                        <field name="ng"/>
-                                        <!-- <field name="ng_uom"/> -->
                                         <field name="total_ok" readonly="1"/>
                                         <field name="total_ok_uom"/>
+                                        <field name="ng"/>
+                                        <!-- <field name="ng_uom"/> -->
                                         <field name="note"/>
                                     </tree>
                                 </field>
