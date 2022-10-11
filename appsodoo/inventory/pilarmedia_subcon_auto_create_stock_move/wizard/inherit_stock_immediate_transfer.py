@@ -8,10 +8,8 @@ class InheritStockImmediateTransfer(models.TransientModel):
     def process(self):
         res = None
         for sp in self.pick_ids:
-            if sp.picking_type_id.is_subcon:
-                res = super().process()
-
-                if not res:
-                    res = make_another_stock_pick_if_subcon(sp)
+            res = super().process()
+            if sp.picking_type_id.is_subcon and not res:
+                res = make_another_stock_pick_if_subcon(sp)
 
         return res
