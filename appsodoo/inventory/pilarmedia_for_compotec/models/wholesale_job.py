@@ -345,9 +345,9 @@ class WholesaleJobLine(models.Model):
         if self.is_set and (self.factor or 0) <= 0:
             raise ValidationError(_("field isi kantong tidak boleh <= 0" )) 
 
-    @api.depends('product_ids')
+    @api.depends('product_ids', 'is_set')
     def _get_pocket_factor_in_product(self):
-        new_factor = 0
+        new_factor = None
         if self.is_set and self.product_ids:
             new_factor = self.product_ids.product_tmpl_id.pocket_factor
         self.factor = new_factor
