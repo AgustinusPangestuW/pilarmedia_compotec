@@ -5,17 +5,12 @@ from ..models.inherit_stock_picking import edit_dest_loc_into_transit, make_anot
 class StockBackorderConfirmation(models.TransientModel):
     _inherit = 'stock.backorder.confirmation'
 
-    def process(self):
-        for stock_picking in self.pick_ids:
-            sp = edit_dest_loc_into_transit(stock_picking)
+    def _process(self, cancel_backorder=False):
+        for sp in self.pick_ids:            
+            res_validate = super()._process(cancel_backorder)
             
-            res_validate = super().process()
-
-            if res_validate:
-                return res_validate
-
-            sp = make_another_stock_pick_if_subcon(sp)
-        return self
+            if sp.picking_type_id.is_subcon:
+                make_another_stock_pick_if_subcon(sp)    
 
     
 
