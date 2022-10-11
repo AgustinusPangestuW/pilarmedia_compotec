@@ -5,6 +5,34 @@
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form" />
         <field name="arch" type="xml">
+            <xpath expr="//button[@name='button_validate']" position="before">
+                <field name="is_approval" invisible="1"/>
+                <field name="restrict_user_for_approve" invisible="1"/>
+                <button name="button_approve" 
+                    attrs="{'invisible': ['|', ('is_approval', '=', False), ('restrict_user_for_approve', '!=', False)]}" 
+                    string="Approve" type="object" 
+                    class="oe_highlight" groups="stock.group_stock_user"/>
+                <button name="button_reject" 
+                    attrs="{'invisible': ['|', ('is_approval', '=', False), ('restrict_user_for_approve', '!=', False)]}" 
+                    string="Reject" type="object" 
+                    class="oe_highlight" groups="stock.group_stock_user"/>
+            </xpath>
+
+            <button name="action_cancel" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|',  
+                    ('state', 'not in', ('assigned', 'confirmed', 'partially_available', 'draft', 'waiting')), 
+                    ('is_locked', '=', False), 
+                    ('restrict_user_for_approve', '!=', False)]}
+                </attribute>
+            </button>
+            <button name="button_validate" position="attributes">
+                <attribute name="attrs">{'invisible': ['|', '|', 
+                    ('state', 'in', ('waiting','confirmed')), 
+                    ('show_validate', '=', False), 
+                    ('is_approval', '!=', False)]}
+                </attribute>
+            </button>
+
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="stock_picking_subcont_ref_id" invisible="1"/>
             </xpath>

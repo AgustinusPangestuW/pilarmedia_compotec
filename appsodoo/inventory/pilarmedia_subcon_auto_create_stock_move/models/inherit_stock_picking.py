@@ -32,6 +32,50 @@ class StockPicking(models.Model):
         copy=False
     )
 
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('waiting', 'Waiting Another Operation'),
+        ('reject', 'Rejected'),
+        ('confirmed', 'Waiting'),
+        ('assigned', 'Ready'),
+        ('done', 'Done'),
+        ('cancel', 'Cancelled')
+    ], string='Status', compute='_compute_state',
+        copy=False, index=True, readonly=True, store=True, tracking=True,
+        help=" * Draft: The transfer is not confirmed yet. Reservation doesn't apply.\n"
+             " * Waiting another operation: This transfer is waiting for another operation before being ready.\n"
+             " * Waiting: The transfer is waiting for the availability of some products.\n(a) The shipping policy is \"As soon as possible\": no product could be reserved.\n(b) The shipping policy is \"When all products are ready\": not all the products could be reserved.\n"
+             " * Rejected: The transfer has been Rejected by user Approval.\n"
+             " * Ready: The transfer is ready to be processed.\n(a) The shipping policy is \"As soon as possible\": at least one product has been reserved.\n(b) The shipping policy is \"When all products are ready\": all product have been reserved.\n"
+             " * Done: The transfer has been processed.\n"
+             " * Cancelled: The transfer has been cancelled.\n")
+    approved_by = fields.Many2one('res.users', string='Approved By')
+    rejected_by = fields.Many2one('res.users', string='Rejected By')
+    is_approval = fields.Boolean(string='Approval ?', compute="_compute_is_approval")
+    restrict_user_for_approve = fields.Boolean(string='restrict user for approve ?', compute="_compute_is_approval")
+
+    def _compute_is_approval(self):
+        is_approval = False
+        restrict_user_for_approve = False
+        for rec in self:
+            if self.picking_type_id.approvals and rec.state == "assigned":
+                is_approval = True
+                if self.env.user in self.picking_type_id.approvals:
+                    restrict_user_for_approve = False
+                else: restrict_user_for_approve = True
+            rec.is_approval = is_approval
+            rec.restrict_user_for_approve = restrict_user_for_approve
+
+    def button_approve(self):
+        for rec in self:
+            rec.approved_by = self.env.user.id
+        return self.button_validate()
+
+    def button_reject(self):
+        for rec in self:
+            rec.rejected_by = self.env.user.id
+            rec.state = "reject"
+
     def button_validate(self):
         res_validate = super(StockPicking, self).button_validate()
         self = edit_dest_loc_into_transit(self)

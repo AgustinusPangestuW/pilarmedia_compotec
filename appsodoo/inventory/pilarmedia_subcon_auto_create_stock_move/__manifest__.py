@@ -14,7 +14,8 @@
     'support':'info@solog.id',
     'depends': ['base', 'stock', 'pilar_subcont_transfer'],
     'data': [
-        "views/inherit_stock_picking_view.xml"
+        "views/inherit_stock_picking_view.xml",
+        "views/inherit_stock_picking_type_view.xml"
     ],
     # 'demo': ['data/sale_order_demo.xml'],
     # report
