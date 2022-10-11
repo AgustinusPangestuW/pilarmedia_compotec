@@ -33,8 +33,8 @@ class StockPicking(models.Model):
     )
 
     def button_validate(self):
-        self = edit_dest_loc_into_transit(self)
         res_validate = super(StockPicking, self).button_validate()
+        self = edit_dest_loc_into_transit(self)
 
         if res_validate:
             return res_validate
@@ -66,15 +66,18 @@ def edit_dest_loc_into_transit(self):
     for rec in self:
         if rec.picking_type_id.is_subcon and not self.stock_picking_subcont_ref_id:
             # ditampung ke variable untuk ditampilkan
-            rec.location_dest_id_subcon = int(rec.location_dest_id.id)
+            self.env['stock.picking'].sudo().search([('id', '=', rec.id)]).write(
+                {'location_dest_id_subcon': rec.location_dest_id.id})
 
             if rec.picking_type_id.transit_location_id:
                 # destination warehouse isikan dengan warehouse transit
-                rec.update({'location_dest_id' : rec.picking_type_id.transit_location_id.id})
+                self.env['stock.picking'].sudo().search([('id', '=', rec.id)]).write(
+                    {'location_dest_id': rec.picking_type_id.transit_location_id.id})
 
                 # rubah destinasi location per item 
                 for line in rec.move_line_ids_without_package:
-                    line.update({"location_dest_id": int(rec.picking_type_id.transit_location_id.id)})
+                    self.env['stock.move.line'].sudo().search([('id', '=', line.id)]).write(
+                        {'location_dest_id': rec.picking_type_id.transit_location_id.id})
             else:
                 # field transit location kosong
                 raise UserError(_("Field Transit Location in Operation Type %s is null." % rec.picking_type_id.name ))
@@ -135,7 +138,7 @@ def _collect_stock_picking(rec):
         'location_src_id_subcon': int(rec.location_id.id),
         'location_id': rec.picking_type_id.transit_location_id.id,
         'location_dest_id': rec.location_dest_id_subcon.id,
-        'location_dest_id_subcon': '',
+        'location_dest_id_subcon': None,
         'stock_picking_subcont_ref_id': rec.id,
         'picking_type_id': rec.picking_type_id.id,
         'immediate_transfer': True,
