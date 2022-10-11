@@ -1,6 +1,6 @@
 from odoo import models, fields, api, _
 from datetime import datetime
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
 from .wrapping import _get_todo
 
@@ -20,7 +20,7 @@ class PeelDissAssy(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    peel_diss_assy_line = fields.One2many('peel.diss.assy.line', 'peel_diss_assy_id', 'Line', copy=True)
+    peel_diss_assy_line = fields.One2many('peel.diss.assy.line', 'peel_diss_assy_id', 'Line', copy=True, auto_join=True)
 
     @api.model
     def create(self, vals):
@@ -39,6 +39,14 @@ class PeelDissAssy(models.Model):
 
         return super().create(vals)  
 
+    def validate_qty_component(self):
+        for idx, rec in enumerate(self.peel_diss_assy_line):
+            for line in rec.peel_diss_assy_component_line:
+                if float(line.peeled_total) != float(rec.qty):
+                    raise UserError(_("Product {} pada baris {}, total kupas componen {} ({}) harus sama dengan qty product acuan ({})".format(
+                            rec.product_id.name, idx+1, line.product_id.name, line.peeled_total, rec.qty
+                        )))
+
     @api.depends('state')
     def _compute_css(self):
         for rec in self:
@@ -52,11 +60,8 @@ class PeelDissAssy(models.Model):
         self.create_mo()
 
     def write(self, vals):  
-        # if self.state in ['submit']:
-        #     raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, self.state)))
-
         vals = super().write(vals)
-
+        self.validate_qty_component()
         return vals
         
     def action_cancel(self):
@@ -98,7 +103,7 @@ class PeelDissAssy(models.Model):
                 new_mo = {
                     "product_id": line.product_id.id,
                     "bom_id": line.bom_id.id,
-                    "product_qty": line.bom_id.product_qty,
+                    "product_qty": line.qty,
                     "product_uom_id": line.bom_id.product_uom_id.id,
                     "company_id": self.env.company.id,
                     "peel_diss_assy_id": rec.id,
@@ -107,8 +112,6 @@ class PeelDissAssy(models.Model):
                     "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
                     "move_raw_ids": []
                 }
-                sum_peeled_total = 0
-                total_row = 0
                 for c in line.peel_diss_assy_component_line:
                     new_mo['move_raw_ids'].append([0,0, {
                         "product_id": c.product_id.id,
@@ -119,11 +122,8 @@ class PeelDissAssy(models.Model):
                         "location_id": rec.job.op_type_ok.default_location_src_id.id,
                         "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
                     }])
-                    sum_peeled_total += c.peeled_total
-                    total_row += 1
 
                 if new_mo:
-                    new_mo.update({'product_qty': int(sum_peeled_total/total_row)})
                     mo = self.env['mrp.production'].sudo().create(new_mo)
                     mo.action_confirm()
                     mo.action_assign()
@@ -152,9 +152,19 @@ class PeelDissAssy(models.Model):
                     # set done qty in stock move line
                     # HACK: cause qty done doesn't change / trigger when execute do_produce
                     for rec in mo.move_raw_ids:
-                        rec.quantity_done = rec.reserved_availability
+                        # stock tidak mencukupi
+                        if float(rec.reserved_availability) < float(rec.product_uom_qty):
+                            raise UserError(_("item {} pada location {} diperlukan qty {} untuk melanjutkan proses Manufacturing Order.".format(
+                                rec.product_id.name, 
+                                rec.location_id.location_id.name+'/'+rec.location_id.name, 
+                                str(rec.product_uom_qty)
+                            )))
+                        # else:
+                        #     rec.quantity_done = rec.reserved_availability
+                            
                         for line in rec.move_line_ids:
                             line.qty_done = rec.product_uom_qty
+                            line.product_uom_qty = float(rec.product_uom_qty)
                             line.lot_produced_ids = finished_lot_id
 
                     mo.button_mark_done()
@@ -189,8 +199,10 @@ class PeelDissAssyLine(models.Model):
         compute="_fetch_component_from_bom",
         store=True,
         readonly=False,
-        copy=True
+        copy=True,
+        auto_join=True
     )
+    qty = fields.Float(string='Quantity')
 
     @api.onchange('product_id')
     def _fetch_component_from_bom(self):
@@ -211,6 +223,13 @@ class PeelDissAssyLine(models.Model):
        
         self.peel_diss_assy_component_line =  list_component
 
+    @api.onchange('qty')
+    def validate_peeled_total(self):
+        for rec in self:
+            for c in rec.peel_diss_assy_component_line:
+                if c.ng and c.ok and rec.qty != c.peeled_total:
+                    return _warn_qty_not_valid(rec.qty)
+
 
 class PeelDissAssyComponentLine(models.Model):
     _name = "peel.diss.assy.component.line"
@@ -223,19 +242,30 @@ class PeelDissAssyComponentLine(models.Model):
         index=True
     )
     product_id = fields.Many2one('product.product', string='Component', required=True, readonly=True, store=True)
-    peeled_total = fields.Float(string="Total yang dikupas")
+    peeled_total = fields.Float(string="Total yang dikupas", compute="_validate_ng_ok", readonly=True, store=True)
     ok = fields.Float(string='OK', store=True)
     ng = fields.Float(string='NG', store=True)
 
     def write(self, vals):
-        self._validate_ng_ok()
         return super(PeelDissAssyComponentLine, self).write(vals)
 
-    @api.onchange('ok', 'ng')
+    @api.depends('ok', 'ng')
     def _validate_ng_ok(self):
         """
         validate field ng + ok = peeled_total
         """
         for rec in self:
-            if (rec.ok or 0) + (rec.ng or 0) > rec.peeled_total:
-                raise ValidationError(_("Total OK + NG maximum must be %s " % (rec.peeled_total)))
+            rec.peeled_total = rec.ng + rec.ok
+
+    @api.onchange('peeled_total')
+    def validate_peeled_total(self):
+        qty = self.peel_diss_assy_line_id.qty
+        for c in self:
+            if c.ng and c.ok and qty != c.peeled_total:
+                return _warn_qty_not_valid(qty)
+
+def _warn_qty_not_valid(qty):
+    return  {'warning':{
+        'title':('Warning'),
+        'message':_("Total OK + NG (total kupas) harus = %s (acuan qty product) " % (qty))
+    }}

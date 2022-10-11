@@ -9,6 +9,7 @@
                 <tree>
                     <field name="user"/>
                     <field name="product_id"/>
+                    <field name="qty"/>
                     <field name="description"/>
                 </tree>
             </field>
@@ -27,6 +28,7 @@
                             <group>
                                 <field name="user"/>
                                 <field name="product_id"/>
+                                <field name="qty"/>
                             </group>
                             <group>
                                 <field name="bom_id" force_save="1"/>
