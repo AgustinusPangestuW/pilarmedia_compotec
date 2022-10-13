@@ -187,6 +187,7 @@ def _collect_stock_picking(rec):
         'picking_type_id': rec.picking_type_id.operation_type_id.id if rec.picking_type_id.operation_type_id.id else rec.picking_type_id.id,
         'immediate_transfer': True,
         'move_line_ids_without_package': [],
+        # 'surat_jalan_id': rec.surat_jalan_id.id,
         'vehicle_id': rec.vehicle_id.id,
         'driver_id': rec.driver_id.id
     }
