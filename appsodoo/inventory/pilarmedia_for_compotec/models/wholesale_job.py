@@ -1,7 +1,7 @@
 from enum import unique
 from odoo import models, fields, api, _, exceptions
 from datetime import datetime
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
 
 
@@ -184,11 +184,44 @@ class WholesaleJob(models.Model):
                     'name': name_desc
                 }))
             
+            # Create
             sm_ng = self.env['stock.picking'].sudo().create(sm_ng)
             sm_ok = self.env['stock.picking'].sudo().create(sm_ok)
 
+            # Mark as To Do
+            sm_ng.action_confirm()
+            sm_ok.action_confirm()
+
+            # Assign
+            sm_ng.action_assign()
+            sm_ok.action_assign()
+            
+            self.validate_reserved_qty(sm_ng)
+            self.validate_reserved_qty(sm_ok)
+            self.fill_done_qty(sm_ng)
+            self.fill_done_qty(sm_ok)
+
+            # Validate
+            sm_ng.button_validate()
+            sm_ok.button_validate()
+
             self._count_stock_picking()
 
+    def validate_reserved_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_ids_without_package:
+                if line.reserved_availability < line.product_uom_qty:
+                    raise UserError(_('Item {} pada location {} diperlukan Qty {} {}.').format(
+                        line.product_id.name, 
+                        rec.location_id.location_id.name + '/' + rec.location_id.name,
+                        line.product_uom_qty,
+                        line.product_uom.name
+                    ))
+
+    def fill_done_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_line_ids_without_package:
+                line.qty_done = line.product_uom_qty
 
 class WholesaleJobLine(models.Model):
     _name = "wholesale.job.line"
