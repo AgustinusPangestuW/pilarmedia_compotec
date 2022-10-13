@@ -2,17 +2,17 @@
 <odoo>
     <data>
         <report
-            string="Surat Jalan CI"
-            id="action_report_delivery"
+            string="Surat Jalan ACP"
+            id="action_report_delivery_acp"
             model="stock.picking"
             report_type="qweb-html"
-            name="pilarmedia_for_compotec.report_suratjalan"
-            file="pilarmedia_for_compotec.report_suratjalan"
+            name="pilarmedia_for_compotec.report_suratjalan_acp"
+            file="pilarmedia_for_compotec.report_suratjalan_acp"
             print_report_name="'Surat Jalan - %s - %s' % (object.partner_id.name or '', object.name)"
         />
     </data>
 
-    <template id="report_suratjalan_document">
+    <template id="report_suratjalan_acp_document">
         <t t-call="web.html_container" style="width: 215mm; height: 160mm; font-size:10pt !important;">
             <!--<t t-call="web.external_layout">-->
                 <div class="wrapper" style="font-size: 10pt;">
@@ -22,10 +22,10 @@
                             <div style="width:30%;">
                             <!-- LOGO -->
                                 <div class="col-xs-12 text-center">
-                                    <img t-att-src="image_data_uri(o.company_id.logo)" style="width:70px;"/>
+                                    <img src="/pilarmedia_for_compotec/static/acp_logo.png" style="width:70px;"/>
                                 </div>
                                 <div class="col-xs-12 text-center">
-                                    <b><span t-field="o.company_id.name"/></b>
+                                    <b><span>AIFA CUTAKA PLASTIK</span></b>
                                 </div>
                             </div>
                             <div style="width:70%; border-left:1px solid black; padding-top:20px; padding-left:20px;">
@@ -173,9 +173,9 @@
          </t>
     </template>
 
-    <template id="report_suratjalan">
+    <template id="report_suratjalan_acp">
         <t t-foreach="docs" t-as="o">
-            <t t-call="pilarmedia_for_compotec.report_suratjalan_document" t-lang="o.partner_id.lang"/>
+            <t t-call="pilarmedia_for_compotec.report_suratjalan_acp_document" t-lang="o.partner_id.lang"/>
         </t>
     </template>
 
