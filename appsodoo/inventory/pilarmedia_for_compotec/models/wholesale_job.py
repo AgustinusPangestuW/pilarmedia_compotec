@@ -31,7 +31,7 @@ class WholesaleJob(models.Model):
         domain=[('active', '=', 1), ('for_form', '=', 'wholesale_job')], 
         required=True
     )
-    lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_ids', 'Lot Line', auto_join=True)
+    lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_ids', 'Lot Line', auto_join=True, copy=True)
     checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
     checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
     shift = fields.Many2one('shift', string='Shift')
@@ -248,10 +248,10 @@ class WholesaleJobLine(models.Model):
     product_ids = fields.Many2one('product.product', string='Produk', required=True)
     user_ids = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True)
-    total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
+    total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True, copy=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
     total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
-    factor = fields.Float(string='Isi Kantong', compute="_get_pocket_factor_in_product", store=True, readonly=False)
+    factor = fields.Float(string='Isi Kantong', compute="_get_pocket_factor_in_product", store=True, readonly=False, copy=True)
     biggest_lot = fields.Many2one(
         'lot', 
         string='Last Lot', 
@@ -260,7 +260,9 @@ class WholesaleJobLine(models.Model):
         store=True, 
         help="this field for track last Lot ID"
     )
-    wholesale_job_lot_lines = fields.One2many('wholesale.job.lot.line', 'wholesale_job_line_ids', 'Lot Line', auto_join=True)           
+    wholesale_job_lot_lines = fields.One2many(
+        'wholesale.job.lot.line', 'wholesale_job_line_ids', 
+        'Lot Line', auto_join=True, copy=True)           
 
     @api.model
     def default_get(self, fields_list):

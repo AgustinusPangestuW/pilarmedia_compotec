@@ -58,10 +58,10 @@ class Wrapping(models.Model):
 
     name = fields.Char(string='Wrapping Name', select=True, copy=False, default='New')
     sequence = fields.Integer(string='Sequence', default=10)
-    shift = fields.Many2one('shift', string='Shift', required=True, domain="[('active', '=', '1')]")
+    shift = fields.Many2one('shift', string='Shift', required=True, domain="[('active', '=', '1')]", copy=True)
     shift_active = fields.Boolean(string='Shift Active?', readonly=True, compute="_change_active_shift", store=False)
     date = fields.Date(string='Date', default=fields.Date.today(), required=True)
-    keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True, domain=_get_domain_user)
+    keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True, domain=_get_domain_user, copy=True)
     operator_absent_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_wrapping_rel',
@@ -74,7 +74,7 @@ class Wrapping(models.Model):
         string='Backup',
         domain=_get_domain_user
     )
-    leader = fields.Many2one('employee.custom', string='Leader', domain=_get_domain_user)
+    leader = fields.Many2one('employee.custom', string='Leader', domain=_get_domain_user, copy=True)
     state = fields.Selection([
         ("draft","Draft"),
         ("submit","Submited"), 
@@ -82,7 +82,7 @@ class Wrapping(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', 1), ('for_form', '=', 'wrapping')])
+    job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', 1), ('for_form', '=', 'wrapping')], copy=True)
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
