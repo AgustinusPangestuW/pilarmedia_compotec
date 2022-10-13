@@ -27,9 +27,12 @@
                     <field name="cek_master" invisible="1"/>
                     <field name="cek_subcon" invisible="1"/>
                     <field name="subkon_id" invisible="1" />
-                    <field name="surat_jalan_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'required':[('cek_master','=',False)],'invisible':[('cek_master','=',True)]}"/>
+                    <field name="surat_jalan_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('master_sj','=',True)]}"/>
                     <field name="vehicle_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('cek_subcon','=',False)]}"/>
                     <field name="driver_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('cek_subcon','=',False)]}" domain="[('perusahaan_id','=',subkon_id)]" />
+                </xpath>
+                <xpath expr="//field[@name='location_dest_id']" position="after">
+                    <field name="master_sj" attrs="{'invisible':[('cek_subcon','=',False)]}"/>
                 </xpath>
                 <xpath expr="/form/sheet/group/group/div[1]" position="attributes">
                     <attribute name="attrs">{'invisible': [('picking_type_code', '=', 'internal')]}</attribute>
@@ -46,7 +49,8 @@
             </field>
         </record>
 
-        <record model="ir.ui.view" id="inherit_mrp_prduction_form">
+        <!-- Remove surat jalan on production -->
+        <!-- <record model="ir.ui.view" id="inherit_mrp_prduction_form">
             <field name="name">mrp.production.form</field>
             <field name="model">mrp.production</field>
             <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
@@ -55,7 +59,7 @@
                     <field name="surat_jalan_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}"/>
                 </xpath>
             </field>
-        </record>
+        </record> -->
 
         <record model="ir.ui.view" id="inherit_product_template_form">
             <field name="name">product.template.form</field>

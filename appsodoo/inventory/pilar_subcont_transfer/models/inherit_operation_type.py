@@ -19,10 +19,11 @@ class InheritStockPickingType(models.Model):
 class InheritStockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    master_sj = fields.Boolean(string='Master Surat Jalan')
     surat_jalan_id = fields.Many2one(
         comodel_name='stock.picking',
         string='Surat Jalan',
-        domain="[('picking_type_id.master_sj', '=', True)]"
+        domain="[('master_sj', '=', True)]"
         )
     po_id = fields.Many2one(
         comodel_name='purchase.order',
@@ -52,8 +53,6 @@ class InheritStockPicking(models.Model):
             doc.subkon_id = com
     
     
-    
-
 class InheritMrpProduction(models.Model):
     _inherit = 'mrp.production'
 
@@ -99,4 +98,3 @@ class InheritProductProduct(models.Model):
         domain = args + ['|','|',('default_code',operator,name),('product_tmpl_id.name',operator,name),('nama_alias',operator,name)]
         res = super(InheritProductProduct, self).search(domain, limit=limit).name_get()
         return res
-    
