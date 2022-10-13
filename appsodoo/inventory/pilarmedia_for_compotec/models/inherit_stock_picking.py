@@ -105,11 +105,12 @@ class StockPicking(models.Model):
 
     def get_used_qty(self, sj, product_id):
         self.env.cr.execute("""
-            SELECT SUM(sm.product_uom_qty) as used_qty
+            SELECT SUM(sml.qty_done) as used_qty
             FROM stock_picking sp
             LEFT JOIN stock_move sm ON sm.picking_id = sp.id
+            LEFT JOIN stock_move_line sml ON sml.move_id = sm.id
             WHERE sp.surat_jalan_id = %s AND sp.state = 'done' 
-                AND sm.product_id = %s
+                AND sm.product_id = %s AND sp.master_sj = false
         """ % (sj, product_id))
         res = self.env.cr.dictfetchone()
         if res and 'used_qty' in res:
