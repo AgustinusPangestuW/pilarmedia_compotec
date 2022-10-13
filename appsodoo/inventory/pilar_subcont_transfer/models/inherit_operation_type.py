@@ -10,6 +10,7 @@ class InheritStockPickingType(models.Model):
         comodel_name='stock.location',
         string='Transit Location'
         )
+    operation_type_id = fields.Many2one('stock.picking.type', string='Next Operation Type')
     pricelist_id = fields.Many2one(
         comodel_name='pilar.pricelist',
         string='Pricelist'

@@ -9,6 +9,7 @@
                 <xpath expr="//field[@name='default_location_dest_id']" position="after">
                     <field name="is_subcon" attrs="{'invisible':[('code','!=','internal')]}" />
                     <field name="transit_location_id" attrs="{'invisible':['|',('is_subcon','=',False),('code','!=','internal')]}"/>
+                    <field name="operation_type_id" attrs="{'invisible':['|',('is_subcon','=',False),('code','!=','internal')]}"/>
                 </xpath>
                 <xpath expr="//field[@name='show_operations']" position="after">
                     <field name="pricelist_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" />
