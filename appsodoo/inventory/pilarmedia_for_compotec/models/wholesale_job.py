@@ -214,7 +214,7 @@ class WholesaleJobLine(models.Model):
     )
     product_ids = fields.Many2one('product.product', string='Produk', required=True)
     user_ids = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
-    total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_set", store=True)
+    total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True)
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
     total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
@@ -297,7 +297,7 @@ class WholesaleJobLine(models.Model):
             raise exceptions.ValidationError(_("Kantong saat ini belum tersedia."))
 
     @api.depends('is_set', 'wholesale_job_lot_lines.ng', 'wholesale_job_lot_lines.ok', \
-        'total_set', 'total_ng')
+        'total_ng')
     def _calc_total_ng_ok(self):
         for rec in self:
             # calculation NG & OK when is_set = FALSE (NON set)
