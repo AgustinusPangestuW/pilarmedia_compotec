@@ -184,7 +184,9 @@ def _collect_stock_picking(rec):
         'location_dest_id': rec.location_dest_id_subcon.id,
         'location_dest_id_subcon': None,
         'stock_picking_subcont_ref_id': rec.id,
-        'picking_type_id': rec.picking_type_id.id,
+        'picking_type_id': rec.picking_type_id.operation_type_id.id if rec.picking_type_id.operation_type_id.id else rec.picking_type_id.id,
         'immediate_transfer': True,
-        'move_line_ids_without_package': []
+        'move_line_ids_without_package': [],
+        'vehicle_id': rec.vehicle_id.id,
+        'driver_id': rec.driver_id.id
     }
