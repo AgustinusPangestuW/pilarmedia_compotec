@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//button[@name='button_validate']" position="before">
                 <field name="is_approval" invisible="1"/>
-                <field name="restrict_user_for_approve" invisible="1"/>
+                <field name="restrict_user_for_approve"/>
                 <button name="button_approve" 
                     attrs="{'invisible': ['|', ('is_approval', '=', False), ('restrict_user_for_approve', '!=', False)]}" 
                     string="Approve" type="object" 
@@ -58,6 +58,91 @@
                     <field name="count_stock_picking_created" widget="statinfo" string="Subcon Created"/>
                 </button>    
             </xpath>
+        </field>
+    </record>
+
+    <record model="ir.ui.view" id="inherit_view_picking_internal_search">
+        <field name="name">stock.picking.internal.search.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='backorder']" position="after">
+                <filter name="rejected" string="Rejected" 
+                    domain="[('state', '=', 'reject')]"/>
+                <filter name="approved" string="Approved" 
+                    domain="[('approved_by', '!=', False), ('state', '=', 'done')]"/>
+                <filter name="need_approval" string="Need Approval" 
+                    domain="[('restrict_user_for_approve', '=', False), ('state', '=', 'need_approval')]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- <record id="inherit_vpicktree_view_tree" model="ir.ui.view">
+        <field name="name">stock.picking.tree.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <t t-if="record.location_src_id_subcon">
+                <xpath expr="//field[@name='location_id']" position="replace">
+                    <field name="location_src_id_subcon" options="{'no_create': True}" string="From" groups="stock.group_stock_multi_locations" optional="show"/>
+                </xpath>
+            </t>
+            <t t-if="record.location_dest_id_subcon">
+                <xpath expr="//field[@name='location_id']" position="replace">
+                    <field name="location_dest_id_subcon" options="{'no_create': True}" string="To" groups="stock.group_stock_multi_locations" optional="show"/>
+                </xpath>
+            </t>
+        </field>
+    </record> -->
+
+    <record id="action_picking_tree_need_approval" model="ir.actions.act_window">
+        <field name="name">Need Approval</field>
+        <field name="res_model">stock.picking</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,kanban,form,calendar</field>
+        <field name="domain"></field>
+        <field name="context">{'contact_display': 'partner_address', 'search_default_need_approval': 1}</field>
+        <field name="search_view_id" ref="stock.view_picking_internal_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new transfer
+            </p><p>
+                Transfers allow you to move products from one location to another.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_picking_tree_rejected" model="ir.actions.act_window">
+        <field name="name">Rejected Transfers</field>
+        <field name="res_model">stock.picking</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,kanban,form,calendar</field>
+        <field name="domain"></field>
+        <field name="context">{'contact_display': 'partner_address', 'search_default_rejected': 1}</field>
+        <field name="search_view_id" ref="stock.view_picking_internal_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new transfer
+            </p><p>
+                Transfers allow you to move products from one location to another.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_picking_tree_approved" model="ir.actions.act_window">
+        <field name="name">Approved Transfers</field>
+        <field name="res_model">stock.picking</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,kanban,form,calendar</field>
+        <field name="domain"></field>
+        <field name="context">{'contact_display': 'partner_address', 'search_default_approved': 1}</field>
+        <field name="search_view_id" ref="stock.view_picking_internal_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new transfer
+            </p><p>
+                Transfers allow you to move products from one location to another.
+            </p>
         </field>
     </record>
     

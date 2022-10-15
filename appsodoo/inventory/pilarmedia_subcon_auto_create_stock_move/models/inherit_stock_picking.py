@@ -37,6 +37,7 @@ class StockPicking(models.Model):
         ('waiting', 'Waiting Another Operation'),
         ('reject', 'Rejected'),
         ('confirmed', 'Waiting'),
+        ('need_approval', 'Need Approval'),
         ('assigned', 'Ready'),
         ('done', 'Done'),
         ('cancel', 'Cancelled')
@@ -52,19 +53,21 @@ class StockPicking(models.Model):
     approved_by = fields.Many2one('res.users', string='Approved By')
     rejected_by = fields.Many2one('res.users', string='Rejected By')
     is_approval = fields.Boolean(string='Approval ?', compute="_compute_is_approval")
-    restrict_user_for_approve = fields.Boolean(string='restrict user for approve ?', compute="_compute_is_approval")
-
+    
     def _compute_is_approval(self):
         is_approval = False
         restrict_user_for_approve = False
         for rec in self:
-            if self.picking_type_id.approvals and rec.state == "assigned":
+            if self.picking_type_id.approvals and rec.state in ["assigned", "need_approval"]:
                 is_approval = True
+                rec.state = "need_approval"
                 if self.env.user in self.picking_type_id.approvals:
                     restrict_user_for_approve = False
                 else: restrict_user_for_approve = True
             rec.is_approval = is_approval
             rec.restrict_user_for_approve = restrict_user_for_approve
+
+    restrict_user_for_approve = fields.Boolean(string='restrict user for approve ?', compute="_compute_is_approval")
 
     def button_approve(self):
         for rec in self:
@@ -142,8 +145,9 @@ def make_another_stock_pick_if_subcon(self):
     
     if new_sm:
         st_subcon_created = self.env['stock.picking'].sudo().create(new_sm)
+        st_subcon_created.update({'state': 'assigned'})
         # merubah state ke ready pada Immediate Transfer
-        st_subcon_created.button_validate()
+        # st_subcon_created.button_validate()
         
         # ini state saat transfer planned
         # st_subcon_created.action_confirm()
@@ -170,6 +174,7 @@ def _copy_line(rec, line):
 
 def _collect_stock_picking(rec):
     return {
+        'name': rec.name + "-R",
         'message_main_attachment_id': rec.message_main_attachment_id.id or '',
         'origin': rec.origin,
         'note': rec.note,
