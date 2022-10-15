@@ -22,9 +22,12 @@
                             <div style="width:30%;">
                             <!-- LOGO -->
                                 <div class="col-xs-12 text-center">
-                                    <img t-att-src="image_data_uri(o.company_id.logo)" style="width:70px;"/>
+                                    <t t-if="o.vendor.name=='HBR'"><img src="/pilarmedia_for_compotec/static/hbr_logo.png" style="width:70px;"/></t>
+                                    <t t-elif="o.vendor.name=='ACP'"><img src="/pilarmedia_for_compotec/static/acp_logo.png" style="width:70px;"/></t>
+                                    <t t-else=""><img t-att-src="image_data_uri(o.company_id.logo)" style="width:70px;"/></t>
                                 </div>
                                 <div class="col-xs-12 text-center">
+                                
                                     <b><span t-field="o.company_id.name"/></b>
                                 </div>
                             </div>
@@ -85,32 +88,43 @@
                             </thead>
                             <tbody>
                                 <t t-set="total_qty_done" t-value="0"/>
-                                <tr t-foreach="o.move_ids_without_package" t-as="move">
+                                <t t-foreach="o.move_ids_without_package" t-as="move">
                                     <t t-set="information" t-value=""/>
                                     <t t-set="price_total" t-value="0"/>
                                     
                                     <t t-foreach="o.pricelist_subcons" t-as="ps">
-                                      <t t-if="ps.move_id.id == move.id and ps.product_id.id == move.product_id.id">
-                                        <!-- MENDAPATKAN TOTAL HARGA -->
-                                        <t t-set="price_total" t-value="price_total + ps.price_total"/>
-                                          <t t-foreach="ps.lines" t-as="line">
-                                            <!-- MENDAPATKAN KETERANGAN PRICELIST SUBCON -->
-                                            <t t-if="information">
-                                              <t t-set="information" t-value="str(information or '') + ', '"/>
-                                            </t>
-                                            <t t-set="information" t-value="str(information or '') + str(line.pricelist_id.product_id.product_tmpl_id.name or '' )"/>
-                                          </t>
-                                      </t>
+                                        <t t-if="ps.move_id.id == move.id and ps.product_id.id == move.product_id.id">
+                                            <!-- MENDAPATKAN TOTAL HARGA -->
+                                            <t t-set="price_total" t-value="price_total + ps.price_total"/>
+                                            <tr t-foreach="ps.lines" t-as="line">
+                                                <!-- MENDAPATKAN KETERANGAN PRICELIST SUBCON -->
+                                                <t t-if="information">
+                                                <t t-set="information" t-value="str(information or '') + ', '"/>
+                                                </t>
+                                                <t t-set="information" t-value="str(information or '') + str(line.pricelist_id.product_id.product_tmpl_id.name or '' )"/>
+
+                                                <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
+                                                <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
+                                                <td style="text-align:right;"> <t t-esc="round(move.quantity_done * line.price_total, 2)"/> </td>
+                                                <td> <t t-esc="line.price_total"/> x <t t-esc="move.quantity_done"/> </td>
+                                                <td> <p t-esc="str(line.pricelist_id.product_id.product_tmpl_id.name or '' )"/></td>
+                                            </tr>
+
+                                            <!-- TANPA PRICELIST -->
+                                            <tr t-if="not ps.lines">
+                                                <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
+                                                <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
+                                                <td style="text-align:right;"> <t t-esc="round(move.quantity_done * ps.price_total, 2)"/> </td>
+                                                <td> 0 x <t t-esc="move.quantity_done"/> </td>
+                                                <td>0</td>
+                                            </tr>
+                                        </t>
                                     </t>
                                     
                                     <t t-set="total_qty_done" t-value="total_qty_done + (move.quantity_done * price_total)"/>
                                     
-                                    <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
-                                    <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
-                                    <td style="text-align:right;"> <t t-esc="round(move.quantity_done * price_total, 2)"/> </td>
-                                    <td> <t t-esc="price_total"/> x <t t-esc="move.quantity_done"/> </td>
-                                    <td> <p t-esc="information"/></td>
-                                </tr>
+                                    
+                                </t>
                                 <tr>
                                     <td colspan="2" style="text-align:center;">JUMLAH</td>
                                     <td style="text-align:right;"><t t-esc="round(total_qty_done, 2)"/> </td>

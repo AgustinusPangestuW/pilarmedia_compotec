@@ -22,6 +22,13 @@ class StockPicking(models.Model):
         copy=False
     )
     vendor = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor", stored=True)
+    vendor_dest_loc_subcon = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc_subcon")
+    location_dest_id_subcon = fields.Many2one(
+        'stock.location', 
+        string='Destination Location', 
+        readonly=True,
+        copy=False
+    )
 
     def button_validate(self):
         self._get_outstanding_qty()
@@ -60,6 +67,16 @@ class StockPicking(models.Model):
                 if warehouse:
                     vendor = warehouse.vendor.id
             rec.vendor = vendor
+
+    @api.depends('location_dest_id_subcon')
+    def _fill_vendor_dest_loc_subcon(self):
+        vendor = None
+        for rec in self:
+            if rec.location_dest_id_subcon:
+                warehouse = self.get_warehouse(rec.location_dest_id_subcon)
+                if warehouse:
+                    vendor = warehouse.vendor.id
+            rec.vendor_dest_loc_subcon = vendor
 
     @api.depends('surat_jalan_id')
     def _get_outstanding_qty(self):
