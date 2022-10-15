@@ -63,6 +63,10 @@
             <xpath expr="/kanban/templates/t/div/div/div[3]/div/div[2]/div[2]" position="replace">
                 <!-- remove button transfer immediate -->
             </xpath>
+
+            <xpath expr="/kanban/templates/t/div/div/div[2]/div/div[2]/div[3]" position="replace">
+                <!-- remove button transfer Late -->
+            </xpath>
         </field>
     </record>
 </odoo>
