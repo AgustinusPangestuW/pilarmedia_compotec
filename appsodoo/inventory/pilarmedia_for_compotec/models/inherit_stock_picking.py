@@ -86,19 +86,21 @@ class StockPicking(models.Model):
         if self.surat_jalan_id:
             list_res = []
             for rec in self:
-                for sm in rec.move_ids_without_package:
-                    done_qty = self.get_done_qty(rec.surat_jalan_id.id, sm.product_id.id)
+                for sm in self.env['stock.move'].sudo().search([('picking_id', '=', rec.surat_jalan_id.id)]):
+                    done_qty = self.get_done_qty(rec.surat_jalan_id.id, sm.product_id.id) or 0
                     used_qty = self.get_used_qty(rec.surat_jalan_id.id, sm.product_id.id) or 0
 
-                    if done_qty != None:
-                        remaining_qty = done_qty - used_qty
-                        list_res.append([0,0, {
-                            'picking_id': rec.id,
-                            'move_id': sm.id,
-                            'product_id': sm.product_id.id,
-                            'done_qty': done_qty,
-                            'remaining_qty': remaining_qty
-                        }])
+                    remaining_qty = done_qty - used_qty
+                    list_res.append([0,0, {
+                        'picking_id': rec.id,
+                        'move_id': sm.id,
+                        'sj_id': rec.surat_jalan_id.id,
+                        'product_id': sm.product_id.id,
+                        'qty_base_on_sj_master': done_qty,
+                        'done_qty': used_qty,
+                        'remaining_qty': remaining_qty
+                    }])
+                
                 rec.update({
                     'log_outstanding_qty_line': list_res
                 })

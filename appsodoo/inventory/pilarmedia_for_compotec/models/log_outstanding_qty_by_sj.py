@@ -10,7 +10,9 @@ class LogOutstandingQty(models.Model):
         index=True,
         readonly=True
     )
+    sj_id = fields.Many2one('stock.picking', string='Surat Jalan ID', readonly=True)
     product_id = fields.Many2one('product.product', string='Product', readonly=True)
     picking_id = fields.Many2one('stock.picking', string='Stock Picking ID', readonly=True)
+    qty_base_on_sj_master = fields.Float(string='Qty', readonly=True)    
     done_qty = fields.Float(string='Done Qty', readonly=True)    
     remaining_qty = fields.Float(string='Remaining Qty', readonly=True)    
