@@ -50,9 +50,7 @@
         "data/ir_sequence_wholesale_job.xml",
         "data/ir_sequence_peel_diss_assy.xml",
         "data/ir_sequence_cleaning.xml",
-        "report/surat_jalan.xml",
-        "report/surat_jalan_hbr.xml",
-        "report/surat_jalan_acp.xml"
+        "report/surat_jalan.xml"
     ],
     # 'demo': ['data/sale_order_demo.xml'],
     # report

@@ -2,7 +2,7 @@
 <odoo>
     <data>
         <report
-            string="Surat Jalan CI"
+            string="Surat Jalan"
             id="action_report_delivery"
             model="stock.picking"
             report_type="qweb-html"
@@ -40,7 +40,15 @@
                             <div style="width:60%;">
                                 <div>
                                     <p style="padding:0px !important; margin:0px !important;">Kepada Yth,</p>
-                                    <p style="padding:0px !important; margin:0px !important; padding-left:20px !important;" t-field="o.vendor.name"/>
+                                    <t t-if="o.vendor_dest_loc_subcon">
+                                        <p style="padding:0px !important; margin:0px !important; padding-left:20px !important;" t-field="o.vendor_dest_loc_subcon"/>
+                                    </t>
+                                    <t t-elif="o.vendor_dest_loc">
+                                        <p style="padding:0px !important; margin:0px !important; padding-left:20px !important;" t-field="o.vendor_dest_loc"/>
+                                    </t>
+                                    <t t-else="">
+                                        <p style="padding:0px !important; margin:0px !important; padding-left:20px !important;">Compotec International</p>
+                                    </t>
                                     <t t-if="o.location_dest_id_subcon"> 
                                         <p style="padding:0px !important; margin:0px !important; padding-left:20px !important;" t-field="o.location_dest_id_subcon"/>
                                     </t>
@@ -93,7 +101,7 @@
                                     <t t-set="price_total" t-value="0"/>
                                     
                                     <t t-foreach="o.pricelist_subcons" t-as="ps">
-                                        <t t-if="ps.move_id.id == move.id and ps.product_id.id == move.product_id.id">
+                                        <t t-if="ps.product_id.id == move.product_id.id">
                                             <!-- MENDAPATKAN TOTAL HARGA -->
                                             <t t-set="price_total" t-value="price_total + ps.price_total"/>
                                             <tr t-foreach="ps.lines" t-as="line">
@@ -111,7 +119,7 @@
                                             </tr>
 
                                             <!-- TANPA PRICELIST -->
-                                            <tr t-if="not ps.lines">
+                                            <tr t-if="len(ps.lines)==0">
                                                 <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
                                                 <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
                                                 <td style="text-align:right;"> <t t-esc="round(move.quantity_done * ps.price_total, 2)"/> </td>
@@ -153,7 +161,12 @@
                                         <br/>
                                         <br/>
                                         <br/>
-                                        (<span><field t-field="o.driver_id.name" style="border-bottom:1px dotted;"/></span>)
+                                        <t t-if="o.driver_id.name">
+                                            (<span><field t-field="o.driver_id.name" style="border-bottom:1px dotted;"/></span>)
+                                        </t>
+                                        <t t-else="">
+                                            (................)
+                                        </t>
                                     </div>
                                 </div>
                                 <div style="width:calc(100%/3); padding: 10px;">
