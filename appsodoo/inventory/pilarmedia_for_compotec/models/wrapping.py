@@ -196,57 +196,57 @@ class Wrapping(models.Model):
                         "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
                         "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
                     }
+                    
+                    try:
+                        finished_lot_id = ""
+                        mo = self.env['mrp.production'].sudo().create(new_mo)
+                        mo._onchange_move_raw()
+                        mo.action_confirm()
+                        mo.action_assign()
+                        for rec in mo:
+                            if mo.reservation_state == "waiting":
+                                raise UserError(_('stock is not enough.'))
+                            else:
+                                finished_lot_id = self.env['stock.production.lot'].create({
+                                    'product_id': rec.product_id.id,
+                                    'company_id': rec.company_id.id
+                                })
+                                # create produce
+                                todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
+                                prod = mo.env['mrp.product.produce'].sudo().create({
+                                    'production_id': rec.id,
+                                    'product_id': rec.product_id.id,
+                                    'qty_producing': todo_qty,
+                                    'product_uom_id': todo_uom,
+                                    'finished_lot_id': finished_lot_id.id,
+                                    'consumption': bom.consumption,
+                                    'serial': bool(serial_finished)
+                                })
+                                prod._compute_pending_production()
+                                prod.do_produce()
 
-                    if new_mo:
-                        try:
-                            finished_lot_id = ""
-                            mo = self.env['mrp.production'].sudo().create(new_mo)
-                            mo._onchange_move_raw()
-                            mo.action_confirm()
-                            mo.action_assign()
-                            for rec in mo:
-                                if mo.reservation_state == "waiting":
-                                    raise UserError(_('stock is not enough.'))
-                                else:
-                                    finished_lot_id = self.env['stock.production.lot'].create({
-                                        'product_id': rec.product_id.id,
-                                        'company_id': rec.company_id.id
-                                    })
-                                    # create produce
-                                    todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
-                                    prod = mo.env['mrp.product.produce'].sudo().create({
-                                        'production_id': rec.id,
-                                        'product_id': rec.product_id.id,
-                                        'qty_producing': todo_qty,
-                                        'product_uom_id': todo_uom,
-                                        'finished_lot_id': finished_lot_id.id,
-                                        'consumption': bom.consumption,
-                                        'serial': bool(serial_finished)
-                                    })
-                                    prod._compute_pending_production()
-                                    prod.do_produce()
+                        # set done qty in stock move line
+                        # HACK: cause qty done doesn't change / trigger when execute do_produce
+                        for rec in mo.move_raw_ids:
+                            # validation reserved_availability must be same with product_uom_qty (to consume)
+                            if float(rec.reserved_availability or 0) < float(rec.product_uom_qty):
+                                raise ValidationError(_("Item %s diperlukan Qty %s %s pada location %s untuk melanjutkan proses. Stock tersedia hanya %s") %(
+                                    rec.product_id.name,
+                                    rec.product_uom_qty, rec.product_uom.name,
+                                    mo.location_src_id.location_id.name + '/' + mo.location_src_id.name,
+                                    rec.reserved_availability
+                                ))
 
-                            # set done qty in stock move line
-                            # HACK: cause qty done doesn't change / trigger when execute do_produce
-                            for rec in mo.move_raw_ids:
-                                # validation reserved_availability must be same with product_uom_qty (to consume)
-                                if rec.reserved_availability or 0 < rec.product_uom_qty:
-                                    raise ValidationError(_("Item %s diperlukan Qty %s %s pada location %s untuk melanjutkan proses.") %(
-                                        rec.product_id.name,
-                                        rec.product_uom_qty, rec.product_uom.name,
-                                        mo.location_src_id.location_id.name + '/' + mo.location_src_id.name
-                                    ))
+                            rec.quantity_done = rec.reserved_availability
+                            for line in rec.move_line_ids:
+                                line.qty_done = rec.product_uom_qty
+                                line.lot_produced_ids = finished_lot_id
 
-                                rec.quantity_done = rec.reserved_availability
-                                for line in rec.move_line_ids:
-                                    line.qty_done = rec.product_uom_qty
-                                    line.lot_produced_ids = finished_lot_id
-
-                            mo.button_mark_done()
-                            self._count_mo()
-                        
-                        except Exception as e:
-                            raise (e)
+                        mo.button_mark_done()
+                        self._count_mo()
+                    
+                    except Exception as e:
+                        raise (e)
                     
                 else:
                     raise ValidationError(_("BOM untuk item %s belum tersedia") % (
