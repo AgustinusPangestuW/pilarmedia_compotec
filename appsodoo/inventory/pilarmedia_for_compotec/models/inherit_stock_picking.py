@@ -56,8 +56,25 @@ class StockPicking(models.Model):
 
         if list_res:
             vals.update({'pricelist_subcons': list_res})
+        
+        self.validate_pricelist_subcons()
     
         return super().write(vals)
+
+    def validate_pricelist_subcons(self):
+        exists = False
+        id_not_exists = []
+        for ps in self.pricelist_subcons:
+            exists = False
+            for sm in self.move_ids_without_package:
+                if ps.picking_id.id == self.id and (ps.move_id.id == sm.id or sm.product_id.id == ps.product_id.id):
+                    exists = True
+
+            if not exists:
+                id_not_exists.append(ps.id)
+
+        if id_not_exists:
+            self.env['pricelist.subcon.baseon.stockmove'].sudo().search([('id', 'in', id_not_exists)]).unlink()
 
     @api.depends('location_id')
     def _fill_vendor(self):
