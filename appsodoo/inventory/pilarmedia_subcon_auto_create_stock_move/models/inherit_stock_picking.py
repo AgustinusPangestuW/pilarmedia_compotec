@@ -53,6 +53,51 @@ class StockPicking(models.Model):
     approved_by = fields.Many2one('res.users', string='Approved By')
     rejected_by = fields.Many2one('res.users', string='Rejected By')
     is_approval = fields.Boolean(string='Approval ?', compute="_compute_is_approval")
+    location_src = fields.Many2one(
+        'stock.location', 
+        string='Destination Location', 
+        readonly=True,
+        copy=False,
+        help="location src for show in tree",
+        compute="_get_location_src_for_show"
+    )
+    location_dest = fields.Many2one(
+        'stock.location', 
+        string='Destination Location', 
+        readonly=True,
+        copy=False,
+        help="location destination for show in tree",
+        compute="_get_location_dest_for_show"
+    )
+    approvals = fields.Many2many(
+        comodel_name='res.users', 
+        relation='users_approvals_stock_picking_rel',
+        string='Approvals'
+    )
+
+    @api.depends('picking_type_id')
+    def get_approvals_frm_stock_picking_type(self):
+        for rec in self:
+            if rec.picking_type_id:
+                rec.approvals = rec.picking_type_id.approvals
+            else:
+                rec.approvals = None
+   
+    @api.depends('location_id', 'location_src_id_subcon')
+    def _get_location_src_for_show(self):
+        for rec in self:
+            if rec.location_src_id_subcon:
+                rec.location_src = rec.location_src_id_subcon
+            else:
+                rec.location_src = rec.location_id
+
+    @api.depends('location_dest_id', 'location_dest_id_subcon')
+    def _get_location_dest_for_show(self):
+        for rec in self:
+            if rec.location_dest_id_subcon:
+                rec.location_dest = rec.location_dest_id_subcon
+            else:
+                rec.location_dest = rec.location_id
     
     def _compute_is_approval(self):
         is_approval = False

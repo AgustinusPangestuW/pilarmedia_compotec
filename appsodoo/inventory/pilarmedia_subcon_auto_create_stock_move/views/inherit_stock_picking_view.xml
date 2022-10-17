@@ -77,23 +77,19 @@
         </field>
     </record>
 
-    <!-- <record id="inherit_vpicktree_view_tree" model="ir.ui.view">
+    <record id="inherit_vpicktree_view_tree" model="ir.ui.view">
         <field name="name">stock.picking.tree.inherit</field>
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.vpicktree"/>
         <field name="arch" type="xml">
-            <t t-if="record.location_src_id_subcon">
-                <xpath expr="//field[@name='location_id']" position="replace">
-                    <field name="location_src_id_subcon" options="{'no_create': True}" string="From" groups="stock.group_stock_multi_locations" optional="show"/>
-                </xpath>
-            </t>
-            <t t-if="record.location_dest_id_subcon">
-                <xpath expr="//field[@name='location_id']" position="replace">
-                    <field name="location_dest_id_subcon" options="{'no_create': True}" string="To" groups="stock.group_stock_multi_locations" optional="show"/>
-                </xpath>
-            </t>
+            <xpath expr="//field[@name='location_id']" position="replace">
+                <field name="location_src" options="{'no_create': True}" string="From" groups="stock.group_stock_multi_locations" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='location_dest_id']" position="replace">
+                <field name="location_dest" options="{'no_create': True}" string="To" groups="stock.group_stock_multi_locations" optional="show"/>
+            </xpath>
         </field>
-    </record> -->
+    </record>
 
     <record id="action_picking_tree_need_approval" model="ir.actions.act_window">
         <field name="name">Need Approval</field>
@@ -101,7 +97,7 @@
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">tree,kanban,form,calendar</field>
         <field name="domain"></field>
-        <field name="context">{'contact_display': 'partner_address', 'search_default_need_approval': 1}</field>
+        <field name="context">{'search_default_need_approval': 1}</field>
         <field name="search_view_id" ref="stock.view_picking_internal_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -118,7 +114,7 @@
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">tree,kanban,form,calendar</field>
         <field name="domain"></field>
-        <field name="context">{'contact_display': 'partner_address', 'search_default_rejected': 1}</field>
+        <field name="context">{'search_default_rejected': 1}</field>
         <field name="search_view_id" ref="stock.view_picking_internal_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -135,7 +131,7 @@
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">tree,kanban,form,calendar</field>
         <field name="domain"></field>
-        <field name="context">{'contact_display': 'partner_address', 'search_default_approved': 1}</field>
+        <field name="context">{'search_default_approved': 1}</field>
         <field name="search_view_id" ref="stock.view_picking_internal_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
