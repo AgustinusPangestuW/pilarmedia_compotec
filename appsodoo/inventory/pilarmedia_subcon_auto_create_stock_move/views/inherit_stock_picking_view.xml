@@ -72,7 +72,7 @@
                 <filter name="approved" string="Approved" 
                     domain="[('approved_by', '!=', False), ('state', '=', 'done')]"/>
                 <filter name="need_approval" string="Need Approval" 
-                    domain="[('restrict_user_for_approve', '=', False), ('state', '=', 'need_approval')]"/>
+                    domain="[('picking_type_id.approvals', 'in', uid), ('state', '=', 'need_approval')]"/>
             </xpath>
         </field>
     </record>
@@ -96,7 +96,7 @@
         <field name="res_model">stock.picking</field>
         <field name="type">ir.actions.act_window</field>
         <field name="view_mode">tree,kanban,form,calendar</field>
-        <field name="domain"></field>
+        <field name="domain">[('picking_type_id.approvals', 'in', uid), ('state', '=', 'need_approval')]</field>
         <field name="context">{'search_default_need_approval': 1}</field>
         <field name="search_view_id" ref="stock.view_picking_internal_search"/>
         <field name="help" type="html">

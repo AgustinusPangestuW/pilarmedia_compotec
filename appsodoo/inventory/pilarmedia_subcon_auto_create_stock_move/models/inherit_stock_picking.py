@@ -69,20 +69,7 @@ class StockPicking(models.Model):
         help="location destination for show in tree",
         compute="_get_location_dest_for_show"
     )
-    approvals = fields.Many2many(
-        comodel_name='res.users', 
-        relation='users_approvals_stock_picking_rel',
-        string='Approvals'
-    )
-
-    @api.depends('picking_type_id')
-    def get_approvals_frm_stock_picking_type(self):
-        for rec in self:
-            if rec.picking_type_id:
-                rec.approvals = rec.picking_type_id.approvals
-            else:
-                rec.approvals = None
-   
+    
     @api.depends('location_id', 'location_src_id_subcon')
     def _get_location_src_for_show(self):
         for rec in self:
