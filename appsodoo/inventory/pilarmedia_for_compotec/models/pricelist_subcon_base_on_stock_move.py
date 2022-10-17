@@ -70,8 +70,9 @@ class PricelistSubconBaseonStockMoveLine(models.Model):
 
     @api.depends('pricelist_id')
     def _get_price(self):
-        if self.pricelist_id:
-            self.update({'price': self.pricelist_id.price or 0})
+        for rec in self:
+            if rec.pricelist_id:
+                rec.update({'price': rec.pricelist_id.price or 0})
 
     @api.depends('price', 'qty')
     def _calculate_total_price(self):
