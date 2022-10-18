@@ -1,5 +1,5 @@
 from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 import copy
 
 class StockPicking(models.Model):
@@ -69,7 +69,21 @@ class StockPicking(models.Model):
         help="location destination for show in tree",
         compute="_get_location_dest_for_show"
     )
-    
+
+    def action_assign(self):
+        super().action_assign()
+
+        if (self.picking_type_id.is_subcon):
+            for sm in self.move_ids_without_package:
+                if float(sm.reserved_availability) < float(sm.product_uom_qty):
+                    raise ValidationError(_("Item {item} memerlukan Qty {product_uom_qty} {uom} pada location {location} untuk melanjutkan proses. Stock tersedia {reserved_qty} {uom}.".format(
+                        item=sm.product_id.name,
+                        product_uom_qty=sm.product_uom_qty,
+                        uom=sm.product_uom.name,
+                        location=(sm.location_id.location_id.name or "")+ '/' + sm.location_id.name,
+                        reserved_qty=sm.reserved_availability
+                    )))
+        
     @api.depends('location_id', 'location_src_id_subcon')
     def _get_location_src_for_show(self):
         for rec in self:
