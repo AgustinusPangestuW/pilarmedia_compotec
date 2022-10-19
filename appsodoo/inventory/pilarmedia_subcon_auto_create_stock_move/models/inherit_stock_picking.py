@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tests import Form
 import copy
 
 class StockPicking(models.Model):
@@ -53,6 +54,7 @@ class StockPicking(models.Model):
     approved_by = fields.Many2one('res.users', string='Approved By')
     rejected_by = fields.Many2one('res.users', string='Rejected By')
     is_approval = fields.Boolean(string='Approval ?', compute="_compute_is_approval")
+    restrict_user_for_approve = fields.Boolean(string='restrict user for approve ?', compute="_compute_is_approval")
     location_src = fields.Many2one(
         'stock.location', 
         string='Destination Location', 
@@ -100,6 +102,7 @@ class StockPicking(models.Model):
             else:
                 rec.location_dest = rec.location_id
     
+    @api.depends('state', 'picking_type_id.approvals ')
     def _compute_is_approval(self):
         is_approval = False
         restrict_user_for_approve = False
@@ -113,7 +116,6 @@ class StockPicking(models.Model):
             rec.is_approval = is_approval
             rec.restrict_user_for_approve = restrict_user_for_approve
 
-    restrict_user_for_approve = fields.Boolean(string='restrict user for approve ?', compute="_compute_is_approval")
 
     def button_approve(self):
         for rec in self:
@@ -124,6 +126,37 @@ class StockPicking(models.Model):
         for rec in self:
             rec.rejected_by = self.env.user.id
             rec.state = "reject"
+
+        if self.stock_picking_subcont_ref_id:
+            stock_picking_subcont_maker = self.stock_picking_subcont_ref_id
+
+            stock_return_picking_form = Form(self.env['stock.return.picking']
+                .with_context(active_ids=stock_picking_subcont_maker.ids, active_id=stock_picking_subcont_maker.ids[0],
+                active_model='stock.picking'))
+            stock_return_picking = stock_return_picking_form.save()
+
+            qty_stock_move = {}
+            for prm in stock_return_picking.product_return_moves:
+                sm = self.env['stock.move'].search([('id', '=', prm.move_id.id), ('product_id', '=', prm.product_id.id)])
+                prm.quantity = sm.product_uom_qty
+                qty_stock_move[prm.product_id.id] = (qty_stock_move.get(prm.product_id.id) or 0) + sm.product_uom_qty
+
+            stock_return_picking_action = stock_return_picking.create_returns()
+            return_pick = self.env['stock.picking'].browse(stock_return_picking_action['res_id'])
+            return_pick.action_assign()
+
+            # Validate Qty return base on Stock Picking
+            for sm in return_pick.move_lines:
+                if float(sm.reserved_availability) < float(qty_stock_move[sm.product_id.id] or 0):
+                    raise ValidationError(_("item {item} membutuhkan Qty {qty} {uom} pada location {loc} untuk melanjutkan proses. Stock tersedia {reserved_qty} {uom}.").format(
+                        item=sm.product_id.name,
+                        qty=sm.product_uom_qty,
+                        uom=sm.product_uom.name,
+                        loc=(sm.location_id.location_id.name or "") + '/' + sm.location_id.name,
+                        reserved_qty=sm.reserved_availability
+                    ))
+
+            return_pick.action_done()
 
     def button_validate(self):
         res_validate = super(StockPicking, self).button_validate()
