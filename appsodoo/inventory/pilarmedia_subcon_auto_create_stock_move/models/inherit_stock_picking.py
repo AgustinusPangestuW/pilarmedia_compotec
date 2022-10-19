@@ -33,17 +33,9 @@ class StockPicking(models.Model):
         copy=False
     )
 
-    state = fields.Selection([
-        ('draft', 'Draft'),
-        ('waiting', 'Waiting Another Operation'),
-        ('reject', 'Rejected'),
-        ('confirmed', 'Waiting'),
-        ('need_approval', 'Need Approval'),
-        ('assigned', 'Ready'),
-        ('done', 'Done'),
-        ('cancel', 'Cancelled')
-    ], string='Status', compute='_compute_state',
-        copy=False, index=True, readonly=True, store=True, tracking=True,
+    state = fields.Selection(selection_add =[
+        ('reject', 'Rejected'), ('waiting',),
+        ('need_approval', 'Need Approval'), ('assigned',)],
         help=" * Draft: The transfer is not confirmed yet. Reservation doesn't apply.\n"
              " * Waiting another operation: This transfer is waiting for another operation before being ready.\n"
              " * Waiting: The transfer is waiting for the availability of some products.\n(a) The shipping policy is \"As soon as possible\": no product could be reserved.\n(b) The shipping policy is \"When all products are ready\": not all the products could be reserved.\n"
