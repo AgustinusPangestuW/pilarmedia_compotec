@@ -94,7 +94,7 @@ class StockPicking(models.Model):
             else:
                 rec.location_dest = rec.location_id
     
-    @api.depends('state', 'picking_type_id.approvals ')
+    @api.depends('state')
     def _compute_is_approval(self):
         is_approval = False
         restrict_user_for_approve = False
