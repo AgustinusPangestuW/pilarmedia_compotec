@@ -11,10 +11,23 @@ class Lot(models.Model):
         ('check_name_unique', 'UNIQUE(name)', 'The name is not unique')
     ]
     
-    name = fields.Char(string='Name', required=True)
+    name = fields.Char(string='Name', required=True, default="-1")
     sequence = fields.Integer(string='Sequence')
     description = fields.Text(string='Desciption')
 
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        if not res.get('name', -1) == -1:
+            self._cr.execute(""" SELECT MAX(name::integer) as get_max_name FROM lot """)
+            res_max = self.env.cr.dictfetchone()
+            max_ctr_name = 0
+            if res_max:
+                max_ctr_name = res_max['get_max_name'] if 'get_max_name' in res_max else 0
+
+            res.update({'name': str(int(max_ctr_name) + 1)})
+
+        return res
 
     @api.onchange('name')
     def _validate_name(self):
