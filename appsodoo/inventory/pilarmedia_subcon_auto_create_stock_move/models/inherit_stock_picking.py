@@ -126,12 +126,12 @@ class StockPicking(models.Model):
                 .with_context(active_ids=stock_picking_subcont_maker.ids, active_id=stock_picking_subcont_maker.ids[0],
                 active_model='stock.picking'))
             stock_return_picking = stock_return_picking_form.save()
+            stock_return_picking._onchange_picking_id()
 
             qty_stock_move = {}
             for prm in stock_return_picking.product_return_moves:
                 sm = self.env['stock.move'].search([('id', '=', prm.move_id.id), ('product_id', '=', prm.product_id.id)])
-                prm.quantity = sm.product_uom_qty
-                qty_stock_move[prm.product_id.id] = (qty_stock_move.get(prm.product_id.id) or 0) + sm.product_uom_qty
+                qty_stock_move[prm.product_id.id] = (qty_stock_move.get(prm.product_id.id) or 0) + prm.quantity
 
             stock_return_picking_action = stock_return_picking.create_returns()
             return_pick = self.env['stock.picking'].browse(stock_return_picking_action['res_id'])
@@ -147,6 +147,9 @@ class StockPicking(models.Model):
                         loc=(sm.location_id.location_id.name or "") + '/' + sm.location_id.name,
                         reserved_qty=sm.reserved_availability
                     ))
+                else:
+                    for sml in sm.move_line_ids:
+                        sml.qty_done = sml.product_uom_qty
 
             return_pick.action_done()
 
