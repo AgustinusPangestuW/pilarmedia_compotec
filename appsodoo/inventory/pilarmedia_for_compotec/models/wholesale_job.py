@@ -16,6 +16,15 @@ class Lot(models.Model):
     description = fields.Text(string='Desciption')
 
 
+    @api.onchange('name')
+    def _validate_name(self):
+        for rec in self:
+            try:
+                rec.name = int(rec.name)
+            except Exception as e:
+                raise ValidationError(_("name must be Integer"))
+
+
 class WholesaleJob(models.Model):
     _name = 'wholesale.job'
     _description = "Wholesale Job"
