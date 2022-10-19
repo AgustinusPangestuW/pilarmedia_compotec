@@ -92,7 +92,7 @@ class StockPicking(models.Model):
             if rec.location_dest_id_subcon:
                 rec.location_dest = rec.location_dest_id_subcon
             else:
-                rec.location_dest = rec.location_id
+                rec.location_dest = rec.location_dest_id
     
     @api.depends('state')
     def _compute_is_approval(self):
