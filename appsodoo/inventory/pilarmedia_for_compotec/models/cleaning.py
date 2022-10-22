@@ -48,6 +48,26 @@ class Cleaning(models.Model):
     def action_submit(self):
         self.state = "submit"
 
+    def validate_change_state(self, vals):
+        # change state Draft / None -> Submit -> Cancel 
+        # Change state Cancel -> Draft
+        state_before = {
+            "submit": ['', 'draft'],
+            "cancel": ['submit']
+        }
+
+        if vals.get('state'):
+            new_state = vals.get('state')
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            for i in state_before:
+                if new_state == i and self.state not in state_before[i]:
+                    raise ValidationError(_("Current state must be %s when update state into %s, state document %s is %s" % (
+                        "(" + ", ".join(state_before[i]) +")",
+                        new_state,
+                        self.name,
+                        name_cur_state[0]
+                    )))
+
     def validate_change_value_in_restrict_field(self, vals):
         readonly_status = False
         for i in vals:
@@ -60,6 +80,7 @@ class Cleaning(models.Model):
 
     def write(self, vals):  
         self.validate_change_value_in_restrict_field(vals)
+        self.validate_change_state(vals)
         vals = super().write(vals)
         return vals
         
