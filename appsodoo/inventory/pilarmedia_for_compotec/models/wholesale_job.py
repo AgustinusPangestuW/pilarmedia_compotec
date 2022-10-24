@@ -383,7 +383,7 @@ class WholesaleJobLine(models.Model):
             
     @api.depends('factor', 'is_set', 'total_ng')
     def _calc_total_ok_n_set(self):
-        new_total_lot = 0
+        new_total_lot, total_set = 0, 0
         for rec in self:
             if rec.is_set:
                 last_lot_list = rec.wholesale_job_lot_lines
@@ -391,11 +391,11 @@ class WholesaleJobLine(models.Model):
                 if len(last_lot_list) > 0:
                     last_lot_name = last_lot_list[-1].lot_id.name
                     new_total_lot = int(rec.factor) * int(last_lot_name)
-            else:
-                new_total_lot = 0
+                    
+                total_set = rec.total_ok + rec.total_ng
                     
             rec.total_ok = new_total_lot
-            rec.total_set = rec.total_ok + rec.total_ng
+            rec.total_set = total_set
 
     @api.onchange('factor')
     def validate_factor(self):
