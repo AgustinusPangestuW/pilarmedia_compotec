@@ -47,7 +47,7 @@
                                         <field name="output"/>
                                         <field name="break_time"/>
                                         <field name="rest_time"/>
-                                        <field name="plastic_role_change_time"/>
+                                        <field name="plastic_roll_change_time"/>
                                         <field name="product_change_time"/>
                                     </tree>
                                 </field>

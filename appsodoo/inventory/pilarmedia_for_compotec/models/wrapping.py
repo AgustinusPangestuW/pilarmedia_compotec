@@ -384,7 +384,7 @@ class WrappingDeadlineWorkingtimeLine(models.Model):
     output = fields.Integer(string='Output')
     break_time = fields.Char(string='Jam Break')
     rest_time = fields.Char(string='Jam Istirahat')
-    plastic_role_change_time = fields.Char(string='Ganti Rol Plastik')
+    plastic_roll_change_time = fields.Char(string='Ganti Rol Plastik')
     product_change_time = fields.Char(string='Jam Ganti Produk')
     sequence = fields.Integer(string='Sequence')
 
