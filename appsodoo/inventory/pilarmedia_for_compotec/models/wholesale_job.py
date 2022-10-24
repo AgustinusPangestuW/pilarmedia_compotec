@@ -53,7 +53,7 @@ class WholesaleJob(models.Model):
         domain=[('active', '=', 1), ('for_form', '=', 'wholesale_job')], 
         required=True
     )
-    lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_id', 'Lot Line', auto_join=True, copy=True)
+    wholesale_job_lines = fields.One2many('wholesale.job.line', 'wholesale_job_id', 'Lot Line', auto_join=True, copy=True)
     checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
     checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
     shift = fields.Many2one('shift', string='Shift')
@@ -112,15 +112,15 @@ class WholesaleJob(models.Model):
             else:
                 rec.custom_css = False
 
-    @api.depends('lot_lines')
+    @api.depends('wholesale_job_lines')
     def _set_job_id_active(self):
         for rec in self:
-            if len(rec.lot_lines) > 0: rec.job_id_active = 1
+            if len(rec.wholesale_job_lines) > 0: rec.job_id_active = 1
             else: rec.job_id_active = 0
 
     def validate_wj_lines(self):
         for rec in self:
-            if not rec.lot_lines:
+            if not rec.wholesale_job_lines:
                 raise ValidationError(_("Detail kantong masih kosong, harap isikan terlebih dahulu." ))
 
     def action_submit(self):
@@ -187,7 +187,7 @@ class WholesaleJob(models.Model):
             sm_ok['wholesale_job_id'] = self.id
 
             sm_ng['move_lines'], sm_ok['move_lines'] = [], []
-            for line in self.lot_lines:
+            for line in self.wholesale_job_lines:
                 product = line.product_id.with_context(lang=self.env.user.lang)
                 name_desc = product.partner_ref
                 sm_ng['move_lines'].append((0,0, {
