@@ -13,9 +13,9 @@ class WholesaleJobReport(models.Model):
 
     id_wj = fields.Many2one('wholesale.job', string='ID')
     date = fields.Date(string='Date')
-    job_ids = fields.Many2one('job', string='Job')
-    product_ids = fields.Many2one('product.product', string='Product')
-    user_ids = fields.Many2one('employee.custom', string='User', domain=_get_domain_user)
+    job_id = fields.Many2one('job', string='Job')
+    product_id = fields.Many2one('product.product', string='Product')
+    operator = fields.Many2one('employee.custom', string='User', domain=_get_domain_user)
     factor = fields.Float(string='Factor')
     total_ng = fields.Float(string='Total NG')
     total_ok = fields.Float(string='Total OK')
@@ -34,14 +34,14 @@ class WholesaleJobReport(models.Model):
             
             csr cursor for
             SELECT 
-                wj.id as wj_id, wj.date, j.id as job_id, wjl.product_ids as product_id, u.id as user_id, wjl.total_set, wjl.total_ng, 
+                wj.id as wj_id, wj.date, j.id as job_id, wjl.product_id as product_id, u.id as user_id, wjl.total_set, wjl.total_ng, 
                 wjl.total_ok, wjl.factor, wj.checked_coordinator, wj.checked_qc, wjl.factor, wjl.total_pcs, wjl.biggest_lot
             FROM wholesale_job wj
-            LEFT JOIN wholesale_job_line wjl ON wjl.wholesale_job_ids = wj.id
-            LEFT JOIN job j ON j.id = wj.job_ids
-            -- LEFT JOIN product_product p ON p.id = wjl.product_ids
+            LEFT JOIN wholesale_job_line wjl ON wjl.wholesale_job_id = wj.id
+            LEFT JOIN job j ON j.id = wj.job_id
+            -- LEFT JOIN product_product p ON p.id = wjl.product_id
             -- LEFT JOIN product_template pt ON pt.id = p.product_tmpl_id
-            LEFT JOIN res_partner u ON u.id = wjl.user_ids
+            LEFT JOIN res_partner u ON u.id = wjl.operator
             WHERE 
                 wj.date BETWEEN date_start AND date_end 
                     AND input_job in ('', CAST(j.id AS CHAR))
@@ -53,7 +53,7 @@ class WholesaleJobReport(models.Model):
             delete from wholesale_job_report;
             
             for rec in csr loop
-                insert into wholesale_job_report (id_wj, date, job_ids, product_ids, user_ids, total_set, 
+                insert into wholesale_job_report (id_wj, date, job_id, product_id, operator, total_set, 
                     total_ng, total_ok, checked_coordinator, checked_qc, factor, total_pcs, biggest_lot) 
                     values (rec.wj_id, rec.date, rec.job_id, rec.product_id, rec.user_id, 
                         rec.total_set, rec.total_ng, rec.total_ok, rec.checked_coordinator, 

@@ -46,14 +46,14 @@ class WholesaleJob(models.Model):
     name = fields.Char(string='Wholesale Job Name', required=True, readonly=True, index=True, default=lambda self: _('New'))
     sequence = fields.Integer(string='Sequence', default=10)
     date = fields.Date(string="Date", required=True, default=datetime.now().date())
-    job_ids_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)
-    job_ids = fields.Many2one(
+    job_id_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)
+    job_id = fields.Many2one(
         'job', 
         string='Job', 
         domain=[('active', '=', 1), ('for_form', '=', 'wholesale_job')], 
         required=True
     )
-    lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_ids', 'Lot Line', auto_join=True, copy=True)
+    lot_lines = fields.One2many('wholesale.job.line', 'wholesale_job_id', 'Lot Line', auto_join=True, copy=True)
     checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
     checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
     shift = fields.Many2one('shift', string='Shift')
@@ -65,14 +65,14 @@ class WholesaleJob(models.Model):
     operation_type_id_ng = fields.Many2one(
         'stock.picking.type', 
         string='Operation Type for NG', 
-        required=True, 
+        # required=True, 
         compute="_get_op_type_from_job", 
         store=True
     )
     operation_type_id_ok = fields.Many2one(
         'stock.picking.type', 
         string='Operation Type for OK', 
-        required=True, 
+        # required=True, 
         compute="_get_op_type_from_job", 
         store=True
     )
@@ -96,11 +96,11 @@ class WholesaleJob(models.Model):
 
         return super().create(vals)  
 
-    @api.depends('job_ids')
+    @api.depends('job_id')
     def _get_op_type_from_job(self):
-        if self.job_ids:
-            self.operation_type_id_ok = self.job_ids.op_type_ok or ''
-            self.operation_type_id_ng = self.job_ids.op_type_ng or ''
+        if self.job_id:
+            self.operation_type_id_ok = self.job_id.op_type_ok or ''
+            self.operation_type_id_ng = self.job_id.op_type_ng or ''
         else:
             self.operation_type_id_ng = self.operation_type_id_ok = ""
 
@@ -115,8 +115,8 @@ class WholesaleJob(models.Model):
     @api.depends('lot_lines')
     def _set_job_id_active(self):
         for rec in self:
-            if len(rec.lot_lines) > 0: rec.job_ids_active = 1
-            else: rec.job_ids_active = 0
+            if len(rec.lot_lines) > 0: rec.job_id_active = 1
+            else: rec.job_id_active = 0
 
     def validate_wj_lines(self):
         for rec in self:
@@ -188,21 +188,21 @@ class WholesaleJob(models.Model):
 
             sm_ng['move_lines'], sm_ok['move_lines'] = [], []
             for line in self.lot_lines:
-                product = line.product_ids.with_context(lang=self.env.user.lang)
+                product = line.product_id.with_context(lang=self.env.user.lang)
                 name_desc = product.partner_ref
                 sm_ng['move_lines'].append((0,0, {
-                    'product_id': line.product_ids.id,
+                    'product_id': line.product_id.id,
                     'product_uom_qty': line.total_ng,
                     'description_picking': name_desc,
-                    'product_uom': line.product_ids.uom_id.id,
+                    'product_uom': line.product_id.uom_id.id,
                     'name': name_desc
                 }))
 
                 sm_ok['move_lines'].append((0,0, {
-                    'product_id': line.product_ids.id, 
+                    'product_id': line.product_id.id, 
                     'product_uom_qty': line.total_ok,
                     'description_picking': name_desc,
-                    'product_uom': line.product_ids.uom_id.id,
+                    'product_uom': line.product_id.uom_id.id,
                     'name': name_desc
                 }))
             
@@ -250,9 +250,9 @@ class WholesaleJobLine(models.Model):
     _description = "Wholesale Job Line"
 
     sequence = fields.Integer(string='Sequence')
-    wholesale_job_ids = fields.Many2one(
+    wholesale_job_id = fields.Many2one(
         'wholesale.job', 
-        'wholesale job ids', 
+        'wholesale job id', 
         index=1, 
         ondelete="cascade"
     )
@@ -261,14 +261,14 @@ class WholesaleJobLine(models.Model):
         store=True,
         help="This field will be True when product UOM = `set`"
     )
-    job_ids = fields.Many2one(
+    job_id = fields.Many2one(
         'job', string='Job', 
         required=True, 
         readonly=True, 
         domain=[('active', '=', 1)]
     )
-    product_ids = fields.Many2one('product.product', string='Produk', required=True)
-    user_ids = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
+    product_id = fields.Many2one('product.product', string='Produk', required=True)
+    operator = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True)
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True, copy=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
@@ -283,7 +283,7 @@ class WholesaleJobLine(models.Model):
         help="this field for track last Lot ID"
     )
     wholesale_job_lot_lines = fields.One2many(
-        'wholesale.job.lot.line', 'wholesale_job_line_ids', 
+        'wholesale.job.lot.line', 'wholesale_job_line_id', 
         'Lot Line', auto_join=True, copy=True)           
 
     @api.model
@@ -292,7 +292,7 @@ class WholesaleJobLine(models.Model):
 
         if self.env.context.get('job_id'):
             job_id = self.env.context.get('job_id')
-            res.update({'job_ids' : job_id})
+            res.update({'job_id' : job_id})
 
         return res
 
@@ -305,7 +305,7 @@ class WholesaleJobLine(models.Model):
 
         # get list data `job_lot_line`
         if len(self.wholesale_job_lot_lines) > 0:
-            biggest_lot_id = self.wholesale_job_lot_lines[-1].lot_ids.id
+            biggest_lot_id = self.wholesale_job_lot_lines[-1].lot_id.id
         elif len(list_lots) > 0:
             # isikan lot pertama
             next_lot_id = list_lots[0].id 
@@ -325,7 +325,7 @@ class WholesaleJobLine(models.Model):
             raise exceptions.ValidationError(_("Kantong melebihi batas yang ditentukan, silahkan sesuaikan dengan kantong yang tersedia."))
         
         self.update({
-            'wholesale_job_lot_lines': [[0,0,{ 'lot_ids': biggest_lot_id, 'wholesale_job_line_ids': self.id }]],
+            'wholesale_job_lot_lines': [[0,0,{ 'lot_id': biggest_lot_id, 'wholesale_job_line_id': self.id }]],
             'biggest_lot': biggest_lot_id
         })
 
@@ -340,7 +340,7 @@ class WholesaleJobLine(models.Model):
             biggest_lot = None
 
             if len(new_job_lot_line) > 0:
-                biggest_lot = new_job_lot_line[-1].lot_ids.id
+                biggest_lot = new_job_lot_line[-1].lot_id.id
             
             self.write({
                 'wholesale_job_lot_lines': new_job_lot_line,
@@ -389,7 +389,7 @@ class WholesaleJobLine(models.Model):
                 last_lot_list = rec.wholesale_job_lot_lines
                 last_lot_name = ''
                 if len(last_lot_list) > 0:
-                    last_lot_name = last_lot_list[-1].lot_ids.name
+                    last_lot_name = last_lot_list[-1].lot_id.name
                     new_total_lot = int(rec.factor) * int(last_lot_name)
             else:
                 new_total_lot = 0
@@ -402,20 +402,20 @@ class WholesaleJobLine(models.Model):
         if self.is_set and (self.factor or 0) <= 0:
             raise ValidationError(_("field isi kantong tidak boleh <= 0" )) 
 
-    @api.depends('product_ids', 'is_set')
+    @api.depends('product_id', 'is_set')
     def _get_pocket_factor_in_product(self):
         new_factor = None
-        if self.is_set and self.product_ids:
-            new_factor = self.product_ids.product_tmpl_id.pocket_factor
+        if self.is_set and self.product_id:
+            new_factor = self.product_id.product_tmpl_id.pocket_factor
         self.factor = new_factor
 
 
 class WholesaleJobLotLine(models.Model):
     _name = "wholesale.job.lot.line"
     _description = "Wholesale Job Lot Line"
-    _rec_name = "lot_ids"
+    _rec_name = "lot_id"
     
-    wholesale_job_line_ids = fields.Many2one('wholesale.job.line','Wholesale Job Line ID', index=1, ondelete="cascade")
-    lot_ids = fields.Many2one('lot', string='Lot No', required=True, readonly=True)
+    wholesale_job_line_id = fields.Many2one('wholesale.job.line','Wholesale Job Line ID', index=1, ondelete="cascade")
+    lot_id = fields.Many2one('lot', string='Lot No', required=True, readonly=True)
     ok = fields.Float(string='OK')
     ng = fields.Float(string='NG')
