@@ -56,39 +56,72 @@ class Wrapping(models.Model):
     _description = "Wrapping"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Wrapping Name', select=True, copy=False, default='New')
+    READONLY_STATES = {
+        'submit': [('readonly', True)],
+        'cancel': [('readonly', True)],
+    }
+    list_state = [("draft","Draft"), ("submit","Submited"), ('cancel', "Canceled")]
+    readonly_fields = ["name", "shift", "date", "keeper", "operator_absent_ids", "backup_ids", "leader", "job", "wrapping_deadline_line"]
+
+    name = fields.Char(string='Wrapping Name', select=True, copy=False, default='New', states=READONLY_STATES)
     sequence = fields.Integer(string='Sequence', default=10)
-    shift = fields.Many2one('shift', string='Shift', required=True, domain="[('active', '=', '1')]", copy=True)
-    shift_active = fields.Boolean(string='Shift Active?', readonly=True, compute="_change_active_shift", store=False)
-    date = fields.Date(string='Date', default=fields.Date.today(), required=True)
-    keeper = fields.Many2one('employee.custom', string='Line Keeper', required=True, domain=_get_domain_user, copy=True)
+    shift = fields.Many2one(
+        'shift', 
+        string='Shift', 
+        required=True, 
+        domain="[('active', '=', '1')]", 
+        copy=True, 
+        states=READONLY_STATES)
+    shift_active = fields.Boolean(
+        string='Shift Active?', 
+        readonly=True, 
+        compute="_change_active_shift", 
+        store=False)
+    date = fields.Date(string='Date', default=fields.Date.today(), required=True, states=READONLY_STATES)
+    keeper = fields.Many2one(
+        'employee.custom', 
+        string='Line Keeper', 
+        required=True, 
+        domain=_get_domain_user, 
+        copy=True, 
+        states=READONLY_STATES)
     operator_absent_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_wrapping_rel',
         string='Operator Tidak Masuk',
-        domain=_get_domain_user
+        domain=_get_domain_user, 
+        states=READONLY_STATES
     )
     backup_ids = fields.Many2many(
         comodel_name='employee.custom', 
         relation='employee_custom_backup_rel',
         string='Backup',
-        domain=_get_domain_user
+        domain=_get_domain_user, states=READONLY_STATES
     )
-    leader = fields.Many2one('employee.custom', string='Leader', domain=_get_domain_user, copy=True)
-    state = fields.Selection([
-        ("draft","Draft"),
-        ("submit","Submited"), 
-        ('cancel', "Canceled")], string='State', tracking=True)
+    leader = fields.Many2one(
+        'employee.custom', 
+        string='Leader', 
+        domain=_get_domain_user, 
+        copy=True, 
+        states=READONLY_STATES)
+    state = fields.Selection(list_state, string='State', tracking=True)
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    job = fields.Many2one('job', string='Job', required=True, domain=[('active', '=', 1), ('for_form', '=', 'wrapping')], copy=True)
+    job = fields.Many2one(
+        'job', 
+        string='Job', 
+        required=True, 
+        domain=[('active', '=', 1), ('for_form', '=', 'wrapping')], 
+        copy=True, 
+        states=READONLY_STATES)
     wrapping_deadline_line = fields.One2many(
         'wrapping.deadline.line', 
         'wrapping_deadline_id', 
         string='Wrapping Deadline', 
         copy=True, 
-        auto_join=True
+        auto_join=True, 
+        states=READONLY_STATES
     )
 
     @api.model
@@ -127,13 +160,40 @@ class Wrapping(models.Model):
         self.state = "submit"
         self.create_mo()
 
+    def validate_change_state(self, vals):
+        # change state Draft / None -> Submit -> Cancel 
+        # Change state Cancel -> Draft
+        state_before = {
+            "submit": ['', 'draft'],
+            "cancel": ['submit']
+        }
+
+        if vals.get('state'):
+            new_state = vals.get('state')
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            for i in state_before:
+                if new_state == i and self.state not in state_before[i]:
+                    raise ValidationError(_("Current state must be %s when update state into %s, state document %s is %s" % (
+                        "(" + ", ".join(state_before[i]) +")",
+                        new_state,
+                        self.name,
+                        name_cur_state[0]
+                    )))
+
+    def validate_change_value_in_restrict_field(self, vals):
+        readonly_status = False
+        for i in vals:
+            if i in self.readonly_fields:
+                readonly_status = True
+
+        if self.state in ['submit', 'cancel'] and readonly_status:
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, name_cur_state[0])))
+
     def write(self, vals):  
-        # if self.state in ['submit']:
-        #     raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, self.state)))
-
-        vals = super().write(vals)
-
-        return vals
+        self.validate_change_value_in_restrict_field(vals)
+        self.validate_change_state(vals)
+        return super().write(vals)
         
     def action_cancel(self):
         self.state = "cancel"
@@ -277,7 +337,12 @@ class WrappingDeadlineLine(models.Model):
     _description = "Wrapping Deadline Line"
     _rec_name = "shift_deadline"
 
-    shift_deadline = fields.Many2one('shift.deadline', string='Shift Deadline', required=True, ondelete="cascade", index=True)
+    shift_deadline = fields.Many2one(
+        'shift.deadline', 
+        string='Shift Deadline', 
+        required=True, 
+        ondelete="cascade", 
+        index=True)
     wrapping_deadline_id = fields.Many2one(
         'wrapping', 
         string='Wrapping Deadline Id', 
@@ -292,8 +357,17 @@ class WrappingDeadlineLine(models.Model):
         string='Operator Name',
         domain=_get_domain_user
     )
-    total_ok = fields.Integer(string='Total OK', compute="_calculate_total_ok", store=True, help="Result Calculation from total output in Wrapping Working time")
-    total_output_uom = fields.Many2one('uom.uom', string='Total UOM', compute="_product_change", store=True, help="UOM for total output")
+    total_ok = fields.Integer(
+        string='Total OK', 
+        compute="_calculate_total_ok", 
+        store=True, 
+        help="Result Calculation from total output in Wrapping Working time")
+    total_output_uom = fields.Many2one(
+        'uom.uom', 
+        string='Total UOM', 
+        compute="_product_change", 
+        store=True, 
+        help="UOM for total output")
     ng = fields.Integer(string='NG')
     ng_uom = fields.Many2one('uom.uom', string='NG UOM', compute="_product_change", store=True)
     total = fields.Integer(string='Total', readonly=True, compute="_calculate_total")
@@ -306,7 +380,10 @@ class WrappingDeadlineLine(models.Model):
         copy=True, 
         auto_join=True
     )
-    list_id_wt = fields.Char(string='List ID Working Time can access base on Shift', readonly=True, store=False)
+    list_id_wt = fields.Char(
+        string='List ID Working Time can access base on Shift', 
+        readonly=True, 
+        store=False)
 
     @api.depends('product')
     def _product_change(self):
@@ -372,7 +449,12 @@ class WrappingDeadlineWorkingtimeLine(models.Model):
     _name = "wrapping.deadline.working.time.line"
     _description = "Wrapping Deadline Working time Line"
 
-    name = fields.Char(string='Name', copy=False, default='New', compute="_set_name", readonly=False)
+    name = fields.Char(
+        string='Name', 
+        copy=False, 
+        default='New', 
+        compute="_set_name", 
+        readonly=False)
     wrapping_deadline_working_time_id = fields.Many2one(
         'wrapping.deadline.line', 
         string='Wrapping Deadline Working time Id', 
