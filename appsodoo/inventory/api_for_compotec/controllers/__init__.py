@@ -6,4 +6,5 @@ from . import (
     api_cleaning,
     api_wrapping,
     api_peel_diss_assy,
+    api_wholesale_job
 )
