@@ -1,0 +1,4 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"access_transit_log","transit_log","model_transit_log","stock.group_stock_manager",1,1,1,1
+"access_stock_picking_type_for_transit","stock_picking_type_for_transit","model_stock_picking_type_for_transit","stock.group_stock_manager",1,1,1,1
+"access_api_log","api_log","model_api_log","stock.group_stock_manager",1,1,1,1

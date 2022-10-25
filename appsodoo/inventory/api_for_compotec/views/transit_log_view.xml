@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="transit_log_tree">
+            <field name="name">transit.log.tree</field>
+            <field name="model">transit.log</field>
+            <field name="arch" type="xml">
+                <tree default_order="create_date desc">
+                    <field name="picking_id"/>
+                    <field name="long"/>
+                    <field name="lat"/>
+                    <field name="gps_id"/>
+                    <field name="datetime"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="transit_log_form">
+            <field name="name">transit.log.form</field>
+            <field name="model">transit.log</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="picking_id"/>
+                                <field name="long"/>
+                                <field name="lat"/>
+                            </group>
+                            <group>
+                                <field name="gps_id"/>
+                                <field name="datetime"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="transit_log_action">
+            <field name="name">Transit Log</field>
+            <field name="res_model">transit.log</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <!-- for menu item configuration -->
+        <menuitem id="transit_config_menu" name="Transit" parent="stock.menu_stock_config_settings" groups="stock.group_stock_manager"/>
+
+        <menuitem id="main_transit_log" name="Transit Log" parent="transit_config_menu" action="transit_log_action"/>
+    </data>
+</odoo>

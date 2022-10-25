@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="api_log_tree">
+            <field name="name">api.log.tree</field>
+            <field name="model">api.log</field>
+            <field name="arch" type="xml">
+                <tree default_order='create_date desc'>
+                    <field name="name"/>
+                    <field name="datetime"/>
+                    <field name="sucess"/>
+                    <field name="method"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="api_log_form">
+            <field name="name">api.log.form</field>
+            <field name="model">api.log</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name" readonly="1" invisible="1"/>
+                                <field name="datetime"/>
+                                <field name="method"/>
+                                <field name="sucess"/>
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="request"/>
+                            <field name="result"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="api_log_action">
+            <field name="name">API Log</field>
+            <field name="res_model">api.log</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <!-- for menu item configuration -->
+        <menuitem id="main_api_log" name="API Log" parent="stock.menu_stock_config_settings" groups="stock.group_stock_manager" action="api_log_action"/>
+
+    </data>
+</odoo>
