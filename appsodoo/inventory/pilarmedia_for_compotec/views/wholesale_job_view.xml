@@ -10,7 +10,7 @@
                     <field name="name"/>
                     <field name="date"/>
                     <field name="shift"/>
-                    <field name="job_ids"/>
+                    <field name="job_id"/>
                     <field name="checked_coordinator"/>
                     <field name="checked_qc"/>
                     <field name="state"/>
@@ -52,8 +52,8 @@
                                 <field name="shift"/>
                             </group>
                             <group>
-                                <field name="job_ids" attrs="{'readonly': [('job_ids_active', '!=', False)]}" force_save="1"/>
-                                <field name="job_ids_active" invisible="True"/>
+                                <field name="job_id" attrs="{'readonly': [('job_id_active', '!=', False)]}" force_save="1"/>
+                                <field name="job_id_active" invisible="True"/>
                                 <field name="checked_coordinator"/>
                                 <field name="checked_qc"/>
                             </group>
@@ -68,12 +68,12 @@
                         </group>
                         <notebook>
                             <page string="Lot">
-                                <field name="lot_lines" context="{'job_id': job_ids}" attrs="{'readonly': [('job_ids', '=', False)]}">
+                                <field name="wholesale_job_lines" context="{'job_id': job_id}" attrs="{'readonly': [('job_id', '=', False)]}">
                                     <tree>
                                         <field name="sequence" widget="handle"/>
-                                        <field name="job_ids"/>
-                                        <field name="product_ids"/>
-                                        <field name="user_ids"/>
+                                        <field name="job_id"/>
+                                        <field name="product_id"/>
+                                        <field name="operator"/>
                                         <field name="total_ok"/>
                                         <field name="total_ng"/>
                                         <field name="biggest_lot"/>

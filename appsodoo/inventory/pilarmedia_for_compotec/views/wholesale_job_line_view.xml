@@ -8,9 +8,9 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="sequence"/>
-                    <field name="job_ids"/>
-                    <field name="product_ids"/>
-                    <field name="user_ids"/>
+                    <field name="job_id"/>
+                    <field name="product_id"/>
+                    <field name="operator"/>
                     <field name="total_ok"/>
                     <field name="total_ng"/>
                     <field name="biggest_lot"/>
@@ -31,9 +31,9 @@
                     <sheet>
                         <group>
                             <group>
-                                <field name="job_ids"/>
-                                <field name="product_ids" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
-                                <field name="user_ids"/>
+                                <field name="job_id"/>
+                                <field name="product_id" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
+                                <field name="operator"/>
                                 <field name="biggest_lot" invisible="1"/>
                                 <field name="factor" attrs="{'invisible': [('is_set', '=', False)]}"/>
                                 <field name="is_set" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
@@ -53,7 +53,7 @@
                             <page string="Detail">
                                 <field name="wholesale_job_lot_lines" widget="section_and_note_one2many">
                                     <tree create="0" delete="0" editable="bottom">
-                                        <field name="lot_ids"/>
+                                        <field name="lot_id"/>
                                         <field name="ok" attrs="{'column_invisible': [('parent.is_set', '=', True)]}"/>
                                         <field name="ng" attrs="{'column_invisible': [('parent.is_set', '=', True)]}"/>
                                     </tree>
