@@ -6,7 +6,7 @@
             <field name="name">cleaning.tree</field>
             <field name="model">cleaning</field>
             <field name="arch" type="xml">
-                <tree>
+                <tree default_order="create_date desc">
                     <field name="name"/>
                     <field name="datetime"/>
                     <field name="user"/>

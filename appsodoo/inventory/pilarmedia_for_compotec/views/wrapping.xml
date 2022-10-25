@@ -6,7 +6,7 @@
             <field name="name">Wrapping Tree</field>
             <field name="model">wrapping</field>
             <field name="arch" type="xml">
-                <tree>
+                <tree default_order="create_date desc">
                     <field name="name"/>
                     <field name="date"/>
                     <field name="shift"/>
