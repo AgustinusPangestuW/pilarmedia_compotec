@@ -17,8 +17,8 @@ class APICleaning(http.Controller):
             'product': i.product.name,
             'ok': i.res_ok,
             'ng': i.res_ng,
-            'rework': i.rework,
-            'description': i.description
+            'rework': i.rework or None,
+            'description': i.description or None
         } for i in cleaning]
 
     @http.route(['/cleaning/get'], type="json", auth="public", method="GET", csrf=False)
