@@ -3,9 +3,10 @@ from odoo import models, fields, api, _, exceptions
 from datetime import datetime
 from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
+from .inherit_models_model import inheritModel
 
 
-class Lot(models.Model):
+class Lot(inheritModel):
     _name = "lot"
     _sql_constraints = [
         ('check_name_unique', 'UNIQUE(name)', 'The name is not unique')
@@ -38,7 +39,7 @@ class Lot(models.Model):
                 raise ValidationError(_("name must be Integer"))
 
 
-class WholesaleJob(models.Model):
+class WholesaleJob(inheritModel):
     _name = 'wholesale.job'
     _description = "Wholesale Job"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
@@ -304,7 +305,7 @@ class WholesaleJob(models.Model):
             for line in rec.move_line_ids_without_package:
                 line.qty_done = line.product_uom_qty
 
-class WholesaleJobLine(models.Model):
+class WholesaleJobLine(inheritModel):
     _name = "wholesale.job.line"
     _description = "Wholesale Job Line"
 
@@ -343,7 +344,7 @@ class WholesaleJobLine(models.Model):
     )
     wholesale_job_lot_lines = fields.One2many(
         'wholesale.job.lot.line', 'wholesale_job_line_id', 
-        'Lot Line', auto_join=True, copy=True)           
+        'Lot Line', auto_join=True, copy=True)   
 
     @api.model
     def default_get(self, fields_list):
@@ -469,7 +470,7 @@ class WholesaleJobLine(models.Model):
         self.factor = new_factor
 
 
-class WholesaleJobLotLine(models.Model):
+class WholesaleJobLotLine(inheritModel):
     _name = "wholesale.job.lot.line"
     _description = "Wholesale Job Lot Line"
     _rec_name = "lot_id"

@@ -1,7 +1,8 @@
 from odoo import models, fields, api, _
 from .employee_custom import _get_domain_user
+from .inherit_models_model import inheritModel
 
-class Sorting(models.Model):
+class Sorting(inheritModel):
     _name = 'sorting'
 
     name = fields.Char(string='Sorting Name', required=True, copy=False, readonly=True, index=True, default=lambda self: _('New'))
@@ -24,7 +25,7 @@ class Sorting(models.Model):
         return super().create(vals)  
 
 
-class SortingLines(models.Model):
+class SortingLines(inheritModel):
     _name = "sorting.line"
     _description = "Sorting Line"
     _rec_name = "user"

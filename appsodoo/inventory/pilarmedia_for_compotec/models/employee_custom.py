@@ -1,6 +1,7 @@
 from odoo import models, fields, api
+from .inherit_models_model import inheritModel
 
-class EmployeeCustom(models.Model):
+class EmployeeCustom(inheritModel):
     _name = 'employee.custom'
 
     name = fields.Char(string='Nama Pegawai', required=True)

@@ -1,4 +1,5 @@
 from . import (
+    inherit_models_model,
     inherit_stock_picking_type,
     wrapping, 
     sorting, 

@@ -4,8 +4,10 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError 
 import json
 from .employee_custom import _get_domain_user
+from .inherit_models_model import inheritModel
 
-class Shift(models.Model):
+
+class Shift(inheritModel):
     _name = "shift"
     _description = "Shift"
 
@@ -18,7 +20,7 @@ class Shift(models.Model):
         return _show_description(self)
 
 
-class ShiftLine(models.Model):
+class ShiftLine(inheritModel):
     _name = "shift.line"
     _description = "Shift Template"
 
@@ -27,7 +29,7 @@ class ShiftLine(models.Model):
     working_time = fields.Many2one('working.time', string='Working Time', domain=[('active', '=', True)], required=True)
 
 
-class ShiftDeadline(models.Model):
+class ShiftDeadline(inheritModel):
     _name = "shift.deadline"
     _description = "Shift Deadline"
 
@@ -39,7 +41,7 @@ class ShiftDeadline(models.Model):
         return _show_description(self)
 
 
-class WorkingTime(models.Model):
+class WorkingTime(inheritModel):
     _name = "working.time"
     _description = "Working Time"
 
@@ -51,7 +53,7 @@ class WorkingTime(models.Model):
         return _show_description(self)
 
 
-class Wrapping(models.Model):
+class Wrapping(inheritModel):
     _name = 'wrapping'
     _description = "Wrapping"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
@@ -332,7 +334,7 @@ def _get_todo(self, production):
     return todo_quantity, todo_uom, serial_finished
 
     
-class WrappingDeadlineLine(models.Model):
+class WrappingDeadlineLine(inheritModel):
     _name = "wrapping.deadline.line"
     _description = "Wrapping Deadline Line"
     _rec_name = "shift_deadline"
@@ -445,7 +447,7 @@ class WrappingDeadlineLine(models.Model):
         return res
 
 
-class WrappingDeadlineWorkingtimeLine(models.Model):
+class WrappingDeadlineWorkingtimeLine(inheritModel):
     _name = "wrapping.deadline.working.time.line"
     _description = "Wrapping Deadline Working time Line"
 

@@ -3,8 +3,10 @@ from datetime import datetime
 from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
 from .wrapping import _get_todo
+from .inherit_models_model import inheritModel
 
-class PeelDissAssy(models.Model):
+
+class PeelDissAssy(inheritModel):
     _name = 'peel.diss.assy'
     _description = "Form Kupas Diss Assy"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
@@ -221,7 +223,7 @@ class PeelDissAssy(models.Model):
                     self._count_mo()
                     
 
-class PeelDissAssyLine(models.Model):
+class PeelDissAssyLine(inheritModel):
     _name = "peel.diss.assy.line"
     _description = "Detail Job of Peel Diss Assy"
 
@@ -281,7 +283,7 @@ class PeelDissAssyLine(models.Model):
                     return _warn_qty_not_valid(rec.qty)
 
 
-class PeelDissAssyComponentLine(models.Model):
+class PeelDissAssyComponentLine(inheritModel):
     _name = "peel.diss.assy.component.line"
     _description = "Compoent Kupas Diss Assy"
     

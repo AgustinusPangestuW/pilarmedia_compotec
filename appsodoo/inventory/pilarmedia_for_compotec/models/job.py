@@ -1,7 +1,9 @@
 from email.policy import default
 from odoo import models, fields, api
+from .inherit_models_model import inheritModel
 
-class Job(models.Model):
+
+class Job(inheritModel):
     _name = 'job'
 
     name = fields.Char(string='Nama Pengerjaan', required=True)

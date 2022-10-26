@@ -2,8 +2,9 @@ from datetime import datetime
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from .employee_custom import _get_domain_user
+from .inherit_models_model import inheritModel
 
-class Cleaning(models.Model):
+class Cleaning(inheritModel):
     _name = 'cleaning'
     _rec_name = "user"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
