@@ -24,6 +24,30 @@ class ApiController(http.Controller):
 
         if return_res:
             return res
+    
+    def updates_lines(self, lines=[]):
+        # lines
+        if type(lines) == list:
+            list_lines = []
+            for line in lines:
+                dict_line = {}
+                for key, val in line.items():
+                    if type(val) == list and type(val[0]) == dict:
+                        # another line
+                        dict_line[key] = self.updates_lines(val)
+                    else: 
+                        # data
+                        dict_line[key] = val
+                    
+                # update/delete
+                if line.get('id'):
+                    if line.get('delete'): list_lines.append((2, line['id'], dict_line))
+                    else: list_lines.append((1, line['id'], dict_line))
+                # new
+                else:
+                    list_lines.append((0,0, dict_line))
+
+        return list_lines
 
     @http.route('/authenticate', type='json', auth="public")
     def authenticate(self, db, login, password, base_location=None):

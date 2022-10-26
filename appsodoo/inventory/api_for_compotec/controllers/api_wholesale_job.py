@@ -127,22 +127,8 @@ class APIWholesaleJob(http.Controller):
             for k, v in updates_wholesale_job.items():
                 cur_wholesale_job[k] = v
 
-            # wholesale job deadline line
-            if type(updates_wholesale_job_lines) == list:
-                # lines
-                if len(updates_wholesale_job_lines) > 0 and type(updates_wholesale_job_lines[0]) == dict:
-                    updates_wholesale_job_lines = [(0,0, 
-                        {
-                            # val wholesalejob Deadline lot lines
-                            key: [(0,0,val_wt) for val_wt in val] 
-                            if type(val) == list and type(val[0]) == dict 
-                            else val
-                        for key, val in dl.items() } 
-                    ) for dl in updates_wholesale_job_lines]
-
-                # reset / delete wholesalejob deadline line
-                cur_wholesale_job.wholesale_job_lines = [(5,0,0)]
-                cur_wholesale_job.wholesale_job_lines = updates_wholesale_job_lines
+            # update/new/delete wholesalejob line
+            cur_wholesale_job['wholesale_job_lines'] = ApiController().updates_lines(updates_wholesale_job_lines)
 
             if kwargs.get('draft'):
                 cur_wholesale_job.action_draft()
