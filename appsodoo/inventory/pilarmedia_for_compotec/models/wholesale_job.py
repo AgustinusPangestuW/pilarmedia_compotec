@@ -43,20 +43,47 @@ class WholesaleJob(models.Model):
     _description = "Wholesale Job"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Wholesale Job Name', required=True, readonly=True, index=True, default=lambda self: _('New'))
+    READONLY_STATES = {
+        'submit': [('readonly', True)],
+        'cancel': [('readonly', True)],
+    }
+    list_state = [("draft","Draft"), ("submit","Submited"), ('cancel', "Canceled")]
+    readonly_fields = ["name", "date", "job_id", "checked_coordinator", "checked_qc", "shift", ]
+
+    name = fields.Char(
+        string='Wholesale Job Name', 
+        required=True, 
+        readonly=True, 
+        index=True, 
+        default=lambda 
+        self: _('New'))
     sequence = fields.Integer(string='Sequence', default=10)
-    date = fields.Date(string="Date", required=True, default=datetime.now().date())
+    date = fields.Date(string="Date", required=True, default=datetime.now().date(), states=READONLY_STATES)
     job_id_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)
     job_id = fields.Many2one(
         'job', 
         string='Job', 
         domain=[('active', '=', 1), ('for_form', '=', 'wholesale_job')], 
-        required=True
+        required=True, states=READONLY_STATES
     )
-    wholesale_job_lines = fields.One2many('wholesale.job.line', 'wholesale_job_id', 'Lot Line', auto_join=True, copy=True)
-    checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
-    checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
-    shift = fields.Many2one('shift', string='Shift')
+    wholesale_job_lines = fields.One2many(
+        'wholesale.job.line', 
+        'wholesale_job_id', 
+        'Lot Line', 
+        auto_join=True, 
+        copy=True, 
+        states=READONLY_STATES)
+    checked_coordinator = fields.Many2one(
+        'employee.custom', 
+        string='Checked Coordinator', 
+        domain=_get_domain_user, 
+        states=READONLY_STATES)
+    checked_qc = fields.Many2one(
+        'employee.custom', 
+        string='Checked QC', 
+        domain=_get_domain_user, 
+        states=READONLY_STATES)
+    shift = fields.Many2one('shift', string='Shift', states=READONLY_STATES)
     state = fields.Selection([
         ("draft","Draft"),
         ("submit","Submited"), 
@@ -76,7 +103,11 @@ class WholesaleJob(models.Model):
         compute="_get_op_type_from_job", 
         store=True
     )
-    count_stock_picking = fields.Integer(string='Count Stock Picking', compute="_count_stock_picking", store=True, readonly=True)
+    count_stock_picking = fields.Integer(
+        string='Count Stock Picking', 
+        compute="_count_stock_picking", 
+        store=True, 
+        readonly=True)
     company_id = fields.Many2one('res.company', string='Company', readonly=True)
 
     @api.model
@@ -128,12 +159,40 @@ class WholesaleJob(models.Model):
         # self.validate_wj_lines()
         self.create_stock_move()
 
+    def validate_change_state(self, vals):
+        # change state Draft / None -> Submit -> Cancel 
+        # Change state Cancel -> Draft
+        state_before = {
+            "submit": ['', 'draft'],
+            "cancel": ['submit']
+        }
+
+        if vals.get('state'):
+            new_state = vals.get('state')
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            for i in state_before:
+                if new_state == i and self.state not in state_before[i]:
+                    raise ValidationError(_("Current state must be %s when update state into %s, state document %s is %s" % (
+                        "(" + ", ".join(state_before[i]) +")",
+                        new_state,
+                        self.name,
+                        name_cur_state[0]
+                    )))
+
+    def validate_change_value_in_restrict_field(self, vals):
+        readonly_status = False
+        for i in vals:
+            if i in self.readonly_fields:
+                readonly_status = True
+
+        if self.state in ['submit', 'cancel'] and readonly_status:
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, name_cur_state[0])))
+
     def write(self, vals):  
-        # if self.state in ['submit']:
-        #     raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, self.state)))
-
+        self.validate_change_value_in_restrict_field(vals)
+        self.validate_change_state(vals)
         vals = super().write(vals)
-
         return vals
         
     def action_cancel(self):
