@@ -39,7 +39,7 @@ class APIWholesaleJob(http.Controller):
                 'wholesale_job_lot_lines': [{
                     'id': lot_lines.id,
                     'wholesale_job_line_id': lot_lines.wholesale_job_line_id.id,
-                    'lot_id': lot_lines.lot_id,
+                    'lot_id': lot_lines.lot_id.id,
                     'ok': lot_lines.ok,
                     'ng': lot_lines.ng
                 } for lot_lines in lines.wholesale_job_lot_lines]
@@ -86,8 +86,9 @@ class APIWholesaleJob(http.Controller):
 
             res = request.env['wholesale.job'].sudo().create(kwargs)
             wholesale_jobs = self.mapping_values(res)
-            request.env.cr.commit()                
-
+            if len(wholesale_jobs) > 0: wholesale_jobs = wholesale_jobs[0]
+            request.env.cr.commit()   
+            
             return ApiController.response_sucess(ApiController, wholesale_jobs, kwargs, "/wholesalejob/create")
         except Exception as e:
             request.env.cr.rollback()
@@ -125,20 +126,41 @@ class APIWholesaleJob(http.Controller):
 
             # wholesale job deadline line
             if type(updates_wholesale_job_lines) == list:
-                # lines
-                if len(updates_wholesale_job_lines) > 0 and type(updates_wholesale_job_lines[0]) == dict:
-                    updates_wholesale_job_lines = [(0,0, 
-                        {
-                            # val wholesalejob Deadline lot lines
-                            key: [(0,0,val_wt) for val_wt in val] 
-                            if type(val) == list and type(val[0]) == dict 
-                            else val
-                        for key, val in dl.items() } 
-                    ) for dl in updates_wholesale_job_lines]
+                # # lines
+                # if len(updates_wholesale_job_lines) > 0 and type(updates_wholesale_job_lines[0]) == dict:
+                #     updates_wholesale_job_lines = [(0,0, 
+                #         {
+                #             # val wholesalejob Deadline lot lines
+                #             key: [(0,0,val_wt) for val_wt in val] 
+                #             if type(val) == list and type(val[0]) == dict 
+                #             else val
+                #         for key, val in dl.items() } 
+                #     ) for dl in updates_wholesale_job_lines]
+
+                wholesale_job_lines = []
+                for line in updates_wholesale_job_lines:
+                    dict_wholesale_job_line = {}
+                    for key, val in line.items():
+                        # another line
+                        if type(val) == list and type(val[0]) == dict:
+                            list_line = []
+                            for val_line in val:
+                                if val_line.get('id'): list_line.append((1, val_line['id'], val_line))
+                                else: list_line.append((0, 0, val_line))
+                            dict_wholesale_job_line[key] = list_line
+                        # data
+                        else: dict_wholesale_job_line[key] = val
+                        
+                    # update
+                    if line.get('id'):
+                        wholesale_job_lines((1, line['id'], dict_wholesale_job_line))
+                    # buat baru
+                    else:
+                        wholesale_job_lines.append((0,0, dict_wholesale_job_line))
 
                 # reset / delete wholesalejob deadline line
-                cur_wholesale_job.wholesale_job_lines = [(5,0,0)]
-                cur_wholesale_job.wholesale_job_lines = updates_wholesale_job_lines
+                # cur_wholesale_job.wholesale_job_lines = [(5,0,0)]
+                cur_wholesale_job.wholesale_job_lines = wholesale_job_lines
 
             if kwargs.get('draft'):
                 cur_wholesale_job.action_draft()
@@ -147,9 +169,10 @@ class APIWholesaleJob(http.Controller):
             elif kwargs.get('cancel'):
                 cur_wholesale_job.action_cancel()
                 
-            request.env.cr.commit()                
-
-            return ApiController.response_sucess(ApiController, cur_wholesale_job, params, "/wholesalejob/update")
+            request.env.cr.commit()              
+            wholesale_jobs = self.mapping_values(cur_wholesale_job)
+            if len(wholesale_jobs) > 0: wholesale_jobs = wholesale_jobs[0]
+            return ApiController.response_sucess(ApiController, wholesale_jobs, params, "/wholesalejob/update")
         except Exception as e:
             request.env.cr.rollback()
             return ApiController.response_failed(ApiController, e, params, "/wholesalejob/update")
@@ -176,3 +199,7 @@ class APIWholesaleJob(http.Controller):
         except Exception as e:
             request.env.cr.rollback()
             return ApiController.response_failed(ApiController, e, params, "/wholesalejob/delete")
+
+    @http.route(['/wholesalejoblotline/update'], type="json", auth="public", method="POST", scrf=False)
+    def update_lot_line(self, **kwargs):
+        request.env['wholesale.job.line'].sudo().search([('id', '=', 21)]).write({'total_ok': 33})
