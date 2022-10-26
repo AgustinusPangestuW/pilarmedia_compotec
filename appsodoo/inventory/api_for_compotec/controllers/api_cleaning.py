@@ -2,6 +2,7 @@ import json, copy
 from odoo import http, _
 from odoo.http import request
 from .api import RequestError, ApiController
+from odoo.exceptions import ValidationError
 
 
 class APICleaning(http.Controller):
@@ -61,7 +62,7 @@ class APICleaning(http.Controller):
             return ApiController().response_failed(e, kwargs, "/cleaning/create")
 
     @http.route(['/cleaning/update'], type="json", auth="public", method="POST", csrf=False)
-    def update(self, ids, updates, **kwargs):
+    def update(self, updates, **kwargs):
         """
         REST API POST for update table `Cleaning`
 
@@ -74,27 +75,34 @@ class APICleaning(http.Controller):
         """
         request.env.cr.savepoint()
         params = copy.deepcopy(kwargs)
-        params.update({
-            'ids': ids,
-            'updates': updates
-        })
+        params.update({'updates': updates})
         try:
-            for id in ids:
-                ApiController().validate_base_on_id("cleaning", "Cleaning", id, return_res=True)
+            temp_res = []
+            if type(updates) != list: raise ValidationError(_('key updates must be list of dict'))
 
-            res = request.env['cleaning'].sudo().search([('id', 'in', ids)]).write(updates)
+            for rec in updates:
+                if not rec.get('id'): 
+                    raise ValidationError(_("need id for update"))
+                
+                param_update = { key:val for key, val in rec.items() if key not in ['draft', 'submit', 'cancel']}
+                res = request.env['cleaning'].sudo().search([('id', '=', rec['id'])]).write(param_update)
+                if res:
+                    res = request.env['cleaning'].sudo().search([('id', '=', rec['id'])])
+                    res_mapped = self.mapping_values(res)
+                    if res_mapped:
+                        temp_res.append(res_mapped[0])
 
-            for id in ids:
-                if kwargs.get('draft'):
-                    request.env['cleaning'].sudo().search([('id', 'in', ids)]).action_submit()
-                elif kwargs.get('submit'):
-                    request.env['cleaning'].sudo().search([('id', 'in', ids)]).action_submit()
-                elif kwargs.get('cancel'):
-                    request.env['cleaning'].sudo().search([('id', 'in', ids)]).action_cancel()
+                    if rec.get('draft'):
+                        res.action_submit()
+                    elif rec.get('submit'):
+                        res.action_submit()
+                    elif rec.get('cancel'):
+                        res.action_cancel()
+                else:
+                    raise ValidationError(_('execute update cleaning in id %s failed.' % (rec['id'])))
 
-            request.env.cr.commit()                
-
-            return ApiController().response_sucess(res, params, "/cleaning/update")
+            request.env.cr.commit()          
+            return ApiController().response_sucess(temp_res, params, "/cleaning/update")
         except Exception as e:
             request.env.cr.rollback()
             return ApiController().response_failed(e, params, "/cleaning/update")
