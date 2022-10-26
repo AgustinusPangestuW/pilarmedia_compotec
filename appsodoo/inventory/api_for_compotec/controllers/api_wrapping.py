@@ -1,7 +1,7 @@
 import json, copy
 from odoo import http, _
 from odoo.http import request
-from .api import ApiController, RequestError
+from .api import RequestError, ApiController
 
 
 class APIWrapping(http.Controller):
@@ -61,9 +61,9 @@ class APIWrapping(http.Controller):
         try:
             res = request.env['wrapping'].sudo().search(kwargs.get('search') or [])
             wrappings = self.mapping_values(res)
-            return ApiController.response_sucess(ApiController, wrappings, kwargs, "/wrapping/get")
+            return ApiController().response_sucess(wrappings, kwargs, "/wrapping/get")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/wrapping/get")
+            return ApiController().response_failed(e, kwargs, "/wrapping/get")
 
     @http.route(['/wrapping/create'], type="json", auth="public", method="POST", csrf=False)
     def create(self, **kwargs):
@@ -90,10 +90,10 @@ class APIWrapping(http.Controller):
             wrappings = self.mapping_values(res)
             request.env.cr.commit()                
 
-            return ApiController.response_sucess(self, wrappings, kwargs, "/wrapping/create")
+            return ApiController().response_sucess(self, wrappings, kwargs, "/wrapping/create")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(self, e, kwargs, "/wrapping/create")
+            return ApiController().response_failed(self, e, kwargs, "/wrapping/create")
 
     @http.route(['/wrapping/update'], type="json", auth="public", method="POST", csrf=False)
     def update(self, id, updates, **kwargs):
@@ -114,7 +114,7 @@ class APIWrapping(http.Controller):
         })
 
         try:
-            cur_wrapping = ApiController.validate_base_on_id(ApiController, "wrapping", "wrapping", id, return_res=True)
+            cur_wrapping = ApiController().validate_base_on_id("wrapping", "wrapping", id, return_res=True)
             
             updates_wrapping = copy.deepcopy(updates)
             if 'wrapping_deadline_line' in updates_wrapping:
@@ -151,10 +151,10 @@ class APIWrapping(http.Controller):
                 
             request.env.cr.commit()                
 
-            return ApiController.response_sucess(ApiController, cur_wrapping, params, "/wrapping/update")
+            return ApiController().response_sucess(cur_wrapping, params, "/wrapping/update")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, params, "/wrapping/update")
+            return ApiController().response_failed(e, params, "/wrapping/update")
 
     @http.route(['/wrapping/delete'], type="json", auth="public", method="GET", scrf=False)
     def delete(self, ids, **kwargs):
@@ -170,11 +170,11 @@ class APIWrapping(http.Controller):
         params.update({'ids':ids})
         try:
             for id in ids:
-                ApiController.validate_base_on_id(ApiController, "wrapping", "wrapping", id)
+                ApiController().validate_base_on_id("wrapping", "wrapping", id)
             res = request.env['wrapping'].sudo().search([('id', 'in', ids)]).unlink()
             request.env.cr.commit()                
 
-            return ApiController.response_sucess(ApiController, res, params, "/wrapping/delete")
+            return ApiController().response_sucess(res, params, "/wrapping/delete")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, params, "/wrapping/delete")
+            return ApiController().response_failed(e, params, "/wrapping/delete")

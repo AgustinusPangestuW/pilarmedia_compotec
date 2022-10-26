@@ -1,7 +1,7 @@
 import json, copy
 from odoo import http, _
 from odoo.http import request
-from .api import ApiController, RequestError
+from .api import RequestError, ApiController
 
 
 class APIWholesaleJob(http.Controller):
@@ -59,9 +59,9 @@ class APIWholesaleJob(http.Controller):
         try:
             res = request.env['wholesale.job'].sudo().search(kwargs.get('search') or [])
             wholesale_jobs = self.mapping_values(res)
-            return ApiController.response_sucess(ApiController, wholesale_jobs, kwargs, "/wholesalejob/get")
+            return ApiController().response_sucess(wholesale_jobs, kwargs, "/wholesalejob/get")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/wholesalejob/get")
+            return ApiController().response_failed(e, kwargs, "/wholesalejob/get")
 
     @http.route(['/wholesalejob/create'], type="json", auth="public", method="POST", csrf=False)
     def create(self, **kwargs):
@@ -91,7 +91,7 @@ class APIWholesaleJob(http.Controller):
             return ApiController.response_sucess(ApiController, wholesale_jobs, kwargs, "/wholesalejob/create")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, kwargs, "/wholesalejob/create")
+            return ApiController().response_failed(e, kwargs, "/wholesalejob/create")    
 
     @http.route(['/wholesalejob/update'], type="json", auth="public", method="POST", csrf=False)
     def update(self, id, updates, **kwargs):
@@ -112,7 +112,7 @@ class APIWholesaleJob(http.Controller):
         })
 
         try:
-            cur_wholesale_job = ApiController.validate_base_on_id(ApiController, "wholesale.job", "wholesale_job", id, return_res=True)
+            cur_wholesale_job = ApiController().validate_base_on_id("wholesale.job", "wholesale_job", id, return_res=True)
             
             updates_wholesale_job = copy.deepcopy(updates)
             if 'wholesale_job_lines' in updates_wholesale_job:
@@ -146,13 +146,14 @@ class APIWholesaleJob(http.Controller):
                 cur_wholesale_job.action_submit()
             elif kwargs.get('cancel'):
                 cur_wholesale_job.action_cancel()
-                
-            request.env.cr.commit()                
-
-            return ApiController.response_sucess(ApiController, cur_wholesale_job, params, "/wholesalejob/update")
+            
+            request.env.cr.commit()              
+            wholesale_jobs = self.mapping_values(cur_wholesale_job)
+            if len(wholesale_jobs) > 0: wholesale_jobs = wholesale_jobs[0]
+            return ApiController().response_sucess(wholesale_jobs, params, "/wholesalejob/update")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, params, "/wholesalejob/update")
+            return ApiController().response_failed(e, params, "/wholesalejob/update")
 
     @http.route(['/wholesalejob/delete'], type="json", auth="public", method="GET", scrf=False)
     def delete(self, ids, **kwargs):
@@ -168,11 +169,12 @@ class APIWholesaleJob(http.Controller):
         params.update({'ids':ids})
         try:
             for id in ids:
-                res = ApiController.validate_base_on_id(ApiController, "wholesale.job", "wholesale_job", id, return_res=True)
+                res = ApiController().validate_base_on_id("wholesale.job", "wholesale_job", id, return_res=True)
                 res.unlink()
 
             request.env.cr.commit()    
-            return ApiController.response_sucess(ApiController, res, params, "/wholesalejob/delete")
+            return ApiController().response_sucess(res, params, "/wholesalejob/delete")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, params, "/wholesalejob/delete")
+            return ApiController().response_failed(e, params, "/wholesalejob/delete")
+

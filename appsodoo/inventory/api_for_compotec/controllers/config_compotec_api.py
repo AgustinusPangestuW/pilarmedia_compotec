@@ -27,9 +27,9 @@ class ConfigCompotecApi(http.Controller):
                 "vendor_id": i.vendor.id,
                 "vendor": i.vendor.name
             } for i in request.env['employee.custom'].sudo().search((kwargs.get('search') or []))]
-            return ApiController.response_sucess(ApiController, {'employees': employees}, kwargs, "/getemployeecompotec/")
+            return ApiController().response_sucess({'employees': employees}, kwargs, "/getemployeecompotec/")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/getemployeecompotec/") 
+            return ApiController().response_failed(e, kwargs, "/getemployeecompotec/") 
 
     @http.route(['/getlot/'], type="json", auth="public", method=['GET'])
     def getLot(self, **kwargs):
@@ -47,9 +47,9 @@ class ConfigCompotecApi(http.Controller):
                 'description': i.description
             } for i in request.env['lot'].sudo().search([])]
 
-            return ApiController.response_sucess(ApiController, {'lots': lots, "max": max}, kwargs, "/getlot/")
+            return ApiController().response_sucess({'lots': lots, "max": max}, kwargs, "/getlot/")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/getlot/")
+            return ApiController().response_failed(e, kwargs, "/getlot/")
 
     @http.route(['/getshift/'], type="json", auth="public", method=["GET"])
     def getShift(self, **kwargs):
@@ -71,6 +71,6 @@ class ConfigCompotecApi(http.Controller):
                 } for wt in i.shift_line]
             } for i in shifts]
 
-            return ApiController.response_sucess(ApiController, {"shifts": shifts}, kwargs, "/getshift/")
+            return ApiController().response_sucess({"shifts": shifts}, kwargs, "/getshift/")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/getshift/")
+            return ApiController().response_failed(e, kwargs, "/getshift/")

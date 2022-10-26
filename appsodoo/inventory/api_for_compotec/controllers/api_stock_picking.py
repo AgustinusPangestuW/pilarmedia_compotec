@@ -1,7 +1,7 @@
 import json, copy
 from odoo import http, _
 from odoo.http import request
-from .api import ApiController, RequestError
+from .api import RequestError, ApiController
 
 
 class apiStockPicking(http.Controller):
@@ -24,10 +24,10 @@ class apiStockPicking(http.Controller):
 
         try:
             if not kwargs.get('uid') and (kwargs.get('db') and kwargs.get('login') and kwargs.get('password')):
-                ApiController.authenticate(ApiController, kwargs.get('db'), kwargs.get('login'), kwargs.get('password'), kwargs.get('base_location'))
+                ApiController().authenticate(kwargs.get('db'), kwargs.get('login'), kwargs.get('password'), kwargs.get('base_location'))
 
             # hapus parameter untuk execute auth
-            kwargs = ApiController.clear_param_auth(ApiController, kwargs)
+            kwargs = ApiController().clear_param_auth(kwargs)
             # value kwargs ditampung ke temp_kwargs untuk proses create `transit_log`
             temp_kwargs = copy.deepcopy(kwargs)
             for d in temp_kwargs:
@@ -39,10 +39,10 @@ class apiStockPicking(http.Controller):
             transit_logs = self.mapping_values(res)
             if transit_logs: transit_logs = transit_logs[0]
             request.env.cr.commit()     
-            return ApiController.response_sucess(ApiController, transit_logs, kwargs, "updateloc")
+            return ApiController().response_sucess(transit_logs, kwargs, "updateloc")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, kwargs, "updateloc")
+            return ApiController().response_failed(e, kwargs, "updateloc")
 
     @http.route(['/updatepicking/'], type="json", auth="public", method=['POST'], csrf=False)
     def updatepicking(self, **kwargs):
@@ -52,19 +52,19 @@ class apiStockPicking(http.Controller):
         request.env.cr.savepoint()
         try:
             if not kwargs.get('uid') and (kwargs.get('db') and kwargs.get('login') and kwargs.get('password')):
-                ApiController.authenticate(ApiController, kwargs.get('db'), kwargs.get('login'), kwargs.get('password'), kwargs.get('base_location'))
+                ApiController().authenticate(kwargs.get('db'), kwargs.get('login'), kwargs.get('password'), kwargs.get('base_location'))
 
             # hapus parameter untuk execute auth
-            kwargs = ApiController.clear_param_auth(ApiController, kwargs)
+            kwargs = ApiController().clear_param_auth(kwargs)
             if kwargs.get('state') in ['in_transit', 'delivered']:
                 res = request.env['stock.picking'].sudo().search(
                     [('id', '=', kwargs['picking_id'])]).write({'state': kwargs['state']})
                 request.env.cr.commit()
             
-                return ApiController.response_sucess(ApiController, res, kwargs, "updatepicking")
+                return ApiController().response_sucess(res, kwargs, "updatepicking")
             else:
                 raise RequestError('can only update state to (in_transit / delivered)')
 
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, kwargs, "updatepicking")
+            return ApiController().response_failed(e, kwargs, "updatepicking")
