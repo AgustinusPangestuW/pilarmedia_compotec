@@ -120,6 +120,9 @@ class APICleaning(http.Controller):
         params = copy.deepcopy(kwargs)
         params.update({'ids':ids})
         try:
+            if type(ids) != list:
+                raise ValidationError(_("value in key ids must be list of integer."))
+
             for id in ids:
                 ApiController().validate_base_on_id("cleaning", "Cleaning", id)
             res = request.env['cleaning'].sudo().search([('id', 'in', ids)]).unlink()
