@@ -448,14 +448,15 @@ class WholesaleJobLine(inheritModel):
             if rec.is_set:
                 last_lot_list = rec.wholesale_job_lot_lines
                 last_lot_name = ''
+
                 if len(last_lot_list) > 0:
+                    rec.biggest_lot = last_lot_list[-1].lot_id.id
                     last_lot_name = last_lot_list[-1].lot_id.name
                     new_total_lot = int(rec.factor) * int(last_lot_name)
                     
+                rec.total_ok = new_total_lot
                 total_set = rec.total_ok + rec.total_ng
-                    
-            rec.total_ok = new_total_lot
-            rec.total_set = total_set
+                rec.total_set = total_set
 
     @api.onchange('factor')
     def validate_factor(self):
