@@ -63,6 +63,21 @@ class StockPicking(models.Model):
         help="location destination for show in tree",
         compute="_get_location_dest_for_show"
     )
+    users_waiting_approval = fields.Many2many(
+        comodel_name='res.users', 
+        relation='users_waiting_approval_rel',
+        string='User Waiting Approval',
+        copy=False,
+        store=True
+    )
+
+    def write(self, vals):
+        # reset value `users_waiting_approval` 
+        # filled value in field `users_waiting_approval` by system 
+        # when auto create step2 stock picking (autocreate stock picking)
+        if self.state == 'done':
+            vals['users_waiting_approval'] = [(5,0,0)]
+        return super().write(vals)
 
     def action_assign(self):
         super().action_assign()
@@ -211,6 +226,9 @@ def make_another_stock_pick_if_subcon(self):
         if rec.picking_type_id.is_subcon and rec.picking_type_id.operation_type_id:
             # Mapping data stock picking
             new_sm.update(_collect_stock_picking(rec))
+
+            if self.env.context.get('uid'):
+                new_sm.update({"users_waiting_approval": [(4, self.env.context.get('uid'))] })
             
             for line in rec.move_line_ids_without_package:
                 # isikan line (move_line_ids_without_package) karena mau membuat `transfer immediate` 

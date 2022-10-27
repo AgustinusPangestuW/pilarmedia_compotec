@@ -48,6 +48,16 @@
                             <field name="count_picking_need_approval"/>
                         </div>
                     </div>
+                    <div t-if="record.count_picking_users_waiting_approval.raw_value > 0" class="row">
+                        <div class="col-9">
+                            <a class="oe_kanban_stock_picking_type_list" name="get_action_picking_tree_users_waiting_approval" type="object">
+                                Waiting Approval
+                            </a>
+                        </div>
+                        <div class="col-3">
+                            <field name="count_picking_users_waiting_approval"/>
+                        </div>
+                    </div>
                 </xpath>
             </field>
         </record>

@@ -35,6 +35,7 @@
 
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="stock_picking_subcont_ref_id" invisible="1"/>
+                <field name="users_waiting_approval" widget="many2many_tags"/>
             </xpath>
 
             <field name="location_id" position="attributes">
@@ -73,6 +74,8 @@
                     domain="[('approved_by', '!=', False), ('state', '=', 'done')]"/>
                 <filter name="need_approval" string="Need Approval" 
                     domain="[('picking_type_id.approvals', 'in', uid), ('state', '=', 'need_approval')]"/>
+                <filter name="users_waiting_approval" string="Waiting for Approval" 
+                    domain="[('users_waiting_approval', 'in', uid)]"/>
             </xpath>
         </field>
     </record>
@@ -88,6 +91,23 @@
             <xpath expr="//field[@name='location_dest_id']" position="replace">
                 <field name="location_dest" options="{'no_create': True}" string="To" groups="stock.group_stock_multi_locations" optional="show"/>
             </xpath>
+        </field>
+    </record>
+
+    <record id="action_picking_tree_users_waiting_approval" model="ir.actions.act_window">
+        <field name="name">Waiting Approval</field>
+        <field name="res_model">stock.picking</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="view_mode">tree,kanban,form,calendar</field>
+        <field name="domain">[('users_waiting_approval', 'in', uid)]</field>
+        <field name="context">{'search_default_users_waiting_approval': 1}</field>
+        <field name="search_view_id" ref="stock.view_picking_internal_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new transfer
+            </p><p>
+                Transfers allow you to move products from one location to another.
+            </p>
         </field>
     </record>
 
