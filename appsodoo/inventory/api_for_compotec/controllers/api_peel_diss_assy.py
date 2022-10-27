@@ -1,7 +1,7 @@
 import json, copy
 from odoo import http, _
 from odoo.http import request
-from .api import ApiController, RequestError
+from .api import RequestError, ApiController
 
 
 class APIPeelDissAssy(http.Controller):
@@ -48,9 +48,9 @@ class APIPeelDissAssy(http.Controller):
         try:
             res = request.env['peel.diss.assy'].sudo().search(kwargs.get('search') or [])
             peel_diss_assys = self.mapping_values(res)
-            return ApiController.response_sucess(ApiController, peel_diss_assys, kwargs, "/peeldissassy/get")
+            return ApiController().response_sucess(peel_diss_assys, kwargs, "/peeldissassy/get")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/peeldissassy/get")
+            return ApiController().response_failed(e, kwargs, "/peeldissassy/get")
 
     @http.route(['/peeldissassy/create'], type="json", auth="public", method="POST", csrf=False)
     def create(self, **kwargs):
@@ -77,10 +77,10 @@ class APIPeelDissAssy(http.Controller):
             peel_diss_assys = self.mapping_values(res)
             request.env.cr.commit()                
 
-            return ApiController.response_sucess(self, peel_diss_assys, kwargs, "/peeldissassy/create")
+            return ApiController().response_sucess(self, peel_diss_assys, kwargs, "/peeldissassy/create")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(self, e, kwargs, "/peeldissassy/create")
+            return ApiController().response_failed(self, e, kwargs, "/peeldissassy/create")
 
     @http.route(['/peeldissassy/update'], type="json", auth="public", method="POST", csrf=False)
     def update(self, id, updates, **kwargs):
@@ -97,7 +97,7 @@ class APIPeelDissAssy(http.Controller):
         params = copy.deepcopy(kwargs)
         params.update({'id':id, 'updates':updates})
         try:
-            cur_peel_diss_assy = ApiController.validate_base_on_id(ApiController, "peel.diss.assy", "peel_diss_assy", id, return_res=True)
+            cur_peel_diss_assy = ApiController().validate_base_on_id("peel.diss.assy", "peel_diss_assy", id, return_res=True)
             
             updates_peel_diss_assy = copy.deepcopy(updates)
             if 'peel_diss_assy_line' in updates_peel_diss_assy:
@@ -134,10 +134,10 @@ class APIPeelDissAssy(http.Controller):
                 
             request.env.cr.commit()   
             cur_peel_diss_assy = self.mapping_values(cur_peel_diss_assy)      
-            return ApiController.response_sucess(ApiController, cur_peel_diss_assy, params, "/peel_diss_assy/update")
+            return ApiController().response_sucess(cur_peel_diss_assy, params, "/peel_diss_assy/update")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, params, "/peel_diss_assy/update")
+            return ApiController().response_failed(e, params, "/peel_diss_assy/update")
 
     @http.route(['/peeldissassy/delete'], type="json", auth="public", method="GET", scrf=False)
     def delete(self, ids, **kwargs):
@@ -153,11 +153,11 @@ class APIPeelDissAssy(http.Controller):
         params.update({'ids':ids})
         try:
             for id in ids:
-                res = ApiController.validate_base_on_id(ApiController, "peel.diss.assy", "peel_diss_assy", id, return_res=True)
+                res = ApiController().validate_base_on_id("peel.diss.assy", "peel_diss_assy", id, return_res=True)
                 res.unlink()
 
             request.env.cr.commit()                
-            return ApiController.response_sucess(ApiController, True, params, "/peeldissassy/delete")
+            return ApiController().response_sucess(True, params, "/peeldissassy/delete")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController.response_failed(ApiController, e, params, "/peeldissassy/delete")
+            return ApiController().response_failed(e, params, "/peeldissassy/delete")

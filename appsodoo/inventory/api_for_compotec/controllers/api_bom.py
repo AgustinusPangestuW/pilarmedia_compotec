@@ -1,7 +1,7 @@
 import json, copy
 from odoo import http, _
 from odoo.http import request
-from .api import ApiController, RequestError
+from .api import RequestError, ApiController
 
 
 class APIBOM(http.Controller):    
@@ -42,9 +42,9 @@ class APIBOM(http.Controller):
         try:
             res = request.env['mrp.bom'].sudo().search(kwargs.get('search') or [])
             boms = self.mapping_values(res)
-            return ApiController.response_sucess(ApiController, boms, kwargs, "/bom/get")
+            return ApiController().response_sucess(boms, kwargs, "/bom/get")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/bom/get")
+            return ApiController().response_failed(e, kwargs, "/bom/get")
 
     @http.route(['/bom/getbaseoncomponent'], type="json", auth="public", method="GET", csrf=False)
     def get_base_on_component(self, product_ids, **kwargs):
@@ -63,6 +63,6 @@ class APIBOM(http.Controller):
             searchs = (kwargs.get('search') or []) + [('id', 'in', ids)]
             res = request.env['mrp.bom'].sudo().search(searchs or [])
             boms = self.mapping_values(res)
-            return ApiController.response_sucess(ApiController, boms, kwargs, "/bom/getbaseoncomponent/")
+            return ApiController().response_sucess(boms, kwargs, "/bom/getbaseoncomponent/")
         except Exception as e:
-            return ApiController.response_failed(ApiController, e, kwargs, "/bom/getbaseoncomponent/")
+            return ApiController().response_failed(e, kwargs, "/bom/getbaseoncomponent/")
