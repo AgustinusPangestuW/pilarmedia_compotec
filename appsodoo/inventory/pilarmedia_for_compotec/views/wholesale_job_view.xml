@@ -35,9 +35,6 @@
                             type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
                         <field name="state" widget="statusbar"/>
                         <field name="custom_css" invisible="1"/>    
-
-                        <!-- <button string="Create Stock Move" name="create_stock_move" class="btn-primary"
-                            attrs="{'invisible':[('state', 'not in', ['submit'])]}" type="object" /> -->
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
