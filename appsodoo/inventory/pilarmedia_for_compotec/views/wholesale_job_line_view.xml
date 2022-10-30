@@ -60,6 +60,7 @@
                                 </field>
                                 <group>
                                     <group>
+                                        <field name="reason_for_ng"/>
                                     </group>
                                     <group>
                                         <field name="total_ok"/>

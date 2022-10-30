@@ -345,6 +345,7 @@ class WholesaleJobLine(inheritModel):
     wholesale_job_lot_lines = fields.One2many(
         'wholesale.job.lot.line', 'wholesale_job_line_id', 
         'Lot Line', auto_join=True, copy=True)   
+    reason_for_ng = fields.Text(string='Keterangan NG')
 
     @api.model
     def default_get(self, fields_list):
