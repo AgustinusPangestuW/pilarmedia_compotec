@@ -360,7 +360,7 @@ class WrappingDeadlineLine(inheritModel):
         domain=_get_domain_user
     )
     total_ok = fields.Integer(
-        string='Total OK', 
+        string='OK', 
         compute="_calculate_total_ok", 
         store=True, 
         help="Result Calculation from total output in Wrapping Working time")
@@ -396,25 +396,25 @@ class WrappingDeadlineLine(inheritModel):
             rec.ng_uom = rec.total_output_uom = rec.total_ok_uom = rec.product.product_tmpl_id.uom_id.id
 
     @api.depends('wrapping_deadline_working_time_line.output')
-    def _calculate_total_ok(self):
+    def _calculate_total(self):
         """
         Calculate the total output of the wrapping_deadline_working output.
         """
-        total_ok = 0.0
+        total = 0.0
         for rec in self:
             for line in rec.wrapping_deadline_working_time_line:
-                total_ok += line.output
+                total += line.output
 
-            self.total_ok = total_ok
+            rec.total = total
 
-    @api.depends('total_ok', 'ng')
-    def _calculate_total(self):
+    @api.depends('total', 'ng')
+    def _calculate_total_ok(self):
         """
         Calculate the total output of the wrapping_deadline_working total_ok + ng.
         """
-        for wrapping_deadline_line in self:
-            wrapping_deadline_line.update({
-                'total': wrapping_deadline_line.total_ok + wrapping_deadline_line.ng
+        for rec in self:
+            rec.update({
+                'total_ok': rec.total - rec.ng
             })
 
     @api.model
@@ -465,7 +465,7 @@ class WrappingDeadlineWorkingtimeLine(inheritModel):
         index=1
     )
     working_time = fields.Many2one('working.time', string='Working time', required=True)
-    output = fields.Integer(string='Output')
+    output = fields.Integer(string='Total')
     break_time = fields.Char(string='Jam Break')
     rest_time = fields.Char(string='Jam Istirahat')
     plastic_roll_change_time = fields.Char(string='Ganti Rol Plastik')
