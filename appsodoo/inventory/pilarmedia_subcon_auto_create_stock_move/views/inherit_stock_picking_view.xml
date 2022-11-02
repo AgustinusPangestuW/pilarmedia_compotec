@@ -35,7 +35,7 @@
 
             <xpath expr="//field[@name='origin']" position="after">
                 <field name="stock_picking_subcont_ref_id" invisible="1"/>
-                <field name="users_waiting_approval" widget="many2many_tags"/>
+                <field name="users_waiting_approval" widget="many2many_tags" readonly="1" attrs="{'invisible':[('users_waiting_approval', '=', [])]}"/>
             </xpath>
 
             <field name="location_id" position="attributes">
