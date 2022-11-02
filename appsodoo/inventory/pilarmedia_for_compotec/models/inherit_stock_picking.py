@@ -112,6 +112,10 @@ class StockPicking(models.Model):
         self.update({'log_outstanding_qty_line': [(5,0,0)]})
 
         if self.surat_jalan_id:
+            # set vehicle_id base on surat_jalan_id
+            stock_picking = self.env['stock.picking'].sudo().search([('id', '=', self.surat_jalan_id.id)])
+            if stock_picking: self.vehicle_id = stock_picking.vehicle_id.id
+
             list_res = []
             for rec in self:
                 for sm in self.env['stock.move'].sudo().search([('picking_id', '=', rec.surat_jalan_id.id)]):
