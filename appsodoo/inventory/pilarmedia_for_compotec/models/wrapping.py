@@ -299,9 +299,8 @@ class Wrapping(inheritModel):
                                     rec.reserved_availability
                                 ))
 
-                            rec.quantity_done = rec.reserved_availability
                             for line in rec.move_line_ids:
-                                line.qty_done = rec.product_uom_qty
+                                line.qty_done = line.product_uom_qty
                                 line.lot_produced_ids = finished_lot_id
 
                         mo.button_mark_done()
