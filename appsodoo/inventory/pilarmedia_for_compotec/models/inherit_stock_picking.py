@@ -14,13 +14,6 @@ class StockPicking(models.Model):
         store=True,
         copy=False
     )
-    pricelist_subcons = fields.One2many(
-        'pricelist.subcon.baseon.stockmove', 
-        'picking_id', 
-        string='Pricelist subcon',
-        store=True,
-        copy=False
-    )
     vendor = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor", stored=True)
     vendor_dest_loc = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc")
     vendor_dest_loc_subcon = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc_subcon")
@@ -34,47 +27,6 @@ class StockPicking(models.Model):
     def button_validate(self):
         self._get_outstanding_qty()
         return super().button_validate()
-
-    def write(self, vals):
-        list_res = []
-        for sm in self.move_ids_without_package:
-            exists = False
-            for ps in self.pricelist_subcons:
-                if ps.picking_id.id == self.id and (ps.move_id.id == sm.id or sm.product_id.id == ps.product_id.id):
-                    exists = True
-                    break
-            
-            if not exists:
-                list_res.append([0,0, {
-                    'picking_id': self.id,
-                    'move_id': sm.id,
-                    'product_id': sm.product_id.id,
-                    'price_total': 0,
-                    'vendor': self.vendor.id,
-                    'lines': []
-                }])
-
-        if list_res:
-            vals.update({'pricelist_subcons': list_res})
-        
-        self.validate_pricelist_subcons()
-    
-        return super().write(vals)
-
-    def validate_pricelist_subcons(self):
-        exists = False
-        id_not_exists = []
-        for ps in self.pricelist_subcons:
-            exists = False
-            for sm in self.move_ids_without_package:
-                if ps.picking_id.id == self.id and (ps.move_id.id == sm.id or sm.product_id.id == ps.product_id.id):
-                    exists = True
-
-            if not exists:
-                id_not_exists.append(ps.id)
-
-        if id_not_exists:
-            self.env['pricelist.subcon.baseon.stockmove'].sudo().search([('id', 'in', id_not_exists)]).unlink()
 
     @api.depends('location_id')
     def _fill_vendor(self):

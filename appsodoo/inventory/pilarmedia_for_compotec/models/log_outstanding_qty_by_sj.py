@@ -16,3 +16,4 @@ class LogOutstandingQty(models.Model):
     qty_base_on_sj_master = fields.Float(string='Qty', readonly=True)    
     done_qty = fields.Float(string='Done Qty', readonly=True)    
     remaining_qty = fields.Float(string='Remaining Qty', readonly=True)    
+    bom_id = fields.Float(string='Remaining Qty', readonly=True, store=False)    
