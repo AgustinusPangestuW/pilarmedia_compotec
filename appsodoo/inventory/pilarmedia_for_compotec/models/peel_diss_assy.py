@@ -266,6 +266,7 @@ class PeelDissAssyLine(inheritModel):
             if rec.product_id:
                 bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', rec.product_id.product_tmpl_id.id)])
                 if bom:
+                    bom = bom[0]
                     rec.update({'bom_id': bom.id})
                     for component in bom.bom_line_ids:
                         list_component.append([0,0,{
