@@ -10,7 +10,7 @@
                     <field name="name"/>
                     <field name="date"/>
                     <field name="shift"/>
-                    <field name="job_id"/>
+                    <field name="job"/>
                     <field name="checked_coordinator"/>
                     <field name="checked_qc"/>
                     <field name="state"/>
@@ -38,6 +38,10 @@
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
+                            <button name="action_see_mo" type="object" class="oe_stat_button" 
+                                icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_mo" widget="statinfo" string=" MO"/>
+                            </button>
                             <button name="action_see_stock_picking" type="object" class="oe_stat_button" 
                                 icon="fa-truck" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
                                 <field name="count_stock_picking" widget="statinfo" string="Move"/>
@@ -49,7 +53,7 @@
                                 <field name="shift"/>
                             </group>
                             <group>
-                                <field name="job_id" attrs="{'readonly': [('job_id_active', '!=', False)]}" force_save="1"/>
+                                <field name="job" attrs="{'readonly': [('job_id_active', '!=', False)]}" force_save="1"/>
                                 <field name="job_id_active" invisible="True"/>
                                 <field name="checked_coordinator"/>
                                 <field name="checked_qc"/>
@@ -65,10 +69,10 @@
                         </group>
                         <notebook>
                             <page string="Lot">
-                                <field name="wholesale_job_lines" context="{'job_id': job_id}" attrs="{'readonly': [('job_id', '=', False)]}">
+                                <field name="wholesale_job_lines" context="{'job': job}" attrs="{'readonly': [('job', '=', False)]}">
                                     <tree>
                                         <field name="sequence" widget="handle"/>
-                                        <field name="job_id"/>
+                                        <field name="job"/>
                                         <field name="product_id"/>
                                         <field name="operator"/>
                                         <field name="total_ok"/>

@@ -43,6 +43,10 @@
                                 icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
                                 <field name="count_mo" widget="statinfo" string=" MO"/>
                             </button>
+                            <button name="action_see_stock_picking" type="object" class="oe_stat_button" 
+                                icon="fa-truck" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_stock_picking" widget="statinfo" string="Move"/>
+                            </button>
                         </div>
                         <group>
                             <field name="name"/>

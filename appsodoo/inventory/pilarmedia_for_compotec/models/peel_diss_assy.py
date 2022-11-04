@@ -35,6 +35,11 @@ class PeelDissAssy(inheritModel):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
+    count_stock_picking = fields.Integer(
+        string='Count Stock Picking', 
+        compute="_count_stock_picking", 
+        store=True, 
+        readonly=True)
     peel_diss_assy_line = fields.One2many(
         'peel.diss.assy.line', 
         'peel_diss_assy_id', 
@@ -77,7 +82,11 @@ class PeelDissAssy(inheritModel):
 
     def action_submit(self):
         self.state = "submit"
-        self.create_mo()
+        
+        if self.job.generate_document == "mo":
+            self.create_mo()
+        elif self.job.generate_document == "transfer":
+            self.create_stock_picking()
 
     def validate_change_state(self, vals):
         # change state Draft / None -> Submit -> Cancel 
@@ -135,6 +144,10 @@ class PeelDissAssy(inheritModel):
     def _count_mo(self):
         for rec in self:
             rec.count_mo = rec.env['mrp.production'].sudo().search_count([('peel_diss_assy_id', '=', rec.id)])
+    
+    def _count_stock_picking(self):
+        for rec in self:
+            rec.count_stock_picking = rec.env['stock.picking'].sudo().search_count([('peel_diss_assy_id', '=', rec.id)])
 
     def action_see_mo(self):
         list_domain = []
@@ -145,6 +158,19 @@ class PeelDissAssy(inheritModel):
             'name':_('Manufacturing Order'),
             'domain':list_domain,
             'res_model':'mrp.production',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
+
+    def action_see_stock_picking(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            list_domain.append(('peel_diss_assy_id', '=', self.env.context['active_id']))
+        
+        return {
+            'name':_('Transfers'),
+            'domain':list_domain,
+            'res_model':'stock.picking',
             'view_mode':'tree,form',
             'type':'ir.actions.act_window',
         }
@@ -160,8 +186,8 @@ class PeelDissAssy(inheritModel):
                     "company_id": self.env.company.id,
                     "peel_diss_assy_id": rec.id,
                     "picking_type_id": rec.job.op_type_ok.id,
-                    "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
-                    "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
+                    "location_src_id": rec.job.source_location_ok.id,
+                    "location_dest_id": rec.job.dest_location_ok.id,
                     "move_raw_ids": []
                 }
                 for c in line.peel_diss_assy_component_line:
@@ -171,8 +197,8 @@ class PeelDissAssy(inheritModel):
                         "product_uom_qty": float(c.peeled_total),
                         "name": "New",
                         "picking_type_id": rec.job.op_type_ok.id,
-                        "location_id": rec.job.op_type_ok.default_location_src_id.id,
-                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
+                        "location_id": rec.job.source_location_ok.id,
+                        "location_dest_id": rec.job.dest_location_ok.id
                     }])
 
                 if new_mo:
@@ -211,8 +237,6 @@ class PeelDissAssy(inheritModel):
                                 rec.location_id.location_id.name+'/'+rec.location_id.name, 
                                 str(rec.product_uom_qty)
                             )))
-                        # else:
-                        #     rec.quantity_done = rec.reserved_availability
                             
                         for line in rec.move_line_ids:
                             line.qty_done = rec.product_uom_qty
@@ -221,7 +245,88 @@ class PeelDissAssy(inheritModel):
 
                     mo.button_mark_done()
                     self._count_mo()
-                    
+
+    def create_stock_picking(self):
+        def get_total_ok_ng_from_component(line):
+            ok, ng = 0, 0
+            for c in line.peel_diss_assy_component_line:
+                ok += c.ok
+                ng += c.ng
+
+            return ok,ng
+
+        sp_ng, sp_ok = {}, {}
+        for rec in self:
+            sp_ng['picking_type_id'] = rec.job.op_type_ng.id
+            sp_ng['location_id'] = rec.job.source_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ng['location_dest_id'] = rec.job.dest_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ng['peel_diss_assy_id'] = self.id
+
+            sp_ok['picking_type_id'] = rec.job.op_type_ok.id
+            sp_ok['location_id'] = rec.job.source_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ok['location_dest_id'] = rec.job.dest_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ok['peel_diss_assy_id'] = self.id
+
+            sp_ng['move_lines'], sp_ok['move_lines'] = [], []
+            for line in self.peel_diss_assy_line:
+                product = line.product_id.with_context(lang=self.env.user.lang)
+                ok, ng = get_total_ok_ng_from_component(line)
+                name_desc = product.partner_ref
+                sp_ng['move_lines'].append((0,0, {
+                    'product_id': line.product_id.id,
+                    'product_uom_qty': ng,
+                    'description_picking': name_desc,
+                    'product_uom': line.product_id.uom_id.id,
+                    'name': name_desc
+                }))
+
+                sp_ok['move_lines'].append((0,0, {
+                    'product_id': line.product_id.id, 
+                    'product_uom_qty': ok,
+                    'description_picking': name_desc,
+                    'product_uom': line.product_id.uom_id.id,
+                    'name': name_desc
+                }))
+            
+            # Create
+            sp_ng = self.env['stock.picking'].sudo().create(sp_ng)
+            sp_ok = self.env['stock.picking'].sudo().create(sp_ok)
+
+            # Mark as To Do
+            sp_ng.action_confirm()
+            sp_ok.action_confirm()
+
+            # Assign
+            sp_ng.action_assign()
+            sp_ok.action_assign()
+            
+            self.validate_reserved_qty(sp_ng)
+            self.validate_reserved_qty(sp_ok)
+            self.fill_done_qty(sp_ng)
+            self.fill_done_qty(sp_ok)
+
+            # Validate
+            sp_ng.button_validate()
+            sp_ok.button_validate()
+
+            self._count_stock_picking()
+
+    def validate_reserved_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_ids_without_package:
+                if line.reserved_availability < line.product_uom_qty:
+                    raise UserError(_('Item {} pada location {} diperlukan Qty {} {}.').format(
+                        line.product_id.name, 
+                        rec.location_id.location_id.name + '/' + rec.location_id.name,
+                        line.product_uom_qty,
+                        line.product_uom.name
+                    ))
+
+    def fill_done_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_line_ids_without_package:
+                line.qty_done = line.product_uom_qty    
+    
 
 class PeelDissAssyLine(inheritModel):
     _name = "peel.diss.assy.line"

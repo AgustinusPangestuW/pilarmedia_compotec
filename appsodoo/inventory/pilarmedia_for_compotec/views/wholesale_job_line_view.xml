@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="sequence"/>
-                    <field name="job_id"/>
+                    <field name="job"/>
                     <field name="product_id"/>
                     <field name="operator"/>
                     <field name="total_ok"/>
@@ -31,7 +31,7 @@
                     <sheet>
                         <group>
                             <group>
-                                <field name="job_id"/>
+                                <field name="job"/>
                                 <field name="product_id" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
                                 <field name="operator"/>
                                 <field name="biggest_lot" invisible="1"/>

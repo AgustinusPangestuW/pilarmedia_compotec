@@ -7,7 +7,7 @@
 			<tree string="Laporan Harian Check" create="0" edit="0">
 				<field name="id_wj"/>
 				<field name="date"/>
-				<field name="job_id"/>
+				<field name="job"/>
 				<field name="product_id"/>
 				<field name="operator"/>
 				<field name="factor"/>
@@ -31,7 +31,7 @@
 					<group>
                         <field name="id"/>
                         <field name="date"/>
-                        <field name="job_id"/>
+                        <field name="job"/>
                         <field name="product_id"/>
                         <field name="operator"/>
                         <field name="checked_coordinator"/>
