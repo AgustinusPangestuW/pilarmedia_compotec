@@ -19,7 +19,7 @@ class PeelDissAssy(inheritModel):
     readonly_fields = ["name", "date", "job"]
 
     sequence = fields.Integer(string='Sequence')
-    name = fields.Char(string='Name', readonly=True)
+    name = fields.Char(string='Name', readonly=True, copy=False)
     date = fields.Date(
         string='Tangal',
         default=datetime.now().date(), 

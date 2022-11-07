@@ -58,7 +58,8 @@ class WholesaleJob(inheritModel):
         readonly=True, 
         index=True, 
         default=lambda 
-        self: _('New'))
+        self: _('New'),
+        copy=False)
     sequence = fields.Integer(string='Sequence', default=10)
     date = fields.Date(string="Date", required=True, default=datetime.now().date(), states=READONLY_STATES)
     job_id_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)

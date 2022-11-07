@@ -16,7 +16,7 @@ class Cleaning(inheritModel):
     list_state = [("draft","Draft"), ("submit","Submited"), ('cancel', "Canceled")]
     readonly_fields = ["name", "datetime", "user", "product", "res_ok", "res_ng", "rework", "description"]
 
-    name = fields.Char(string='Name', states=READONLY_STATES)
+    name = fields.Char(string='Name', copy=False, states=READONLY_STATES)
     sequence = fields.Integer(string='Sequence')
     datetime = fields.Datetime(string="Tanggal dan Waktu", default=datetime.now(), states=READONLY_STATES)
     user = fields.Many2one('employee.custom', string='Nama User', required=True, domain=_get_domain_user, states=READONLY_STATES)
