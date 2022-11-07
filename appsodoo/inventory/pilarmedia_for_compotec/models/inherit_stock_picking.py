@@ -74,7 +74,8 @@ class StockPicking(models.Model):
             for rec in self:
                 for sm in self.env['stock.move'].sudo().search([('picking_id', '=', rec.surat_jalan_id.id)]):
                     done_qty = self.get_done_qty(rec.surat_jalan_id.id, sm.product_id.id) or 0
-                    used_qty = self.get_used_qty(rec.surat_jalan_id.id, sm.product_id.id) or 0
+                    last_done_qty = self.get_last_done_qty(rec.surat_jalan_id.id, sm.product_id.id) or 0
+                    used_qty = self.get_used_qty(rec.surat_jalan_id.id, sm.product_id) or 0
 
                     remaining_qty = done_qty - used_qty
                     list_res.append([0,0, {
@@ -83,6 +84,7 @@ class StockPicking(models.Model):
                         'sj_id': rec.surat_jalan_id.id,
                         'product_id': sm.product_id.id,
                         'qty_base_on_sj_master': done_qty,
+                        'last_done_qty': last_done_qty,
                         'done_qty': used_qty,
                         'remaining_qty': remaining_qty
                     }])
@@ -110,63 +112,70 @@ class StockPicking(models.Model):
 
     def get_bom_and_component(self, product_id:object):
         bom = self.env['mrp.bom'].sudo().search([("product_tmpl_id.id", "=", product_id.product_tmpl_id.id)])
-        component = self.env['mrp.bom.line'].sudo().search([('product_id', '=', product_id)])
+        component = self.env['mrp.bom.line'].sudo().search([('product_id', '=', product_id.id)])
 
         # only get first data cause to much process if > 1 data
         if bom and len(bom) > 0: bom = bom[0]
         if component and len(component) > 0: component = component[0]
 
-        return bom or {}, component or {}
+        return bom or None, component or None
 
-    def get_item_base_on_bom(self, product_id_1:object, \
-        qty_1:float, product_id_2:object, qty_2:float) -> float:
+    def get_done_qty_baseon_bom(self, product_id_1:object, product_id_2:object, \
+        qty_2:float) -> float:
         # prodcut_id_1 => from master surat jalan
         # product_id_2 => from surat jalan used
 
         bom_sj, component_sj = self.get_bom_and_component(product_id_1)
         bom_sm, component_sm = self.get_bom_and_component(product_id_2)
 
+        res = 0
+
         # same from BOM
-        if bom_sj and bom_sm and bom_sj.get('id') == bom_sm.grt("id"): 
-            qty_1 -= qty_2
-        elif bom_sj and component_sm and bom_sj.get("id") == component_sm.get("bom_id"):
+        if bom_sj and bom_sm and bom_sj.id == bom_sm.id: 
+            res = qty_2
+        elif bom_sj and component_sm and bom_sj.id == component_sm.bom_id.id:
             # BOM in master sj and component in sj used
-            bom = self.env['mrp.bom'].sudo().search([('id', '=', component_sm.get('bom_id'))])
-            qty_1 -= qty_2 / component_sm.get('product_qty') * bom.get('product_qty')
-        elif component_sj and bom_sm and component_sj.get('bom_id') == bom_sm.get('id'):
+            bom = self.env['mrp.bom'].sudo().search([('id', '=', component_sm.bom_id.id)])
+            res = qty_2 / component_sm.product_qty * bom.product_qty
+        elif component_sj and bom_sm and component_sj.bom_id.id == bom_sm.id:
             # component in master SJ and BOM in sj used (stock move)
-            pass
-        elif component_sj and component_sm and component_sj.get("bom_id") == component_sm.get("bom_id"):
+            count_sm = qty_2 / bom_sm.product_qty
+            count_qty_2 = count_sm * component_sj.product_qty
+            res = count_qty_2
+        elif component_sj and component_sm and component_sj.bom_id.id == component_sm.bom_id.id:
             # component in master SJ and component in SJ used (stock move)
-            pass
+            res = qty_2
+        elif not bom_sj and not component_sj and not bom_sm and not component_sm:
+            # without BOM 
+            res = qty_2
 
-        return qty_1 
+        return res 
 
+    def get_last_done_qty(self, sj_id, product_id_msj):
+        # qty last done in log_outstanding_qty_line
+        self.env.cr.execute("""
+            SELECT SUM(loq.done_qty) as done_qty
+            FROM log_outstanding_qty loq
+            LEFT JOIN stock_picking sp ON sp.id = loq.picking_id
+            WHERE sp.surat_jalan_id = %s AND loq.product_id = %s AND sp.state = 'done' 
+            GROUP BY loq.create_date
+            ORDER BY loq.create_date DESC
+        """ % (sj_id, product_id_msj))
+        last_done_qty = self.env.cr.dictfetchone()
+        if last_done_qty and 'done_qty' in last_done_qty:
+            last_done_qty = last_done_qty['done_qty']
+        else:
+            last_done_qty = 0
 
-    def get_used_qty(self, sj, product_id):
-        # qty used in log_outstanding_qty_line
-        # self.env.cr.execute("""
-        #     SELECT SUM(loq.done_qty) as done_qty
-        #     FROM stock_picking sp
-        #     LEFT JOIN log_outstanding_qty loq ON loq.picking_id = sp.id
-        #     WHERE sp.id = %s AND loq.product_id = %s AND sp.id != %s AND sp.state = "done"
-        # """ % (sj, product_id, self.id))
-        # last_done_qty = self.env.cr.dictfetchone()
-        # if last_done_qty and 'done_qty' in last_done_qty:
-        #     last_done_qty = last_done_qty['done_qty']
-        # else:
-        #     last_done_qty = 0
+        return last_done_qty
 
-        # # BOM
-        # bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id.id', '=', product_id)])
-        # # calculate base on BOM
-        # if bom:
-        #     for sm in self.get('move_ids_without_package'):
+    def get_used_qty(self, sj_id, product_msj):
+        # Calculate current qty base on BOM
+        cur_done_qty = 0
+        for sm in self.move_ids_without_package:
+            cur_done_qty += self.get_done_qty_baseon_bom(product_msj, sm.product_id, sm.product_uom_qty)
 
-        # if res and 'used_qty' in res: return res['used_qty']
-        # else: return 0
-
-        return 0
+        return cur_done_qty
 
     def get_warehouse(self, location):
         parent_loc = location.location_id
