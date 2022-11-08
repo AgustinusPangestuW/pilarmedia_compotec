@@ -17,5 +17,6 @@ from . import (
     log_outstanding_qty_by_sj,
     pricelist_subcon_base_on_stock_move,
     inherit_product_template,
-    inherit_stock_move
+    inherit_stock_move,
+    generator_mo_or_sp
 )

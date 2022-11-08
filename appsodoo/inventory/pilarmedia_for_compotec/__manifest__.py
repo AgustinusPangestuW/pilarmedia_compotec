@@ -45,12 +45,15 @@
         "views/job_view.xml",
         "views/pricelist_subcon_base_on_stock_move.xml",
         "views/inherit_product_template_view.xml",
+        "views/generator_mo_or_sp_view.xml",
+        "views/generator_mosp_line_view.xml",
         "wizard/wholesale_job_report_wizz.xml",
         "data/ir_sequence_wrapping.xml",
         "data/ir_sequence_sorting.xml",
         "data/ir_sequence_wholesale_job.xml",
         "data/ir_sequence_peel_diss_assy.xml",
         "data/ir_sequence_cleaning.xml",
+        "data/ir_sequence_generator_mo_or_sp.xml"
         "report/surat_jalan.xml"
     ],
     # 'demo': ['data/sale_order_demo.xml'],

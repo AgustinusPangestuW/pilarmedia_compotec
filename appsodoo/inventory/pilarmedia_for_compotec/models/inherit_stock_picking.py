@@ -8,6 +8,7 @@ class StockPicking(models.Model):
     wholesale_job_id = fields.Many2one('wholesale.job', string='Checksheet Borongan', readonly=True)
     wrapping_id = fields.Many2one('wrapping', string='Wrapping', readonly=True)
     peel_diss_assy_id = fields.Many2one('wrapping', string='Peel Diss Assy', readonly=True)
+    generator_mosp_id = fields.Many2one('generator.mo.or.sp', string='Generator MO or SP ID', readonly=True)
     log_outstanding_qty_line = fields.One2many(
         'log.outstanding.qty', 
         'picking_id', 

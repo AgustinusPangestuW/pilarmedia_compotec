@@ -7,12 +7,13 @@ class MRPProduction(models.Model):
     peel_diss_assy_id = fields.Many2one('peel.diss.assy', string='Peel Diss Assy')
     wrapping_id = fields.Many2one('wrapping', string='Wrapping')
     wholesale_job_id = fields.Many2one('wholesale.job', string='Wholesale Job', readonly=True)
+    generator_mosp_id = fields.Many2one('generator.mo.or.sp', string='Generator MO or SP ID', readonly=True)
 
     def button_mark_done(self):
         super(MRPProduction, self).button_mark_done()
         
         location, doc_creator = {'source': None, 'dest': None}, None
-        if self.wrapping_id or self.peel_diss_assy_id or self.wholesale_job_id:
+        if self.wrapping_id or self.peel_diss_assy_id or self.wholesale_job_id or self.generator_mosp_id:
             total_ng = 0    
 
             if self.wrapping_id :
@@ -27,6 +28,11 @@ class MRPProduction(models.Model):
                 for wsj in self.wholesale_job_id.wholesale_job_lines:
                     if wsj.product_id.id == self.product_id.id:
                         total_ng += wsj.total_ng
+            elif self.generator_mosp_id:
+                doc_creator = self.generator_mosp_id
+                for line in self.generator_mosp_id.line_ids:
+                    if line.product_id.id == self.product_id.id:
+                        total_ng += line.ng
             elif self.peel_diss_assy_id:
                 doc_creator = self.peel_diss_assy_id
                 op_type_ng = self.peel_diss_assy_id.job.op_type_ng

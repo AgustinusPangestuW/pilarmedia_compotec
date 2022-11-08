@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="generator_mosp_lines_tree">
+            <field name="name">generator.mosp.lines.tree</field>
+            <field name="model">generator.mosp.lines</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="ok"/>
+                    <field name="ng"/>
+                    <field name="total"/>
+                    <field name="desc_for_ng"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="generator_mosp_lines_form">
+            <field name="name">generator.mosp.lines.form</field>
+            <field name="model">generator.mosp.lines</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="product_id"/>
+                                <field name="product_template" invisible="1"/>
+                                <field name="bom_id" 
+                                    domain="[('product_tmpl_id', '=', product_template)]"
+                                    attrs="{'required':[('parent.generate_document', '=', 'mo')],'invisible':[('parent.generate_document', '!=', 'mo')]}"/>
+                                <field name="desc_for_ng"/>
+                            </group>
+                            <group>
+                                <field name="ok"/>
+                                <field name="ng"/>
+                                <field name="total"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="generator_mosp_lines_action">
+            <field name="name">Generator MOSP Lines</field>
+            <field name="res_model">generator.mosp.lines</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

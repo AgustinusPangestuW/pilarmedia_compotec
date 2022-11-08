@@ -25,3 +25,5 @@
 "access_log_outstanding_qty","log_outstanding_qty","model_log_outstanding_qty","stock.group_stock_user",1,1,1,1
 "access_pricelist_subcon_baseon_stockmove","pricelist_subcon_baseon_stockmove","model_pricelist_subcon_baseon_stockmove","stock.group_stock_user",1,1,1,1
 "access_pricelist_subcon_baseon_stockmove_line","pricelist_subcon_baseon_stockmove_line","model_pricelist_subcon_baseon_stockmove_line","stock.group_stock_user",1,1,1,1
+"access_generator_mo_or_sp","generator_mo_or_sp","model_generator_mo_or_sp","stock.group_stock_user",1,1,1,1
+"access_generator_mosp_lines","generator_mosp_lines","model_generator_mosp_lines","stock.group_stock_user",1,1,1,1
