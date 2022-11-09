@@ -53,7 +53,7 @@
         "data/ir_sequence_wholesale_job.xml",
         "data/ir_sequence_peel_diss_assy.xml",
         "data/ir_sequence_cleaning.xml",
-        "data/ir_sequence_generator_mo_or_sp.xml"
+        "data/ir_sequence_generator_mo_or_sp.xml",
         "report/surat_jalan.xml"
     ],
     # 'demo': ['data/sale_order_demo.xml'],
