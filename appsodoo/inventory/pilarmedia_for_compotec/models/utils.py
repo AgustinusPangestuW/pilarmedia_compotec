@@ -1,5 +1,30 @@
 from odoo import _
+from odoo.http import request
 from odoo.exceptions import UserError
+
+def domain_location_by_vendor(self):
+    domain = []
+
+    if self.env.user:
+        warehouses = request.env['stock.warehouse'].sudo().search([('vendor', '=', self.env.user.vendor.id)])
+        locations = []
+        for w in warehouses:
+            locations += get_location_from_warehouse(w.view_location_id.id, [])
+
+        if locations:
+            domain = [('id', 'in', locations)]
+
+    return domain
+
+def get_location_from_warehouse(location_id, locations=[]):
+    locations_base_on_parent = request.env['stock.location'].sudo().search([('location_id', '=', location_id)])
+    
+    for i in locations_base_on_parent:
+        if i.id not in locations: locations.append(i.id)
+        
+        get_location_from_warehouse(i.id, locations)
+
+    return locations
 
 def validate_reserved_qty(stock_picking:object):
     for rec in stock_picking:

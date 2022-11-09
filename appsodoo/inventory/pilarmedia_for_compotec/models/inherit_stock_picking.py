@@ -1,6 +1,7 @@
 from multiprocessing import context
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from.utils import domain_location_by_vendor
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
@@ -9,6 +10,9 @@ class StockPicking(models.Model):
     wrapping_id = fields.Many2one('wrapping', string='Wrapping', readonly=True)
     peel_diss_assy_id = fields.Many2one('wrapping', string='Peel Diss Assy', readonly=True)
     generator_mosp_id = fields.Many2one('generator.mo.or.sp', string='Generator MO or SP ID', readonly=True)
+    location_id = fields.Many2one(
+        'stock.location', domain=domain_location_by_vendor
+    )   
     log_outstanding_qty_line = fields.One2many(
         'log.outstanding.qty', 
         'picking_id', 
