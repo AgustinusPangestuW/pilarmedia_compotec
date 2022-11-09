@@ -15,4 +15,4 @@ class EmployeeCustom(inheritModel):
 
 
 def _get_domain_user(self):
-    return [('vendor', '=', self.env.user.vendor.id)]
+    return [('vendor', 'in', [v.id for v in self.env.user.vendors])]

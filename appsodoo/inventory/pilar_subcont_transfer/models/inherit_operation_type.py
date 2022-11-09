@@ -24,7 +24,7 @@ class InheritStockPicking(models.Model):
     surat_jalan_id = fields.Many2one(
         comodel_name='stock.picking',
         string='Surat Jalan',
-        domain="[('master_sj', '=', True)]"
+        domain="[('master_sj', '=', True), ('state', '=', 'done')]"
         )
     po_id = fields.Many2one(
         comodel_name='purchase.order',

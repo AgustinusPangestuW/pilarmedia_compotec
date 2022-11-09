@@ -5,16 +5,20 @@ from odoo.exceptions import UserError
 def domain_location_by_vendor(self):
     domain = []
 
-    if self.env.user:
-        warehouses = request.env['stock.warehouse'].sudo().search([('vendor', '=', self.env.user.vendor.id)])
-        locations = []
-        for w in warehouses:
-            locations += get_location_from_warehouse(w.view_location_id.id, [])
+    if self.env.user and self.env.user.vendors:
+        locations = get_location_by_vendor(self)
 
         if locations:
             domain = [('id', 'in', locations)]
 
     return domain
+
+def get_location_by_vendor(self):
+    warehouses = request.env['stock.warehouse'].sudo().search([('vendor', 'in', [v.id for v in self.env.user.vendors])])
+    locations = []
+    for w in warehouses:
+        locations += get_location_from_warehouse(w.view_location_id.id, [])
+    return locations
 
 def get_location_from_warehouse(location_id, locations=[]):
     locations_base_on_parent = request.env['stock.location'].sudo().search([('location_id', '=', location_id)])
