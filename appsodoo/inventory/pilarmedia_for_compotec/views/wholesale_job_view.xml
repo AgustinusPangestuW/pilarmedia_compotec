@@ -100,7 +100,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem id="main_wholesale_job" name="Check Sheet Hasil Borongan" parent="compotec_root_menu" action="wholesale_job_action"/>
+        <menuitem id="main_wholesale_job" name="Check Sheet Hasil Borongan" parent="compotec_root_menu" action="wholesale_job_action" sequence="4"/>
 
         <menuitem id="report_conpotec_menu_root" name="Report" parent="compotec_root_menu"/>
 

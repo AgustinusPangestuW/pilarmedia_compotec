@@ -80,7 +80,7 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem id="main_peel_diss_assy" name="Form Kupas Diss Assy" parent="compotec_root_menu" action="peel_diss_assy_action"/>
+        <menuitem id="main_peel_diss_assy" name="Form Kupas Diss Assy" parent="compotec_root_menu" action="peel_diss_assy_action" sequence="3"/>
 
     </data>
 </odoo>

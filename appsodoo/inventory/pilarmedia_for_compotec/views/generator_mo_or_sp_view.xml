@@ -88,6 +88,6 @@
             <field name="view_mode">tree,form</field>
         </record>
         
-        <menuitem id="generator_mo_or_sp_root_menu" name="generator_mo_or_sp" parent="compotec_root_menu" action="generator_mo_or_sp_action"/>
+        <menuitem id="generator_mo_or_sp_root_menu" name="Generator MO or SP" parent="compotec_root_menu" action="generator_mo_or_sp_action" sequence="5"/>
     </data>
 </odoo>

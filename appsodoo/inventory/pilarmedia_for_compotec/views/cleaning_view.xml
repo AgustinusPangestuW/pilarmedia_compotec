@@ -83,7 +83,7 @@
         
         <menuitem id="compotec_root_menu" name="Compotec" parent="stock.menu_stock_root" action="cleaning_action"/>
 
-        <menuitem id="cleaning_root_menu" name="Cleaning" parent="compotec_root_menu" action="cleaning_action"/>
+        <menuitem id="cleaning_root_menu" name="Cleaning" parent="compotec_root_menu" action="cleaning_action" sequence="1"/>
         
 
     </data>
