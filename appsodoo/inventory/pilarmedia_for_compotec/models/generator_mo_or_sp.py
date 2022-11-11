@@ -363,8 +363,8 @@ class GeneratorMOSPLines(models.Model):
         'product.product', string='Product', required=True, ondelete='cascade', 
         index=True)
     product_template = fields.Integer(string='Product Template', readonly=True)
-    ok = fields.Float(string='OK', compute="calc_total", readonly=False)
-    ng = fields.Float(string='NG', compute="calc_total", readonly=False)
+    ok = fields.Float(string='OK', compute="calc_total", store=True, readonly=False)
+    ng = fields.Float(string='NG', compute="calc_total", store=True, readonly=False)
     total = fields.Float(string='Total', compute="calculat_totals", store=True)
     qty_bom = fields.Float(string='Qty BOM', readonly=True, help="information qty FG from BOM")
     desc_for_ng = fields.Text(string='Description NG')

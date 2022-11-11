@@ -51,8 +51,8 @@
                             <group>
                                 <field name="name" invisible="1"/>
                                 <field name="date"/>
-                                <field name="job_id_active"/>
-                                <field name="job" attrs="{'readonly': [('job_id_active', '!=', False)]}"/>
+                                <field name="job_id_active" invisible="1"/>
+                                <field name="job" force_save="1" attrs="{'readonly': [('job_id_active', '!=', False)]}"/>
                                 <field name="shift"/>
                                 <field name="generate_document" invisible="1"/>
                             </group>
