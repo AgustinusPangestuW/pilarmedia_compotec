@@ -27,12 +27,12 @@
                     <header>
                         <button id="button_submit" name="action_submit" string="Submit" class="btn-primary" states="draft" 
                             confirm="Are you sure that you need to confirm ?"
-                            type="object" attrs="{'invisible': [('state', 'in', [False, 'submit', 'cancel'])]}"/>
+                            type="object" attrs="{'invisible': [('state', 'in', [False, '', 'submit', 'cancel'])]}"/>
                         <button id="button_cancel" name="action_cancel" string="Cancel" class="btn-danger" states="submit"
                             confirm="Are you sure that you need to cancel ?"
-                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'cancel'])]}"/>
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'waiting', 'cancel'])]}"/>
                         <button id="button_draft" name="action_draft" string="Draft" class="btn-primary" states="cancel" 
-                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'waiting', 'draft', 'submit'])]}"/>
                         <field name="state" widget="statusbar"/>
                         <field name="custom_css" invisible="1"/>    
                     </header>
@@ -51,7 +51,8 @@
                             <group>
                                 <field name="name" invisible="1"/>
                                 <field name="date"/>
-                                <field name="job"/>
+                                <field name="job_id_active"/>
+                                <field name="job" attrs="{'readonly': [('job_id_active', '!=', False)]}"/>
                                 <field name="shift"/>
                                 <field name="generate_document" invisible="1"/>
                             </group>
@@ -70,6 +71,17 @@
                                         <field name="total"/>
                                     </group>
                                 </group>
+                            </page>
+                            <page string="Required Items">
+                                <field name="required_items">
+                                    <tree editable="bottom" decoration-danger="(reserved_qty&lt;quantity)">
+                                        <field name="product_id"/>
+                                        <field name="location_id"/>
+                                        <field name="dest_location_id"/>
+                                        <field name="reserved_qty" />
+                                        <field name="quantity"/>
+                                    </tree>
+                                </field>
                             </page>
                         </notebook>
                     </sheet>

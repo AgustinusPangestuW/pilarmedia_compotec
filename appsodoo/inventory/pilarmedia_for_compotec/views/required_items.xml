@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="required_items_tree">
+            <field name="name">required.items.tree</field>
+            <field name="model">required.items</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="location_id"/>
+                    <field name="dest_location_id"/>
+                    <field name="reserved_qty"/>
+                    <field name="quantity"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="required_items_form">
+            <field name="name">required.items.form</field>
+            <field name="model">required.items</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="product_id"/>
+                                <field name="location_id"/>
+                                <field name="dest_location_id"/>
+                            </group>
+                            <group>
+                                <field name="reserved_qty"/>
+                                <field name="quantity"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="required_items_action">
+            <field name="name">Required Items</field>
+            <field name="res_model">required.items</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>

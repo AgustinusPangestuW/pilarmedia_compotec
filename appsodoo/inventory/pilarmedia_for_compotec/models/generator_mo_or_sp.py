@@ -12,7 +12,7 @@ class GeneratorMOorSP(inheritModel):
         'submit': [('readonly', True)],
         'cancel': [('readonly', True)],
     }
-    list_state = [("draft","Draft"), ("submit","Submited"), ('cancel', "Canceled")]
+    list_state = [("draft","Draft"), ("waiting","Waiting"), ("submit","Submited"), ('cancel', "Canceled")]
     readonly_fields = ["name", "date", "job", "shift", "line_ids"]
 
     name = fields.Char(
@@ -21,6 +21,7 @@ class GeneratorMOorSP(inheritModel):
     date = fields.Date(
         string='Tanggal', default=date.today(), required=True, states=READONLY_STATES)
     job = fields.Many2one('job', string='Job', required=True, states=READONLY_STATES)
+    job_id_active = fields.Boolean(string='Job ID Active', compute="set_active_job")
     generate_document = fields.Char('Create Document To?', compute="fetch_from_job", store=True)
     shift = fields.Many2one('shift', string='Shift', states=READONLY_STATES)
     company_id = fields.Many2one('res.company', string='Company', readonly=True)
@@ -29,17 +30,26 @@ class GeneratorMOorSP(inheritModel):
     total = fields.Float(string='Total', compute="calculate_ok_ng", store=True)
     state = fields.Selection([
         ("draft","Draft"),
+        ("waiting","Waiting"), 
         ("submit","Submited"), 
         ('cancel', "Canceled")], string='State', tracking=True, copy=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     line_ids = fields.One2many(
-        'generator.mosp.lines', 'line_id', 'Line', states=READONLY_STATES, copy=True)
+        'generator.mosp.lines', 'generator_mosp_id', 'Line', states=READONLY_STATES, copy=True)
+    required_items = fields.One2many(
+        'required.items', 'generator_mosp_id', 'required_items', readonly=True, copy=False)
     count_stock_picking = fields.Integer(
         string='Count Stock Picking', 
         compute="_count_stock_picking", 
         store=True, 
         readonly=True)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
+
+    @api.depends('line_ids')
+    def set_active_job(self):
+        for rec in self:
+            if len(rec.line_ids): rec.job_id_active = 1
+            else: rec.job_id_active = 0
 
     @api.depends('job')
     def fetch_from_job(self):
@@ -135,13 +145,24 @@ class GeneratorMOorSP(inheritModel):
             raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, self.state)))
         return super().unlink()
 
-    def action_submit(self):
-        self.state = "submit"
+    def action_submit(self):        
+        self.env.cr.savepoint()
+        self.add_required_items()
+        self.env.cr.commit()          
         
-        if self.job.generate_document == "mo":
-            self.create_mo()
-        elif self.job.generate_document == "transfer":
-            self.create_stock_picking() 
+        self.env.cr.savepoint()
+        try:
+            if self.job.generate_document == "mo":
+                self.create_mo()
+            elif self.job.generate_document == "transfer":
+                self.create_stock_picking()
+
+            self.state = "submit"
+            self.env.cr.commit()                
+        except Exception as e:
+            self.env.cr.rollback()  
+            self.state = "waiting"
+            
 
     def validate_picking_type_ng_and_ok(self):
         # validate JOB
@@ -157,6 +178,33 @@ class GeneratorMOorSP(inheritModel):
             raise ValidationError(_("Need operation type NG in Job %s for process to submit." % (
                 self.job.name
             )))
+
+    def add_required_items(self):
+        def _add_item(product_id:object, location_id:object, dest_location_id:object, qty:float):
+            available_qty = self.env['stock.quant'].sudo()._get_available_quantity(product_id, location_id)
+            cur_qty = 0 if available_qty - qty < 0 else qty
+            self.required_items = [(0, 0, {
+                'generator_mosp_id': self.id,
+                'product_id': product_id.id,
+                'reserved_qty': cur_qty if available_qty >= qty else available_qty,
+                'quantity': qty,
+                'location_id': location_id.id,
+                'dest_location_id': dest_location_id.id
+            })]
+
+        if self.job.generate_document == "transfer":
+            self.required_items = [(5, 0, 0)]
+            for i in self.line_ids:
+                # OK
+                _add_item(i.product_id, self.job.source_location_ok, self.job.dest_location_ok, i.total)
+                # NG
+                _add_item(i.product_id, self.job.source_location_ng, self.job.dest_location_ng, i.ng)
+                
+        elif self.job.generate_document == "mo":
+            self.required_items = [(5, 0, 0)]
+            for i in self.line_ids:
+                for c in i.bom_components:
+                    _add_item(c.product_id, self.job.source_location_ok, self.job.dest_location_ok, c.total)
 
     def create_mo(self):
         for rec in self:
@@ -225,16 +273,16 @@ class GeneratorMOorSP(inheritModel):
                         for mri in mo.move_raw_ids:
                             # validation reserved_availability must be same with product_uom_qty (to consume)
                             if float(mri.reserved_availability or 0) < float(mri.product_uom_qty):
-                                raise ValidationError(_("Item %s diperlukan Qty %s %s pada location %s untuk melanjutkan proses. Stock tersedia hanya %s") %(
-                                    mri.product_id.name,
-                                    mri.product_uom_qty, mri.product_uom.name,
-                                    mo.location_src_id.location_id.name + '/' + mo.location_src_id.name,
-                                    mri.reserved_availability
+                                raise ValidationError(_("Item {product} diperlukan Qty {qty} {uom} pada location {src_loc} untuk melanjutkan proses. Stock tersedia hanya {cur_qty} {uom}").format(
+                                    product=mri[0].product_id.name,
+                                    qty=mri[0].product_uom_qty, uom=mri[0].product_uom.name,
+                                    src_loc=mo.location_src_id.location_id.name + '/' + mo.location_src_id.name,
+                                    cur_qty=mri[0].reserved_availability
                                 ))
-
-                            for line in mri.move_line_ids:
-                                line.qty_done = line.product_uom_qty
-                                line.lot_produced_ids = finished_lot_id
+                            else:
+                                for line in mri.move_line_ids:
+                                    line.qty_done = line.product_uom_qty
+                                    line.lot_produced_ids = finished_lot_id
 
                         mo.button_mark_done()
                         self._count_mo()
@@ -315,15 +363,19 @@ class GeneratorMOSPLines(models.Model):
         'product.product', string='Product', required=True, ondelete='cascade', 
         index=True)
     product_template = fields.Integer(string='Product Template', readonly=True)
-    ok = fields.Float(string='OK')
-    ng = fields.Float(string='NG')
+    ok = fields.Float(string='OK', compute="calc_total", readonly=False)
+    ng = fields.Float(string='NG', compute="calc_total", readonly=False)
     total = fields.Float(string='Total', compute="calculat_totals", store=True)
+    qty_bom = fields.Float(string='Qty BOM', readonly=True, help="information qty FG from BOM")
     desc_for_ng = fields.Text(string='Description NG')
     description = fields.Text(string='Description')
-    line_id = fields.Many2one(
+    generator_mosp_id = fields.Many2one(
         'generator.mo.or.sp', 'Items', index=True, ondelete='cascade')
     bom_id = fields.Many2one(
-        'mrp.bom', string='BOM ID', compute="get_first_bom", readonly=False)
+        'mrp.bom', string='BOM ID', compute="get_first_bom", readonly=False, copy=True)
+    bom_components = fields.One2many(
+        'gen.mosp.bomlines', 'generate_mosp_line_id', 'Component BOMs', compute="add_components",
+        store=True, readonly=False, copy=True)
 
     @api.depends('ok', 'ng')
     def calculat_totals(self):
@@ -336,8 +388,68 @@ class GeneratorMOSPLines(models.Model):
             # reset bom_id
             rec.bom_id = None
 
-            if rec.product_id:
+            if rec.product_id and self.generator_mosp_id.job.generate_document == "mo":
                 rec.product_template = rec.product_id.product_tmpl_id.id
                 boms = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', rec.product_template)])
                 if boms:
                     rec.bom_id = boms[0].id
+
+    @api.depends('bom_id')
+    def add_components(self):
+        for rec in self:
+            rec.bom_components = [(5, 0, 0)]
+            list_components = []
+            if rec.bom_id:
+                for c in rec.bom_id.bom_line_ids:
+                    rec.qty_bom = c.product_qty
+                    list_components.append([0,0,{ 
+                        'product_id': c.product_id.id,
+                        'generate_mosp_line_id': rec.id,
+                        'qty_need': c.product_qty
+                    }])
+
+                rec.bom_components = list_components
+
+    @api.depends('bom_components.ok', 'bom_components.ng')
+    def calc_total(self):
+        self.ensure_one()
+        for rec in self:
+            tot_ok, tot_ng, total = 0, 0, 0
+            for line in rec.bom_components:
+                tot_ng += line.ng
+                tot_ok += line.ok
+                total += line.total
+            rec.update({
+                'ok': tot_ok,
+                'ng': tot_ng,
+                'total': total
+            })
+
+
+class BOMComponents(models.Model):
+    _name = 'gen.mosp.bomlines'
+
+    generate_mosp_line_id = fields.Many2one(
+        'generator.mosp.lines', string='Generate MO or SP ID', index=True, ondelete='cascade')
+    product_id = fields.Many2one('product.product', string='Product', readonly=True)
+    qty_need = fields.Float(string='Qty Needed', readonly=True, help="information qty component needed from BOM")
+    total = fields.Float(string='Total', readonly=True, compute="calculate_total", store=True)
+    ok = fields.Float(string='OK', readonly=False)
+    ng = fields.Float(string='NG', readonly=False)
+
+    @api.depends('ok', 'ng')
+    def calculate_total(self):
+        for rec in self:
+            rec.total = (rec.ok or 0) + (rec.ng or 0)
+
+
+class RequiredItems(models.Model):
+    _name = 'required.items'
+
+    generator_mosp_id = fields.Many2one(
+        'generator.mo.or.sp', string='Generator MO or SP ID', index=True, ondelete='cascade')
+    product_id = fields.Many2one('product.product', string='Product')
+    location_id = fields.Many2one('stock.location', string='Source Location', readonly=True)
+    dest_location_id = fields.Many2one('stock.location', string='Dest Location', readonly=True)
+    reserved_qty = fields.Float(string='Reserved', readonly=True)
+    quantity = fields.Float(string='Quantity', readonly=True)

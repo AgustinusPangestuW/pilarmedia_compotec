@@ -36,14 +36,28 @@
                                 <field name="desc_for_ng"/>
                             </group>
                             <group>
-                                <field name="ok"/>
-                                <field name="ng"/>
+                                <field name="ok" attrs="{'readonly': [('bom_id', '!=', False)]}"/>
+                                <field name="ng" attrs="{'readonly': [('bom_id', '!=', False)]}"/>
                                 <field name="total"/>
+                                <field name="qty_bom" attrs="{'invisible': [('bom_id', '=', False)]}"/>
                             </group>
                         </group>
                         <group>
                             <field name="description"/>
                         </group>
+                        <notebook>
+                            <page string="Components" attrs="{'invisible': [('bom_id', '=', False)]}">
+                                <field name="bom_components">
+                                    <tree create="0" delete="0" editable="bottom">
+                                        <field name="product_id" force_save="1"/>
+                                        <field name="qty_need"/>
+                                        <field name="total"/>
+                                        <field name="ok" readonly="False" force_save="1"/>
+                                        <field name="ng" readonly="False" force_save="1"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
                     </sheet>
                 </form>
             </field>

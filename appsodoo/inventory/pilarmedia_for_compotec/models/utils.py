@@ -1,6 +1,7 @@
 from odoo import _
 from odoo.http import request
 from odoo.exceptions import UserError
+from odoo.addons.stock.models.stock_move import StockMove
 
 def domain_location_by_vendor(self):
     domain = []
@@ -32,14 +33,18 @@ def get_location_from_warehouse(location_id, locations=[]):
 
 def validate_reserved_qty(stock_picking:object):
     for rec in stock_picking:
+        required_items = []
         for line in rec.move_ids_without_package:
-            if line.reserved_availability < line.product_uom_qty:
-                raise UserError(_('Item {} pada location {} diperlukan Qty {} {}.').format(
-                    line.product_id.name, 
-                    rec.location_id.location_id.name + '/' + rec.location_id.name,
-                    line.product_uom_qty,
-                    line.product_uom.name
-                ))
+            if line.reserved_availability < line.product_uom_qty or StockMove._should_bypass_reservation(line):
+                required_items.append(line)
+                
+        if required_items:
+            raise UserError(_('Item {} pada location {} diperlukan Qty {} {}.').format(
+                required_items[0].product_id.name, 
+                rec.location_id.location_id.name + '/' + rec.location_id.name,
+                required_items[0].product_uom_qty,
+                required_items[0].product_uom.name
+            ))
 
 def fill_done_qty(stock_picking:object):
     for rec in stock_picking:
