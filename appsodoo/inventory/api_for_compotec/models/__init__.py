@@ -3,5 +3,6 @@ from . import (
     inherit_stock_picking,
     stock_picking_type_for_transit, 
     transit_log,
-    api_log
+    api_log,
+    inherit_ir_http
 )
