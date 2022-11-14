@@ -25,7 +25,7 @@ class inheritModel(models.Model):
         # change state Draft / None -> Submit -> Cancel 
         # Change state Cancel -> Draft
         state_before = {
-            "submit": ['', 'draft'],
+            "submit": ['', 'waiting', 'draft'],
             "cancel": ['submit']
         }
 
