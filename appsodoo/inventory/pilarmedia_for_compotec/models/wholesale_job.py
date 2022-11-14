@@ -336,7 +336,7 @@ class WholesaleJob(inheritModel):
                         line.product.product_tmpl_id.name
                     ))
 
-    def create_stock_move(self):
+    def create_stock_picking(self):
         self.validate_wj_lines()
 
         sm_ng, sm_ok = {}, {}
