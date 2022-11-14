@@ -346,12 +346,14 @@ class WholesaleJob(inheritModel):
             sm_ng['location_id'] = det_picking_type_ng.default_location_src_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ng['location_dest_id'] = det_picking_type_ng.default_location_dest_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ng['wholesale_job_id'] = self.id
+            sm_ng['name'] = '/'
 
             det_picking_type_ok = self.env['stock.picking.type'].sudo().search([('id', '=', rec.operation_type_id_ok.id)])
             sm_ok['picking_type_id'] = rec.operation_type_id_ok.id
             sm_ok['location_id'] = det_picking_type_ok.default_location_src_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ok['location_dest_id'] = det_picking_type_ok.default_location_dest_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ok['wholesale_job_id'] = self.id
+            sm_ok['name'] = '/'
 
             sm_ng['move_lines'], sm_ok['move_lines'] = [], []
             for line in self.wholesale_job_lines:

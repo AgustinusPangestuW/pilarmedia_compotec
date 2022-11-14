@@ -347,11 +347,13 @@ class Wrapping(inheritModel):
             sp_ng['location_id'] = rec.job.source_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sp_ng['location_dest_id'] = rec.job.dest_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sp_ng['wrapping_id'] = self.id
+            sp_ng['name'] = '/'
 
             sp_ok['picking_type_id'] = rec.job.op_type_ok.id
             sp_ok['location_id'] = rec.job.source_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sp_ok['location_dest_id'] = rec.job.dest_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sp_ok['wrapping_id'] = self.id
+            sp_ok['name'] = '/'
 
             sp_ng['move_lines'], sp_ok['move_lines'] = [], []
             for line in self.wrapping_deadline_line:
