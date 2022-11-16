@@ -12,10 +12,13 @@ class inheritStockMove(models.Model):
         copy=False
     )
 
-    def action_show_pricelist_subcon(self):
-        self.ensure_one()
-        view = self.env.ref('pilarmedia_for_compotec.pricelist_subcons_form')
+    @api.model
+    def write(self, vals):
+        res = super().write(vals)
+        self.create_pricelist_subcon()
+        return res
 
+    def create_pricelist_subcon(self):
         for rec in self:
             ps = self.env['pricelist.subcon.baseon.stockmove'].sudo().search([('move_id', '=', rec.id)])
             if not ps:
@@ -28,7 +31,18 @@ class inheritStockMove(models.Model):
                     "vendor": rec.picking_id.vendor.id or None,
                     "lines": []
                 })  
-            else: ps = ps[0]
+
+            if not rec.picking_id.surat_jalan_id:
+                ps.lines = [(5,0,0)]
+
+    def action_show_pricelist_subcon(self):
+        self.ensure_one()
+        view = self.env.ref('pilarmedia_for_compotec.pricelist_subcons_form')
+
+        for rec in self:
+            self.create_pricelist_subcon()
+            ps = self.env['pricelist.subcon.baseon.stockmove'].sudo().search([('move_id', '=', rec.id)])
+            ps = ps[0]
 
         return {
             'name': _('Pricelist Subcon'),
