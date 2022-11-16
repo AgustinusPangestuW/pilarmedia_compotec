@@ -100,7 +100,7 @@
                                     <t t-set="information" t-value=""/>
                                     <t t-set="price_total" t-value="0"/>
                                     
-                                    <t t-foreach="o.pricelist_subcons" t-as="ps">
+                                    <t t-foreach="move.pricelist_subcons" t-as="ps">
                                         <t t-if="ps.product_id.id == move.product_id.id">
                                             <!-- MENDAPATKAN TOTAL HARGA -->
                                             <t t-set="price_total" t-value="price_total + ps.price_total"/>
@@ -113,8 +113,8 @@
 
                                                 <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
                                                 <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
-                                                <td style="text-align:right;"> <t t-esc="round(move.quantity_done * line.price_total, 2)"/> </td>
-                                                <td> <t t-esc="line.price_total"/> x <t t-esc="move.quantity_done"/> </td>
+                                                <td style="text-align:right;"> <t t-esc="'{0:,.2f}'.format(int(round(move.quantity_done * line.price_total, 2))) "/> </td>
+                                                <td> <t t-esc="'{0:,.2f}'.format(int(line.price_total))"/> x <t t-esc="'{0:,.2f}'.format(int(move.quantity_done))"/> </td>
                                                 <td> <p t-esc="str(line.pricelist_id.product_id.product_tmpl_id.name or '' )"/></td>
                                             </tr>
 
@@ -122,7 +122,7 @@
                                             <tr t-if="len(ps.lines)==0">
                                                 <td> <p style="padding:0px !important; margin:0px !important;" t-field="o.surat_jalan_id"/> </td>
                                                 <td> <p style="padding:0px !important; margin:0px !important;" t-field="move.product_id"/> </td>
-                                                <td style="text-align:right;"> <t t-esc="round(move.quantity_done * ps.price_total, 2)"/> </td>
+                                                <td style="text-align:right;"> <t t-esc="'{0:,.2f}'.format(int(round(move.quantity_done * ps.price_total, 2)))"/> </td>
                                                 <td> 0 x <t t-esc="move.quantity_done"/> </td>
                                                 <td>0</td>
                                             </tr>
@@ -135,7 +135,7 @@
                                 </t>
                                 <tr>
                                     <td colspan="2" style="text-align:center;">JUMLAH</td>
-                                    <td style="text-align:right;"><t t-esc="round(total_qty_done, 2)"/> </td>
+                                    <td style="text-align:right;"><t t-esc="'{0:,.2f}'.format(int(round(total_qty_done, 2)))"/> </td>
                                     <td/>
                                     <td/>
                                 </tr>
@@ -197,7 +197,7 @@
                     </div>
                 </div>
             <!--</t>-->
-         </t>
+        </t>
     </template>
 
     <template id="report_suratjalan">
