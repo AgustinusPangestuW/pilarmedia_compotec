@@ -433,6 +433,8 @@ class WholesaleJobLine(inheritModel):
     job = fields.Many2one(
         'job', string='Job', 
         required=True, 
+        compute="fetch_job",
+        store=True,
         readonly=True, 
         domain=[('active', '=', 1)]
     )
@@ -474,6 +476,13 @@ class WholesaleJobLine(inheritModel):
             if rec.is_detail_ng and rec.total_from_detail_ng != rec.total_ng:
                 show_msg_error = 1
             rec.show_msg_error = show_msg_error
+
+    @api.depends('wholesale_job_id')
+    def fetch_job(self):
+        for rec in self:
+            if rec.wholesale_job_id.job:
+                job = rec.wholesale_job_id.job.id
+                rec.update({'job': job})
 
     @api.model
     def default_get(self, fields_list):
