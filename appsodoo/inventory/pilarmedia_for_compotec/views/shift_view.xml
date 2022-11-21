@@ -54,6 +54,5 @@
         </record>
 
         <menuitem id="shift_root_menu" name="Shift" parent="wrapping_config_menu" action="shift_action"/>
-
     </data>
 </odoo>

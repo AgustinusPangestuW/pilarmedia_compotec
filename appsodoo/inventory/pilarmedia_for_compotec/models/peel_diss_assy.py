@@ -342,20 +342,24 @@ class PeelDissAssyLine(inheritModel):
     )
     user = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     product_id = fields.Many2one('product.product', string='Produk', required=True)
+    product_template_id = fields.Many2one(
+        'product.template', string='Product Template', compute="get_product_template", store=True, 
+        readonly=True)
     bom_id = fields.Many2one(
         'mrp.bom', 
         string='BOM', 
-        readonly=True, 
-        compute='_fetch_component_from_bom', 
+        required=True, 
+        compute='get_first_bom', 
         store=True,
-        copy=True
+        copy=True,
+        readonly=False
     )
     description = fields.Text(string="Description")
     peel_diss_assy_component_line = fields.One2many(
         'peel.diss.assy.component.line', 
         'peel_diss_assy_line_id', 
         'Peel Diss Assy Componen Line',
-        compute="_fetch_component_from_bom",
+        compute="fetch_component_bom",
         store=True,
         readonly=False,
         copy=True,
@@ -363,25 +367,34 @@ class PeelDissAssyLine(inheritModel):
     )
     qty = fields.Float(string='Quantity')
 
-    @api.onchange('product_id')
-    def _fetch_component_from_bom(self):
-        # reset lines to null
-        self.peel_diss_assy_component_line = [(5,0,0)]
-        list_component = []
-
+    @api.depends('product_id')
+    def get_product_template(self):
         for rec in self:
+            product_template = None
+            if rec.product_id:
+                product_template = rec.product_id.product_tmpl_id.id
+            rec.product_template_id = product_template
+
+    @api.depends('product_id')
+    def get_first_bom(self):
+        for rec in self:
+            bom = None
             if rec.product_id:
                 bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', rec.product_id.product_tmpl_id.id)])
                 if bom:
-                    bom = bom[0]
-                    rec.update({'bom_id': bom.id})
-                    for component in bom.bom_line_ids:
-                        list_component.append([0,0,{
-                            'product_id': component.product_id.id,
-                            'peel_diss_assy_line_id': rec.id
-                        }])
-       
-        self.peel_diss_assy_component_line =  list_component
+                    bom = bom[0].id
+
+            rec.update({'bom_id': bom})
+                    
+    @api.depends('bom_id')
+    def fetch_component_bom(self):
+        list_component = []
+        for rec in self:
+            rec.peel_diss_assy_component_line = [(5,0,0)]
+            if 'bom_id' in rec and rec.bom_id:
+                for component in rec.bom_id.bom_line_ids or []:
+                    list_component.append((0,0,{'product_id': component.product_id.id}))
+            rec.peel_diss_assy_component_line =  list_component
 
     @api.onchange('qty')
     def validate_peeled_total(self):
