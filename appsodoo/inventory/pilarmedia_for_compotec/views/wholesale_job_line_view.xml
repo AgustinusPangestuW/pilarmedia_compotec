@@ -13,6 +13,7 @@
                     <field name="operator"/>
                     <field name="total_ok"/>
                     <field name="total_ng"/>
+                    <field name="total_from_detail_ng" invisible="1"/>
                     <field name="biggest_lot"/>
                     <field name="total_set"/>
                     <field name="total_pcs"/>
@@ -31,7 +32,7 @@
                     <sheet>
                         <group>
                             <group>
-                                <field name="job"/>
+                                <field name="job" force_save="1"/>
                                 <field name="product_id" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
                                 <field name="operator"/>
                                 <field name="biggest_lot" invisible="1"/>
@@ -60,11 +61,23 @@
                                 </field>
                                 <group>
                                     <group>
-                                        <field name="reason_for_ng"/>
+                                        <field name="is_detail_ng"/>
+                                        <field name="total_from_detail_ng" invisible="1"/>
+                                        <field name="ng_ids" widget="section_and_note_one2many" attrs="{'invisible': [('is_detail_ng', '=', False)]}">
+                                            <tree editable="bottom">
+                                                <field name="ng_id"/>
+                                                <field name="total_ng"/>
+                                            </tree>
+                                        </field>
+                                        <field name="reason_for_ng" attrs="{'invisible': [('is_detail_ng', '!=', False)]}"/>
                                     </group>
                                     <group>
                                         <field name="total_ok"/>
-                                        <field name="total_ng" attrs="{'readonly': [('is_set', '=', False)]}"/>
+                                        <field name="total_ng" force_save="1" 
+                                            decoration-danger="total_from_detail_ng!=total_ng and is_detail_ng==True"/>
+                                        <field name="show_msg_error" invisible="1"/>
+                                        <field name="msg_error" decoration-danger="1" nolabel="1" force_save="1" 
+                                            attrs="{'invisible': [('show_msg_error', '=', False)]}"/>
                                         <field name="total_pcs" attrs="{'invisible': [('is_set', '!=', False)]}"/>
                                         <field name="total_set" attrs="{'invisible': [('is_set', '=', False)]}"/>
                                     </group>

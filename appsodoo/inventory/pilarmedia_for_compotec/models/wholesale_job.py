@@ -451,10 +451,29 @@ class WholesaleJobLine(inheritModel):
         store=True, 
         help="this field for track last Lot ID"
     )
+    is_detail_ng = fields.Boolean(string='NG detail?')
+    total_from_detail_ng = fields.Float(
+        string='Total NG', 
+        compute="_calculate_total_ng_from_detail_ng", 
+        store=True,
+        help="result from calculate total_ng from detail ng (ng_ids)")
+    ng_ids = fields.One2many('details.ng', 'wholesale_job_id', 'NG Details')
+    msg_error = fields.Text(
+        string='', readonly=1, default="Total NG in detail not same with Total NG current")
+    show_msg_error = fields.Boolean(
+        string='Show Message Error', help="flag for show field msg_error", compute="_comp_show_msg_error")
     wholesale_job_lot_lines = fields.One2many(
         'wholesale.job.lot.line', 'wholesale_job_line_id', 
         'Lot Line', auto_join=True, copy=True)   
     reason_for_ng = fields.Text(string='Keterangan NG')
+
+    @api.depends('is_detail_ng', 'total_from_detail_ng', 'total_ng')
+    def _comp_show_msg_error(self):
+        for rec in self:
+            show_msg_error = 0
+            if rec.is_detail_ng and rec.total_from_detail_ng != rec.total_ng:
+                show_msg_error = 1
+            rec.show_msg_error = show_msg_error
 
     @api.model
     def default_get(self, fields_list):
@@ -523,8 +542,14 @@ class WholesaleJobLine(inheritModel):
         else:
             raise exceptions.ValidationError(_("Kantong saat ini belum tersedia."))
 
+    @api.depends('ng_ids', 'is_detail_ng')
+    def _calculate_total_ng_from_detail_ng(self):
+        for rec in self:
+            total_ng = sum([i.total_ng for i in rec.ng_ids])
+            rec.total_from_detail_ng = total_ng
+
     @api.depends('is_set', 'wholesale_job_lot_lines.ng', 'wholesale_job_lot_lines.ok', \
-        'total_ng')
+        'total_ng', 'total_from_detail_ng')
     def _calc_total_ng_ok(self):
         for rec in self:
             # calculation NG & OK when is_set = FALSE (NON set)
@@ -533,8 +558,10 @@ class WholesaleJobLine(inheritModel):
 
             # calculation NG & OK when is_set = TRUE
             else:
-                self._calc_total_ok_n_set()
+                # get total ng base on table detail_ng
+                rec.total_ng = rec.total_from_detail_ng
 
+                self._calc_total_ok_n_set()
 
     def _calculate_ok_ng_pcs(self):
         total_ng, total_ok, total_pcs = 0, 0, 0
@@ -590,3 +617,25 @@ class WholesaleJobLotLine(inheritModel):
     lot_id = fields.Many2one('lot', string='Lot No', required=True, readonly=True)
     ok = fields.Float(string='OK')
     ng = fields.Float(string='NG')
+
+
+class MasterNG(inheritModel):
+    _name = "master.ng"
+    _description = "Master NG"
+
+    _sql_constraints = [
+        ('check_name_unique', 'UNIQUE(name)', 'The name must be unique')
+    ]
+
+    name = fields.Char(string='Name', required=True, copy=False)
+    active = fields.Boolean(string='Active', default=True)
+    description = fields.Text(string='Description')
+
+
+class DetailsNG(inheritModel):
+    _name = "details.ng"
+    _description = "Detail NG"
+   
+    wholesale_job_id = fields.Many2one('wholesale.job.id', 'Wholesale Job ID', ondelete='cascade', index=True)
+    ng_id = fields.Many2one('master.ng', string='NG', domain="[('active', '=', True)]", required=True, copy=True)
+    total_ng = fields.Float(string='NG Total')

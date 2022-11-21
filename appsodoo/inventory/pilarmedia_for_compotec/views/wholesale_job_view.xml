@@ -70,13 +70,15 @@
                         <notebook>
                             <page string="Lot">
                                 <field name="wholesale_job_lines" context="{'job': job}" attrs="{'readonly': [('job', '=', False)]}">
-                                    <tree>
+                                    <tree decoration-warning="total_from_detail_ng!=total_ng and is_detail_ng==True">
                                         <field name="sequence" widget="handle"/>
                                         <field name="job"/>
                                         <field name="product_id"/>
                                         <field name="operator"/>
                                         <field name="total_ok"/>
                                         <field name="total_ng"/>
+                                        <field name="is_detail_ng" invisible="1"/>
+                                        <field name="total_from_detail_ng" invisible="1"/>
                                         <field name="biggest_lot"/>
                                         <field name="total_set"/>
                                         <field name="total_pcs"/>

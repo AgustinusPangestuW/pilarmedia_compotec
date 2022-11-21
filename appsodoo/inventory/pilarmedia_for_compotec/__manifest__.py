@@ -6,13 +6,14 @@
     'version': '1.0',
     'author': 'Pilarmedia Indonesia',
     'category': 'Compotec',
-    'summary': """ new Form Wrapping and Sorting """,
+    'summary': """ new Form Cleaning, Wrapping, Peel Diss Assy and Wholesale Job (Checksheet Borongan). """,
     'website': 'https://solog.id/',
     'description': """
     New Form : \n
-    1. Sorting \n
-    2. Wrapping \n
-    3. Cleaning \n
+    1. Cleaning. \n
+    2. Wrapping. \n
+    3. Peel Diss assy. \n
+    4. Wholesale Job (Checksheet Borongan). \n
     """,
     'maintainer': 'Pilarmedia',
     'license': 'OPL-1',
@@ -30,6 +31,7 @@
         "views/wrapping_working_time_line.xml",
         "views/sorting.xml",
         "views/sorting_line_view.xml",
+        "views/master_ng_view.xml",
         "views/peel_diss_assy_view.xml",
         "views/peel_diss_assy_line_view.xml",
         "views/peel_diss_assy_component_line_view.xml",

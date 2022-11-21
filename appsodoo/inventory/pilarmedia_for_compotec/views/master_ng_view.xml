@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="master_ng_tree">
+            <field name="name">master.ng.tree</field>
+            <field name="model">master.ng</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="active"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="master_ng_form">
+            <field name="name">master.ng.form</field>
+            <field name="model">master.ng</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="active"/>
+                            </group>
+                            <group>
+                                <field name="description"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="master_ng_action">
+            <field name="name">Master NG</field>
+            <field name="res_model">master.ng</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="master_ng_root_menu" name="Master NG" parent="lot_config_menu" action="master_ng_action"/>
+    </data>
+</odoo>
