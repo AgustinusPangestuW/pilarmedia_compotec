@@ -494,17 +494,13 @@ class WrappingDeadlineLine(inheritModel):
         for rec in self:
             rec.ng_uom = rec.total_output_uom = rec.total_ok_uom = rec.product.product_tmpl_id.uom_id.id
 
-    @api.depends('wrapping_deadline_working_time_line.output')
+    @api.depends('wrapping_deadline_working_time_line', 'wrapping_deadline_working_time_line.output')
     def _calculate_total(self):
         """
         Calculate the total output of the wrapping_deadline_working output.
         """
-        total = 0.0
         for rec in self:
-            for line in rec.wrapping_deadline_working_time_line:
-                total += line.output
-
-            rec.total = total
+            rec.total = sum([l.output for l in rec.wrapping_deadline_working_time_line]) or 0
 
     @api.depends('total', 'ng')
     def _calculate_total_ok(self):
