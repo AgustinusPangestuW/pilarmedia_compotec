@@ -459,7 +459,7 @@ class WholesaleJobLine(inheritModel):
         compute="_calculate_total_ng_from_detail_ng", 
         store=True,
         help="result from calculate total_ng from detail ng (ng_ids)")
-    ng_ids = fields.One2many('details.ng', 'wholesale_job_id', 'NG Details')
+    ng_ids = fields.One2many('details.ng', 'wholesale_job_line_id', 'NG Details')
     msg_error = fields.Text(
         string='', readonly=1, default="Total NG in detail not same with Total NG current")
     show_msg_error = fields.Boolean(
@@ -645,6 +645,6 @@ class DetailsNG(inheritModel):
     _name = "details.ng"
     _description = "Detail NG"
    
-    wholesale_job_id = fields.Many2one('wholesale.job.id', 'Wholesale Job ID', ondelete='cascade', index=True)
+    wholesale_job_line_id = fields.Many2one('wholesale.job.line', 'Wholesale Job Line ID', ondelete='cascade', index=True)
     ng_id = fields.Many2one('master.ng', string='NG', domain="[('active', '=', True)]", required=True, copy=True)
     total_ng = fields.Float(string='NG Total')
