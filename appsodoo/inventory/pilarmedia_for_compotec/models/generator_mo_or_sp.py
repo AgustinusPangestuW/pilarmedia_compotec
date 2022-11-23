@@ -6,6 +6,7 @@ from .utils import validate_reserved_qty, fill_done_qty, _get_todo
 
 class GeneratorMOorSP(inheritModel):
     _name = 'generator.mo.or.sp'    
+    _description = "Generator MO or SP"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
     READONLY_STATES = {
@@ -162,8 +163,7 @@ class GeneratorMOorSP(inheritModel):
         except Exception as e:
             self.env.cr.rollback()  
             self.state = "waiting"
-            
-
+        
     def validate_picking_type_ng_and_ok(self):
         # validate JOB
         if not self.job:
