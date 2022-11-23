@@ -396,12 +396,21 @@ class PeelDissAssyLine(inheritModel):
                     list_component.append((0,0,{'product_id': component.product_id.id}))
             rec.peel_diss_assy_component_line =  list_component
 
+    def write(self, vals):
+        res = self.validate_peeled_total(stop=True)
+
+        if res:
+            return res
+
+        res = super().write(vals)
+        return res
+
     @api.onchange('qty')
-    def validate_peeled_total(self):
+    def validate_peeled_total(self, stop=False):
         for rec in self:
             for c in rec.peel_diss_assy_component_line:
                 if c.ng and c.ok and rec.qty != c.peeled_total:
-                    return _warn_qty_not_valid(rec.qty)
+                    return _warn_qty_not_valid(rec.qty, stop=stop)
 
 
 class PeelDissAssyComponentLine(inheritModel):
@@ -437,8 +446,11 @@ class PeelDissAssyComponentLine(inheritModel):
             if c.ng and c.ok and qty != c.peeled_total:
                 return _warn_qty_not_valid(qty)
 
-def _warn_qty_not_valid(qty):
-    return  {'warning':{
-        'title':('Warning'),
-        'message':_("Total OK + NG (total kupas) harus = %s (acuan qty product) " % (qty))
-    }}
+def _warn_qty_not_valid(qty, stop=False):
+    if stop:
+        raise ValidationError(_("Total OK + NG (total kupas) harus = %s (acuan qty product) ") % (qty))
+    else:
+        return  {'warning':{
+            'title':('Warning'),
+            'message':_("Total OK + NG (total kupas) harus = %s (acuan qty product) " % (qty))
+        }}
