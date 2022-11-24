@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="generator_mo_or_sp_tree">
+            <field name="name">generator.mo.or.sp.tree</field>
+            <field name="model">generator.mo.or.sp</field>
+            <field name="arch" type="xml">
+                <tree default_order="create_date desc">
+                    <field name="name"/>
+                    <field name="date"/>
+                    <field name="job"/>
+                    <field name="shift"/>
+                    <field name="total_ok"/>
+                    <field name="total_ng"/>
+                    <field name="total"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="generator_mo_or_sp_form">
+            <field name="name">generator.mo.or.sp.form</field>
+            <field name="model">generator.mo.or.sp</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button id="button_submit" name="action_submit" string="Submit" class="btn-primary" states="draft" 
+                            confirm="Are you sure that you need to confirm ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, '', 'submit', 'cancel'])]}"/>
+                        <button id="button_cancel" name="action_cancel" string="Cancel" class="btn-danger" states="submit"
+                            confirm="Are you sure that you need to cancel ?"
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'waiting', 'cancel'])]}"/>
+                        <button id="button_draft" name="action_draft" string="Draft" class="btn-primary" states="cancel" 
+                            type="object" attrs="{'invisible': [('state', 'in', [False, 'waiting', 'draft', 'submit'])]}"/>
+                        <field name="state" widget="statusbar"/>
+                        <field name="custom_css" invisible="1"/>    
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_see_mo" type="object" class="oe_stat_button" 
+                                icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_mo" widget="statinfo" string=" MO"/>
+                            </button>
+                            <button name="action_see_stock_picking" type="object" class="oe_stat_button" 
+                                icon="fa-truck" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_stock_picking" widget="statinfo" string="Move"/>
+                            </button>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="name" invisible="1"/>
+                                <field name="date"/>
+                                <field name="job_id_active" invisible="1"/>
+                                <field name="job" force_save="1" attrs="{'readonly': [('job_id_active', '!=', False)]}"/>
+                                <field name="shift"/>
+                                <field name="generate_document" invisible="1"/>
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Generator Detail">
+                                <field name="line_ids"/>
+                                <group>
+                                    <group>
+                                    </group>
+                                    <group>
+                                        <field name="total_ok"/>
+                                        <field name="total_ng"/>
+                                        <field name="total"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Required Items">
+                                <field name="required_items">
+                                    <tree editable="bottom" decoration-danger="(reserved_qty&lt;quantity)">
+                                        <field name="product_id"/>
+                                        <field name="location_id"/>
+                                        <field name="dest_location_id"/>
+                                        <field name="reserved_qty" />
+                                        <field name="quantity"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="generator_mo_or_sp_action">
+            <field name="name">Generator MO Or SP</field>
+            <field name="res_model">generator.mo.or.sp</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <menuitem id="generator_mo_or_sp_root_menu" name="Generator MO or SP" parent="compotec_root_menu" action="generator_mo_or_sp_action" sequence="5"/>
+    </data>
+</odoo>

@@ -10,6 +10,7 @@ class InheritStockPickingType(models.Model):
         string='Approvals'
     )
    
+    count_picking_users_waiting_approval = fields.Integer(compute='_compute_picking_status')
     count_picking_need_approval = fields.Integer(compute='_compute_picking_status')
     count_picking_rejected = fields.Integer(compute='_compute_picking_status')
     count_picking_approved = fields.Integer(compute='_compute_picking_status')
@@ -19,7 +20,8 @@ class InheritStockPickingType(models.Model):
         domains = {
             'count_picking_rejected': [('state', '=', 'reject')],
             'count_picking_approved': [('approved_by', '!=', False), ('state', '=', 'done')],
-            'count_picking_need_approval': [('state', '=', 'need_approval'), ('picking_type_id', 'in', id_stock_pick_approva)]
+            'count_picking_need_approval': [('state', '=', 'need_approval'), ('picking_type_id', 'in', id_stock_pick_approva)],
+            'count_picking_users_waiting_approval': [('users_waiting_approval.id', '=', self.env.context.get('uid'))]
         }
         for field in domains:
             data = self.env['stock.picking'].read_group(domains[field] +
@@ -40,3 +42,6 @@ class InheritStockPickingType(models.Model):
 
     def get_action_picking_tree_need_approval(self):
         return self._get_action('pilarmedia_subcon_auto_create_stock_move.action_picking_tree_need_approval')
+
+    def get_action_picking_tree_users_waiting_approval(self):
+        return self._get_action('pilarmedia_subcon_auto_create_stock_move.action_picking_tree_users_waiting_approval')

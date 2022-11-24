@@ -31,15 +31,22 @@
                                 <field name="name"/>
                                 <field name="active"/>
                                 <field name="for_form"/>
+                                <field name="generate_document"/>
                             </group>
                             <group>
-                                <field name="op_type_ok"/>
-                                <field name="op_type_ng"/>
+                                <field name="description"/>
                             </group>
                         </group>
                         <group>
                             <group>
-                                <field name="description"/>
+                                <field name="op_type_ok"/>
+                                <field name="source_location_ok"/>
+                                <field name="dest_location_ok"/>
+                            </group>
+                            <group>
+                                <field name="op_type_ng"/>
+                                <field name="source_location_ng"/>
+                                <field name="dest_location_ng"/>
                             </group>
                         </group>
                     </sheet>

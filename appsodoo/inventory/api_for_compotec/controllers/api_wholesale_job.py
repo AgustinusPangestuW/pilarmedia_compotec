@@ -44,7 +44,7 @@ class APIWholesaleJob(http.Controller):
                 'wholesale_job_lot_lines': [{
                     'id': lot_lines.id,
                     'wholesale_job_line_id': lot_lines.wholesale_job_line_id.id,
-                    'lot_id': lot_lines.lot_id,
+                    'lot_id': lot_lines.lot_id.id,
                     'ok': lot_lines.ok,
                     'ng': lot_lines.ng
                 } for lot_lines in lines.wholesale_job_lot_lines]

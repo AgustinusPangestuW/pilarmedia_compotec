@@ -63,6 +63,21 @@ class StockPicking(models.Model):
         help="location destination for show in tree",
         compute="_get_location_dest_for_show"
     )
+    users_waiting_approval = fields.Many2many(
+        comodel_name='res.users', 
+        relation='users_waiting_approval_rel',
+        string='User Waiting Approval',
+        copy=False,
+        store=True
+    )
+
+    def write(self, vals):
+        # reset value `users_waiting_approval` 
+        # filled value in field `users_waiting_approval` by system 
+        # when auto create step2 stock picking (autocreate stock picking)
+        if self.state == 'done':
+            vals['users_waiting_approval'] = [(5,0,0)]
+        return super().write(vals)
 
     def action_assign(self):
         super().action_assign()
@@ -185,32 +200,35 @@ class StockPicking(models.Model):
 
 def edit_dest_loc_into_transit(self):
     for rec in self:
-        if rec.picking_type_id.is_subcon and not self.stock_picking_subcont_ref_id:
+        if rec.picking_type_id.is_subcon and rec.picking_type_id.operation_type_id:
             # ditampung ke variable untuk ditampilkan
             self.env['stock.picking'].sudo().search([('id', '=', rec.id)]).write(
                 {'location_dest_id_subcon': rec.location_dest_id.id})
 
-            if rec.picking_type_id.transit_location_id:
+            if rec.picking_type_id.operation_type_id.default_location_src_id:
                 # destination warehouse isikan dengan warehouse transit
                 self.env['stock.picking'].sudo().search([('id', '=', rec.id)]).write(
-                    {'location_dest_id': rec.picking_type_id.transit_location_id.id})
+                    {'location_dest_id': rec.picking_type_id.operation_type_id.default_location_src_id.id})
 
                 # rubah destinasi location per item 
                 for line in rec.move_line_ids_without_package:
                     self.env['stock.move.line'].sudo().search([('id', '=', line.id)]).write(
-                        {'location_dest_id': rec.picking_type_id.transit_location_id.id})
+                        {'location_dest_id': rec.picking_type_id.operation_type_id.default_location_src_id.id})
             else:
                 # field transit location kosong
-                raise UserError(_("Field Transit Location in Operation Type %s is null." % rec.picking_type_id.name ))
+                raise UserError(_("Field Default Source Location in next Operation Type %s is null." % rec.picking_type_id.name ))
 
     return self
 
 def make_another_stock_pick_if_subcon(self):
     new_sm = {}
     for rec in self:
-        if rec.picking_type_id.is_subcon and not self.stock_picking_subcont_ref_id:
+        if rec.picking_type_id.is_subcon and rec.picking_type_id.operation_type_id:
             # Mapping data stock picking
             new_sm.update(_collect_stock_picking(rec))
+
+            if self.env.context.get('uid'):
+                new_sm.update({"users_waiting_approval": [(4, self.env.context.get('uid'))] })
             
             for line in rec.move_line_ids_without_package:
                 # isikan line (move_line_ids_without_package) karena mau membuat `transfer immediate` 
@@ -233,7 +251,7 @@ def make_another_stock_pick_if_subcon(self):
 
 def _copy_line(rec, line):
     return {
-        'location_id': rec.picking_type_id.transit_location_id.id,
+        'location_id': rec.picking_type_id.operation_type_id.default_location_src_id.id,
         'location_dest_id': rec.location_dest_id_subcon.id,
         'product_id': line.product_id.id,
         'product_uom_id': line.product_uom_id.id,
@@ -259,7 +277,7 @@ def _collect_stock_picking(rec):
         'vehicle_id': rec.vehicle_id.id,
         'driver_id': rec.driver_id,
         'location_src_id_subcon': int(rec.location_id.id),
-        'location_id': rec.picking_type_id.transit_location_id.id,
+        'location_id': rec.picking_type_id.operation_type_id.default_location_src_id.id,
         'location_dest_id': rec.location_dest_id_subcon.id,
         'location_dest_id_subcon': None,
         'stock_picking_subcont_ref_id': rec.id,

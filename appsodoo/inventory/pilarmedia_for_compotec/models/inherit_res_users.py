@@ -4,9 +4,10 @@ from odoo.exceptions import UserError
 class ResUsers(models.Model):
     _inherit = 'res.users'
 
-    vendor = fields.Many2one(
-        'res.partner', 
+    vendors = fields.Many2many(
+        comodel_name='res.partner', 
         string='Vendor Subcon', 
+        relation='user_partner_rel',
         domain=[('is_subcon', '=', 1)], 
         help="relation with res parner, with is_subcon = 1"
     )

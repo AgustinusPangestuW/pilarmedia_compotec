@@ -3,9 +3,11 @@ from odoo import models, fields, api, _, exceptions
 from datetime import datetime
 from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
+from .inherit_models_model import inheritModel
+from .wrapping import _get_todo
 
 
-class Lot(models.Model):
+class Lot(inheritModel):
     _name = "lot"
     _sql_constraints = [
         ('check_name_unique', 'UNIQUE(name)', 'The name is not unique')
@@ -38,25 +40,53 @@ class Lot(models.Model):
                 raise ValidationError(_("name must be Integer"))
 
 
-class WholesaleJob(models.Model):
+class WholesaleJob(inheritModel):
     _name = 'wholesale.job'
     _description = "Wholesale Job"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Wholesale Job Name', required=True, readonly=True, index=True, default=lambda self: _('New'))
+    READONLY_STATES = {
+        'submit': [('readonly', True)],
+        'cancel': [('readonly', True)],
+    }
+    list_state = [("draft","Draft"), ("submit","Submited"), ('cancel', "Canceled")]
+    readonly_fields = ["name", "date", "job", "checked_coordinator", "checked_qc", "shift", ]
+
+    name = fields.Char(
+        string='Wholesale Job Name', 
+        required=True, 
+        readonly=True, 
+        index=True, 
+        default=lambda 
+        self: _('New'),
+        copy=False)
     sequence = fields.Integer(string='Sequence', default=10)
-    date = fields.Date(string="Date", required=True, default=datetime.now().date())
+    date = fields.Date(string="Date", required=True, default=datetime.now().date(), states=READONLY_STATES)
     job_id_active = fields.Boolean(string='Job ID Active', compute="_set_job_id_active", store=True)
-    job_id = fields.Many2one(
+    job = fields.Many2one(
         'job', 
         string='Job', 
         domain=[('active', '=', 1), ('for_form', '=', 'wholesale_job')], 
-        required=True
+        required=True, states=READONLY_STATES
     )
-    wholesale_job_lines = fields.One2many('wholesale.job.line', 'wholesale_job_id', 'Lot Line', auto_join=True, copy=True)
-    checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
-    checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
-    shift = fields.Many2one('shift', string='Shift')
+    wholesale_job_lines = fields.One2many(
+        'wholesale.job.line', 
+        'wholesale_job_id', 
+        'Lot Line', 
+        auto_join=True, 
+        copy=True, 
+        states=READONLY_STATES)
+    checked_coordinator = fields.Many2one(
+        'employee.custom', 
+        string='Checked Coordinator', 
+        domain=_get_domain_user, 
+        states=READONLY_STATES)
+    checked_qc = fields.Many2one(
+        'employee.custom', 
+        string='Checked QC', 
+        domain=_get_domain_user, 
+        states=READONLY_STATES)
+    shift = fields.Many2one('shift', string='Shift', states=READONLY_STATES)
     state = fields.Selection([
         ("draft","Draft"),
         ("submit","Submited"), 
@@ -76,8 +106,13 @@ class WholesaleJob(models.Model):
         compute="_get_op_type_from_job", 
         store=True
     )
-    count_stock_picking = fields.Integer(string='Count Stock Picking', compute="_count_stock_picking", store=True, readonly=True)
+    count_stock_picking = fields.Integer(
+        string='Count Stock Picking', 
+        compute="_count_stock_picking", 
+        store=True, 
+        readonly=True)
     company_id = fields.Many2one('res.company', string='Company', readonly=True)
+    count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
 
     @api.model
     def create(self, vals):
@@ -96,11 +131,11 @@ class WholesaleJob(models.Model):
 
         return super().create(vals)  
 
-    @api.depends('job_id')
+    @api.depends('job')
     def _get_op_type_from_job(self):
-        if self.job_id:
-            self.operation_type_id_ok = self.job_id.op_type_ok or ''
-            self.operation_type_id_ng = self.job_id.op_type_ng or ''
+        if self.job:
+            self.operation_type_id_ok = self.job.op_type_ok or ''
+            self.operation_type_id_ng = self.job.op_type_ng or ''
         else:
             self.operation_type_id_ng = self.operation_type_id_ok = ""
 
@@ -125,15 +160,46 @@ class WholesaleJob(models.Model):
 
     def action_submit(self):
         self.state = "submit"
-        # self.validate_wj_lines()
-        self.create_stock_move()
+        
+        if self.job.generate_document == "mo":
+            self.create_mo()
+        elif self.job.generate_document == "transfer":
+            self.create_stock_picking()
+
+    def validate_change_state(self, vals):
+        # change state Draft / None -> Submit -> Cancel 
+        # Change state Cancel -> Draft
+        state_before = {
+            "submit": ['', 'draft'],
+            "cancel": ['submit']
+        }
+
+        if vals.get('state'):
+            new_state = vals.get('state')
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            for i in state_before:
+                if new_state == i and self.state not in state_before[i]:
+                    raise ValidationError(_("Current state must be %s when update state into %s, state document %s is %s" % (
+                        "(" + ", ".join(state_before[i]) +")",
+                        new_state,
+                        self.name,
+                        name_cur_state[0]
+                    )))
+
+    def validate_change_value_in_restrict_field(self, vals):
+        readonly_status = False
+        for i in vals:
+            if i in self.readonly_fields:
+                readonly_status = True
+
+        if self.state in ['submit', 'cancel'] and readonly_status:
+            name_cur_state = [s[1] for s in self.list_state if s[0] == self.state] or [""]
+            raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, name_cur_state[0])))
 
     def write(self, vals):  
-        # if self.state in ['submit']:
-        #     raise ValidationError(_("You Cannot Edit %s as it is in %s State" % (self.name, self.state)))
-
+        self.validate_change_value_in_restrict_field(vals)
+        self.validate_change_state(vals)
         vals = super().write(vals)
-
         return vals
         
     def action_cancel(self):
@@ -152,6 +218,10 @@ class WholesaleJob(models.Model):
             raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, (self.state))))
         return super(WholesaleJob, self).remove()
 
+    def _count_mo(self):
+        for rec in self:
+            rec.count_mo = rec.env['mrp.production'].sudo().search_count([('wholesale_job_id', '=', rec.id)])
+    
     def _count_stock_picking(self):
         for rec in self:
             rec.count_stock_picking = rec.env['stock.picking'].sudo().search_count([('wholesale_job_id', '=', rec.id)])
@@ -169,7 +239,104 @@ class WholesaleJob(models.Model):
             'type':'ir.actions.act_window',
         }
 
-    def create_stock_move(self):
+    def action_see_mo(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            list_domain.append(('wholesale_job_id', '=', self.env.context['active_id']))
+        
+        return {
+            'name':_('Manufacturing Order'),
+            'domain':list_domain,
+            'res_model':'mrp.production',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
+
+    def create_mo(self):
+        for rec in self:
+            arr_total_per_product = {}
+            for line in rec.wholesale_job_lines:
+                arr_total_per_product[line.product_id.id] = arr_total_per_product.get(line.product_id.id, 0) + (line.total_set or line.total_pcs)
+
+            product_done_to_process = []
+            for line in rec.wholesale_job_lines:
+                # hanya proses item yang berbeda saja
+                if line.product_id.id not in product_done_to_process:
+                    product_done_to_process.append(line.product_id.id)
+                else:
+                    continue
+
+                bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', line.product_id.product_tmpl_id.id)])
+                if bom:
+                    product_id_from_bom = self.env['product.product'].sudo().search([('product_tmpl_id', '=', line.product_id.product_tmpl_id.id)])
+                    new_mo = {
+                        "product_id": product_id_from_bom.id,
+                        "bom_id": bom.id,
+                        "product_qty": arr_total_per_product[line.product_id.id],
+                        "product_uom_id": bom.product_uom_id.id,
+                        "company_id": self.env.company.id,
+                        "wholesale_job_id": rec.id,
+                        "picking_type_id": rec.job.op_type_ok.id,
+                        "location_src_id": rec.job.source_location_ok.id,
+                        "location_dest_id": rec.job.dest_location_ok.id
+                    }
+                    
+                    try:
+                        finished_lot_id = ""
+                        mo = self.env['mrp.production'].sudo().create(new_mo)
+                        mo._onchange_move_raw()
+                        mo.action_confirm()
+                        mo.action_assign()
+                        for rec_mo in mo:
+                            if mo.reservation_state == "waiting":
+                                raise UserError(_('stock is not enough.'))
+                            else:
+                                finished_lot_id = self.env['stock.production.lot'].create({
+                                    'product_id': rec_mo.product_id.id,
+                                    'company_id': rec_mo.company_id.id
+                                })
+                                # create produce
+                                todo_qty, todo_uom, serial_finished = _get_todo(self, rec_mo)
+                                prod = mo.env['mrp.product.produce'].sudo().create({
+                                    'production_id': rec_mo.id,
+                                    'product_id': rec_mo.product_id.id,
+                                    'qty_producing': todo_qty,
+                                    'product_uom_id': todo_uom,
+                                    'finished_lot_id': finished_lot_id.id,
+                                    'consumption': bom.consumption,
+                                    'serial': bool(serial_finished)
+                                })
+                                prod._compute_pending_production()
+                                prod.do_produce()
+
+                        # set done qty in stock move line
+                        # HACK: cause qty done doesn't change / trigger when execute do_produce
+                        for mri in mo.move_raw_ids:
+                            # validation reserved_availability must be same with product_uom_qty (to consume)
+                            if float(mri.reserved_availability or 0) < float(mri.product_uom_qty):
+                                raise ValidationError(_("Item %s diperlukan Qty %s %s pada location %s untuk melanjutkan proses. Stock tersedia hanya %s") %(
+                                    mri.product_id.name,
+                                    mri.product_uom_qty, mri.product_uom.name,
+                                    mo.location_src_id.location_id.name + '/' + mo.location_src_id.name,
+                                    mri.reserved_availability
+                                ))
+
+                            for line in mri.move_line_ids:
+                                line.qty_done = line.product_uom_qty
+                                line.lot_produced_ids = finished_lot_id
+
+                        mo.button_mark_done()
+                        self._count_mo()
+                    
+                    except Exception as e:
+                        raise (e)
+                    
+                else:
+                    raise ValidationError(_("BOM untuk item %s belum tersedia") % (
+                        line.product.product_tmpl_id.name
+                    ))
+
+    def create_stock_picking(self):
         self.validate_wj_lines()
 
         sm_ng, sm_ok = {}, {}
@@ -179,12 +346,14 @@ class WholesaleJob(models.Model):
             sm_ng['location_id'] = det_picking_type_ng.default_location_src_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ng['location_dest_id'] = det_picking_type_ng.default_location_dest_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ng['wholesale_job_id'] = self.id
+            sm_ng['name'] = '/'
 
             det_picking_type_ok = self.env['stock.picking.type'].sudo().search([('id', '=', rec.operation_type_id_ok.id)])
             sm_ok['picking_type_id'] = rec.operation_type_id_ok.id
             sm_ok['location_id'] = det_picking_type_ok.default_location_src_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ok['location_dest_id'] = det_picking_type_ok.default_location_dest_id.id or self.env['stock.warehouse']._get_partner_locations()[1].id
             sm_ok['wholesale_job_id'] = self.id
+            sm_ok['name'] = '/'
 
             sm_ng['move_lines'], sm_ok['move_lines'] = [], []
             for line in self.wholesale_job_lines:
@@ -245,7 +414,7 @@ class WholesaleJob(models.Model):
             for line in rec.move_line_ids_without_package:
                 line.qty_done = line.product_uom_qty
 
-class WholesaleJobLine(models.Model):
+class WholesaleJobLine(inheritModel):
     _name = "wholesale.job.line"
     _description = "Wholesale Job Line"
 
@@ -261,9 +430,11 @@ class WholesaleJobLine(models.Model):
         store=True,
         help="This field will be True when product UOM = `set`"
     )
-    job_id = fields.Many2one(
+    job = fields.Many2one(
         'job', string='Job', 
         required=True, 
+        compute="fetch_job",
+        store=True,
         readonly=True, 
         domain=[('active', '=', 1)]
     )
@@ -282,17 +453,44 @@ class WholesaleJobLine(models.Model):
         store=True, 
         help="this field for track last Lot ID"
     )
+    is_detail_ng = fields.Boolean(string='NG detail?')
+    total_from_detail_ng = fields.Float(
+        string='Total NG', 
+        compute="_calculate_total_ng_from_detail_ng", 
+        store=True,
+        help="result from calculate total_ng from detail ng (ng_ids)")
+    ng_ids = fields.One2many('details.ng', 'wholesale_job_line_id', 'NG Details')
+    msg_error = fields.Text(
+        string='', readonly=1, default="Total NG in detail not same with Total NG current")
+    show_msg_error = fields.Boolean(
+        string='Show Message Error', help="flag for show field msg_error", compute="_comp_show_msg_error")
     wholesale_job_lot_lines = fields.One2many(
         'wholesale.job.lot.line', 'wholesale_job_line_id', 
-        'Lot Line', auto_join=True, copy=True)           
+        'Lot Line', auto_join=True, copy=True)   
+    reason_for_ng = fields.Text(string='Keterangan NG')
+
+    @api.depends('is_detail_ng', 'total_from_detail_ng', 'total_ng')
+    def _comp_show_msg_error(self):
+        for rec in self:
+            show_msg_error = 0
+            if rec.is_detail_ng and rec.total_from_detail_ng != rec.total_ng:
+                show_msg_error = 1
+            rec.show_msg_error = show_msg_error
+
+    @api.depends('wholesale_job_id')
+    def fetch_job(self):
+        for rec in self:
+            if rec.wholesale_job_id.job:
+                job = rec.wholesale_job_id.job.id
+                rec.update({'job': job})
 
     @api.model
     def default_get(self, fields_list):
         res = super(WholesaleJobLine, self).default_get(fields_list)
 
-        if self.env.context.get('job_id'):
-            job_id = self.env.context.get('job_id')
-            res.update({'job_id' : job_id})
+        if self.env.context.get('job'):
+            job = self.env.context.get('job')
+            res.update({'job' : job})
 
         return res
 
@@ -353,8 +551,14 @@ class WholesaleJobLine(models.Model):
         else:
             raise exceptions.ValidationError(_("Kantong saat ini belum tersedia."))
 
+    @api.depends('ng_ids', 'is_detail_ng')
+    def _calculate_total_ng_from_detail_ng(self):
+        for rec in self:
+            total_ng = sum([i.total_ng for i in rec.ng_ids])
+            rec.total_from_detail_ng = total_ng
+
     @api.depends('is_set', 'wholesale_job_lot_lines.ng', 'wholesale_job_lot_lines.ok', \
-        'total_ng')
+        'total_ng', 'total_from_detail_ng')
     def _calc_total_ng_ok(self):
         for rec in self:
             # calculation NG & OK when is_set = FALSE (NON set)
@@ -363,8 +567,10 @@ class WholesaleJobLine(models.Model):
 
             # calculation NG & OK when is_set = TRUE
             else:
-                self._calc_total_ok_n_set()
+                # get total ng base on table detail_ng
+                rec.total_ng = rec.total_from_detail_ng
 
+                self._calc_total_ok_n_set()
 
     def _calculate_ok_ng_pcs(self):
         total_ng, total_ok, total_pcs = 0, 0, 0
@@ -388,14 +594,15 @@ class WholesaleJobLine(models.Model):
             if rec.is_set:
                 last_lot_list = rec.wholesale_job_lot_lines
                 last_lot_name = ''
+
                 if len(last_lot_list) > 0:
+                    rec.biggest_lot = last_lot_list[-1].lot_id.id
                     last_lot_name = last_lot_list[-1].lot_id.name
                     new_total_lot = int(rec.factor) * int(last_lot_name)
                     
+                rec.total_ok = new_total_lot
                 total_set = rec.total_ok + rec.total_ng
-                    
-            rec.total_ok = new_total_lot
-            rec.total_set = total_set
+                rec.total_set = total_set
 
     @api.onchange('factor')
     def validate_factor(self):
@@ -410,7 +617,7 @@ class WholesaleJobLine(models.Model):
         self.factor = new_factor
 
 
-class WholesaleJobLotLine(models.Model):
+class WholesaleJobLotLine(inheritModel):
     _name = "wholesale.job.lot.line"
     _description = "Wholesale Job Lot Line"
     _rec_name = "lot_id"
@@ -419,3 +626,25 @@ class WholesaleJobLotLine(models.Model):
     lot_id = fields.Many2one('lot', string='Lot No', required=True, readonly=True)
     ok = fields.Float(string='OK')
     ng = fields.Float(string='NG')
+
+
+class MasterNG(inheritModel):
+    _name = "master.ng"
+    _description = "Master NG"
+
+    _sql_constraints = [
+        ('check_name_unique', 'UNIQUE(name)', 'The name must be unique')
+    ]
+
+    name = fields.Char(string='Name', required=True, copy=False)
+    active = fields.Boolean(string='Active', default=True)
+    description = fields.Text(string='Description')
+
+
+class DetailsNG(inheritModel):
+    _name = "details.ng"
+    _description = "Detail NG"
+   
+    wholesale_job_line_id = fields.Many2one('wholesale.job.line', 'Wholesale Job Line ID', ondelete='cascade', index=True)
+    ng_id = fields.Many2one('master.ng', string='NG', domain="[('active', '=', True)]", required=True, copy=True)
+    total_ng = fields.Float(string='NG Total')

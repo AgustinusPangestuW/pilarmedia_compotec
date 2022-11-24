@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="pricelist_subcons_tree">
+            <field name="name">pricelist.subcon.baseon.stockmove.tree</field>
+            <field name="model">pricelist.subcon.baseon.stockmove</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="price_total"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="pricelist_subcons_form">
+            <field name="name">pricelist.subcon.baseon.stockmove.form</field>
+            <field name="model">pricelist.subcon.baseon.stockmove</field>
+            <field name="arch" type="xml">
+                <form create="false">
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="product_id"/>
+                                <field name="vendor" invisible="1"/>
+                            </group>
+                            <group>
+                                <field name="qty_in_stock_move_line"/>
+                                <field name="uom_in_stock_move_line"/>
+                                <field name="price_total"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Pricelist Subcon">
+                                <field name="lines" 
+                                context="{'product_id':product_id, 'qty':qty_in_stock_move_line, 'uom':uom_in_stock_move_line}">
+                                    <tree editable="bottom" >
+                                        <field name="pricelist_id" domain="[('partner_id', '=', parent.vendor)]"/>
+                                        <field name="price"/>
+                                        <field name="qty"/>
+                                        <field name="price_total"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="pricelist_subcons_action">
+            <field name="name">pricelist_subcon_baseon_stock_move</field>
+            <field name="res_model">pricelist.subcon.baseon.stockmove</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+    </data>
+</odoo>

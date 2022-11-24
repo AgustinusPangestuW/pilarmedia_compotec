@@ -3,8 +3,10 @@ from datetime import datetime
 from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
 from .wrapping import _get_todo
+from .inherit_models_model import inheritModel
 
-class PeelDissAssy(models.Model):
+
+class PeelDissAssy(inheritModel):
     _name = 'peel.diss.assy'
     _description = "Form Kupas Diss Assy"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
@@ -17,7 +19,7 @@ class PeelDissAssy(models.Model):
     readonly_fields = ["name", "date", "job"]
 
     sequence = fields.Integer(string='Sequence')
-    name = fields.Char(string='Name', readonly=True)
+    name = fields.Char(string='Name', readonly=True, copy=False)
     date = fields.Date(
         string='Tangal',
         default=datetime.now().date(), 
@@ -33,6 +35,11 @@ class PeelDissAssy(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
+    count_stock_picking = fields.Integer(
+        string='Count Stock Picking', 
+        compute="_count_stock_picking", 
+        store=True, 
+        readonly=True)
     peel_diss_assy_line = fields.One2many(
         'peel.diss.assy.line', 
         'peel_diss_assy_id', 
@@ -75,7 +82,11 @@ class PeelDissAssy(models.Model):
 
     def action_submit(self):
         self.state = "submit"
-        self.create_mo()
+        
+        if self.job.generate_document == "mo":
+            self.create_mo()
+        elif self.job.generate_document == "transfer":
+            self.create_stock_picking()
 
     def validate_change_state(self, vals):
         # change state Draft / None -> Submit -> Cancel 
@@ -133,6 +144,10 @@ class PeelDissAssy(models.Model):
     def _count_mo(self):
         for rec in self:
             rec.count_mo = rec.env['mrp.production'].sudo().search_count([('peel_diss_assy_id', '=', rec.id)])
+    
+    def _count_stock_picking(self):
+        for rec in self:
+            rec.count_stock_picking = rec.env['stock.picking'].sudo().search_count([('peel_diss_assy_id', '=', rec.id)])
 
     def action_see_mo(self):
         list_domain = []
@@ -143,6 +158,19 @@ class PeelDissAssy(models.Model):
             'name':_('Manufacturing Order'),
             'domain':list_domain,
             'res_model':'mrp.production',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
+
+    def action_see_stock_picking(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            list_domain.append(('peel_diss_assy_id', '=', self.env.context['active_id']))
+        
+        return {
+            'name':_('Transfers'),
+            'domain':list_domain,
+            'res_model':'stock.picking',
             'view_mode':'tree,form',
             'type':'ir.actions.act_window',
         }
@@ -158,8 +186,8 @@ class PeelDissAssy(models.Model):
                     "company_id": self.env.company.id,
                     "peel_diss_assy_id": rec.id,
                     "picking_type_id": rec.job.op_type_ok.id,
-                    "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
-                    "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id,
+                    "location_src_id": rec.job.source_location_ok.id,
+                    "location_dest_id": rec.job.dest_location_ok.id,
                     "move_raw_ids": []
                 }
                 for c in line.peel_diss_assy_component_line:
@@ -169,8 +197,8 @@ class PeelDissAssy(models.Model):
                         "product_uom_qty": float(c.peeled_total),
                         "name": "New",
                         "picking_type_id": rec.job.op_type_ok.id,
-                        "location_id": rec.job.op_type_ok.default_location_src_id.id,
-                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
+                        "location_id": rec.job.source_location_ok.id,
+                        "location_dest_id": rec.job.dest_location_ok.id
                     }])
 
                 if new_mo:
@@ -209,8 +237,6 @@ class PeelDissAssy(models.Model):
                                 rec.location_id.location_id.name+'/'+rec.location_id.name, 
                                 str(rec.product_uom_qty)
                             )))
-                        # else:
-                        #     rec.quantity_done = rec.reserved_availability
                             
                         for line in rec.move_line_ids:
                             line.qty_done = rec.product_uom_qty
@@ -219,9 +245,92 @@ class PeelDissAssy(models.Model):
 
                     mo.button_mark_done()
                     self._count_mo()
-                    
 
-class PeelDissAssyLine(models.Model):
+    def create_stock_picking(self):
+        def get_total_ok_ng_from_component(line):
+            ok, ng = 0, 0
+            for c in line.peel_diss_assy_component_line:
+                ok += c.ok
+                ng += c.ng
+
+            return ok,ng
+
+        sp_ng, sp_ok = {}, {}
+        for rec in self:
+            sp_ng['picking_type_id'] = rec.job.op_type_ng.id
+            sp_ng['location_id'] = rec.job.source_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ng['location_dest_id'] = rec.job.dest_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ng['peel_diss_assy_id'] = self.id
+            sp_ng['name'] = '/'
+
+            sp_ok['picking_type_id'] = rec.job.op_type_ok.id
+            sp_ok['location_id'] = rec.job.source_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ok['location_dest_id'] = rec.job.dest_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ok['peel_diss_assy_id'] = self.id
+            sp_ok['name'] = '/'
+
+            sp_ng['move_lines'], sp_ok['move_lines'] = [], []
+            for line in self.peel_diss_assy_line:
+                product = line.product_id.with_context(lang=self.env.user.lang)
+                ok, ng = get_total_ok_ng_from_component(line)
+                name_desc = product.partner_ref
+                sp_ng['move_lines'].append((0,0, {
+                    'product_id': line.product_id.id,
+                    'product_uom_qty': ng,
+                    'description_picking': name_desc,
+                    'product_uom': line.product_id.uom_id.id,
+                    'name': name_desc
+                }))
+
+                sp_ok['move_lines'].append((0,0, {
+                    'product_id': line.product_id.id, 
+                    'product_uom_qty': ok,
+                    'description_picking': name_desc,
+                    'product_uom': line.product_id.uom_id.id,
+                    'name': name_desc
+                }))
+            
+            # Create
+            sp_ng = self.env['stock.picking'].sudo().create(sp_ng)
+            sp_ok = self.env['stock.picking'].sudo().create(sp_ok)
+
+            # Mark as To Do
+            sp_ng.action_confirm()
+            sp_ok.action_confirm()
+
+            # Assign
+            sp_ng.action_assign()
+            sp_ok.action_assign()
+            
+            self.validate_reserved_qty(sp_ng)
+            self.validate_reserved_qty(sp_ok)
+            self.fill_done_qty(sp_ng)
+            self.fill_done_qty(sp_ok)
+
+            # Validate
+            sp_ng.button_validate()
+            sp_ok.button_validate()
+
+            self._count_stock_picking()
+
+    def validate_reserved_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_ids_without_package:
+                if line.reserved_availability < line.product_uom_qty:
+                    raise UserError(_('Item {} pada location {} diperlukan Qty {} {}.').format(
+                        line.product_id.name, 
+                        rec.location_id.location_id.name + '/' + rec.location_id.name,
+                        line.product_uom_qty,
+                        line.product_uom.name
+                    ))
+
+    def fill_done_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_line_ids_without_package:
+                line.qty_done = line.product_uom_qty    
+    
+
+class PeelDissAssyLine(inheritModel):
     _name = "peel.diss.assy.line"
     _description = "Detail Job of Peel Diss Assy"
 
@@ -233,20 +342,24 @@ class PeelDissAssyLine(models.Model):
     )
     user = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     product_id = fields.Many2one('product.product', string='Produk', required=True)
+    product_template_id = fields.Many2one(
+        'product.template', string='Product Template', compute="get_product_template", store=True, 
+        readonly=True)
     bom_id = fields.Many2one(
         'mrp.bom', 
         string='BOM', 
-        readonly=True, 
-        compute='_fetch_component_from_bom', 
+        required=True, 
+        compute='get_first_bom', 
         store=True,
-        copy=True
+        copy=True,
+        readonly=False
     )
     description = fields.Text(string="Description")
     peel_diss_assy_component_line = fields.One2many(
         'peel.diss.assy.component.line', 
         'peel_diss_assy_line_id', 
         'Peel Diss Assy Componen Line',
-        compute="_fetch_component_from_bom",
+        compute="fetch_component_bom",
         store=True,
         readonly=False,
         copy=True,
@@ -254,34 +367,53 @@ class PeelDissAssyLine(models.Model):
     )
     qty = fields.Float(string='Quantity')
 
-    @api.onchange('product_id')
-    def _fetch_component_from_bom(self):
-        # reset lines to null
-        self.peel_diss_assy_component_line = [(5,0,0)]
-        list_component = []
-
+    @api.depends('product_id')
+    def get_product_template(self):
         for rec in self:
+            product_template = None
+            if rec.product_id:
+                product_template = rec.product_id.product_tmpl_id.id
+            rec.product_template_id = product_template
+
+    @api.depends('product_id')
+    def get_first_bom(self):
+        for rec in self:
+            bom = None
             if rec.product_id:
                 bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', rec.product_id.product_tmpl_id.id)])
                 if bom:
-                    rec.update({'bom_id': bom.id})
-                    for component in bom.bom_line_ids:
-                        list_component.append([0,0,{
-                            'product_id': component.product_id.id,
-                            'peel_diss_assy_line_id': rec.id
-                        }])
-       
-        self.peel_diss_assy_component_line =  list_component
+                    bom = bom[0].id
+
+            rec.update({'bom_id': bom})
+                    
+    @api.depends('bom_id')
+    def fetch_component_bom(self):
+        list_component = []
+        for rec in self:
+            rec.peel_diss_assy_component_line = [(5,0,0)]
+            if 'bom_id' in rec and rec.bom_id:
+                for component in rec.bom_id.bom_line_ids or []:
+                    list_component.append((0,0,{'product_id': component.product_id.id}))
+            rec.peel_diss_assy_component_line =  list_component
+
+    def write(self, vals):
+        res = self.validate_peeled_total(stop=True)
+
+        if res:
+            return res
+
+        res = super().write(vals)
+        return res
 
     @api.onchange('qty')
-    def validate_peeled_total(self):
+    def validate_peeled_total(self, stop=False):
         for rec in self:
             for c in rec.peel_diss_assy_component_line:
                 if c.ng and c.ok and rec.qty != c.peeled_total:
-                    return _warn_qty_not_valid(rec.qty)
+                    return _warn_qty_not_valid(rec.qty, stop=stop)
 
 
-class PeelDissAssyComponentLine(models.Model):
+class PeelDissAssyComponentLine(inheritModel):
     _name = "peel.diss.assy.component.line"
     _description = "Compoent Kupas Diss Assy"
     
@@ -314,8 +446,11 @@ class PeelDissAssyComponentLine(models.Model):
             if c.ng and c.ok and qty != c.peeled_total:
                 return _warn_qty_not_valid(qty)
 
-def _warn_qty_not_valid(qty):
-    return  {'warning':{
-        'title':('Warning'),
-        'message':_("Total OK + NG (total kupas) harus = %s (acuan qty product) " % (qty))
-    }}
+def _warn_qty_not_valid(qty, stop=False):
+    if stop:
+        raise ValidationError(_("Total OK + NG (total kupas) harus = %s (acuan qty product) ") % (qty))
+    else:
+        return  {'warning':{
+            'title':('Warning'),
+            'message':_("Total OK + NG (total kupas) harus = %s (acuan qty product) " % (qty))
+        }}

@@ -4,8 +4,10 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError 
 import json
 from .employee_custom import _get_domain_user
+from .inherit_models_model import inheritModel
 
-class Shift(models.Model):
+
+class Shift(inheritModel):
     _name = "shift"
     _description = "Shift"
 
@@ -18,7 +20,7 @@ class Shift(models.Model):
         return _show_description(self)
 
 
-class ShiftLine(models.Model):
+class ShiftLine(inheritModel):
     _name = "shift.line"
     _description = "Shift Template"
 
@@ -27,7 +29,7 @@ class ShiftLine(models.Model):
     working_time = fields.Many2one('working.time', string='Working Time', domain=[('active', '=', True)], required=True)
 
 
-class ShiftDeadline(models.Model):
+class ShiftDeadline(inheritModel):
     _name = "shift.deadline"
     _description = "Shift Deadline"
 
@@ -39,7 +41,7 @@ class ShiftDeadline(models.Model):
         return _show_description(self)
 
 
-class WorkingTime(models.Model):
+class WorkingTime(inheritModel):
     _name = "working.time"
     _description = "Working Time"
 
@@ -51,7 +53,7 @@ class WorkingTime(models.Model):
         return _show_description(self)
 
 
-class Wrapping(models.Model):
+class Wrapping(inheritModel):
     _name = 'wrapping'
     _description = "Wrapping"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
@@ -108,6 +110,11 @@ class Wrapping(models.Model):
     company_id = fields.Many2one('res.company', string='Company', required=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
+    count_stock_picking = fields.Integer(
+        string='Count Stock Picking', 
+        compute="_count_stock_picking", 
+        store=True, 
+        readonly=True)
     job = fields.Many2one(
         'job', 
         string='Job', 
@@ -158,7 +165,11 @@ class Wrapping(models.Model):
 
     def action_submit(self):
         self.state = "submit"
-        self.create_mo()
+        
+        if self.job.generate_document == "mo":
+            self.create_mo()
+        elif self.job.generate_document == "transfer":
+            self.create_stock_picking()
 
     def validate_change_state(self, vals):
         # change state Draft / None -> Submit -> Cancel 
@@ -211,6 +222,10 @@ class Wrapping(models.Model):
             raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, (self.state))))
         return super().remove()
 
+    def _count_stock_picking(self):
+        for rec in self:
+            rec.count_stock_picking = rec.env['stock.picking'].sudo().search_count([('wrapping_id', '=', rec.id)])
+
     def _count_mo(self):
         for rec in self:
             rec.count_mo = rec.env['mrp.production'].sudo().search_count([('wrapping_id', '=', rec.id)])
@@ -224,6 +239,19 @@ class Wrapping(models.Model):
             'name':_('Manufacturing Order'),
             'domain':list_domain,
             'res_model':'mrp.production',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
+
+    def action_see_stock_picking(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            list_domain.append(('wrapping_id', '=', self.env.context['active_id']))
+        
+        return {
+            'name':_('Transfers'),
+            'domain':list_domain,
+            'res_model':'stock.picking',
             'view_mode':'tree,form',
             'type':'ir.actions.act_window',
         }
@@ -253,8 +281,8 @@ class Wrapping(models.Model):
                         "company_id": self.env.company.id,
                         "wrapping_id": rec.id,
                         "picking_type_id": rec.job.op_type_ok.id,
-                        "location_src_id": rec.job.op_type_ok.default_location_src_id.id,
-                        "location_dest_id": rec.job.op_type_ok.default_location_dest_id.id
+                        "location_src_id": rec.job.source_location_ok.id,
+                        "location_dest_id": rec.job.dest_location_ok.id
                     }
                     
                     try:
@@ -297,9 +325,8 @@ class Wrapping(models.Model):
                                     rec.reserved_availability
                                 ))
 
-                            rec.quantity_done = rec.reserved_availability
                             for line in rec.move_line_ids:
-                                line.qty_done = rec.product_uom_qty
+                                line.qty_done = line.product_uom_qty
                                 line.lot_produced_ids = finished_lot_id
 
                         mo.button_mark_done()
@@ -312,6 +339,80 @@ class Wrapping(models.Model):
                     raise ValidationError(_("BOM untuk item %s belum tersedia") % (
                         line.product.product_tmpl_id.name
                     ))
+
+    def create_stock_picking(self):
+        sp_ng, sp_ok = {}, {}
+        for rec in self:
+            sp_ng['picking_type_id'] = rec.job.op_type_ng.id
+            sp_ng['location_id'] = rec.job.source_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ng['location_dest_id'] = rec.job.dest_location_ng.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ng['wrapping_id'] = self.id
+            sp_ng['name'] = '/'
+
+            sp_ok['picking_type_id'] = rec.job.op_type_ok.id
+            sp_ok['location_id'] = rec.job.source_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ok['location_dest_id'] = rec.job.dest_location_ok.id or self.env['stock.warehouse']._get_partner_locations()[1].id
+            sp_ok['wrapping_id'] = self.id
+            sp_ok['name'] = '/'
+
+            sp_ng['move_lines'], sp_ok['move_lines'] = [], []
+            for line in self.wrapping_deadline_line:
+                product = line.product.with_context(lang=self.env.user.lang)
+                name_desc = product.partner_ref
+                sp_ng['move_lines'].append((0,0, {
+                    'product_id': line.product.id,
+                    'product_uom_qty': line.ng,
+                    'description_picking': name_desc,
+                    'product_uom': line.product.uom_id.id,
+                    'name': name_desc
+                }))
+
+                sp_ok['move_lines'].append((0,0, {
+                    'product_id': line.product.id, 
+                    'product_uom_qty': line.total_ok,
+                    'description_picking': name_desc,
+                    'product_uom': line.product.uom_id.id,
+                    'name': name_desc
+                }))
+            
+            # Create
+            sp_ng = self.env['stock.picking'].sudo().create(sp_ng)
+            sp_ok = self.env['stock.picking'].sudo().create(sp_ok)
+
+            # Mark as To Do
+            sp_ng.action_confirm()
+            sp_ok.action_confirm()
+
+            # Assign
+            sp_ng.action_assign()
+            sp_ok.action_assign()
+            
+            self.validate_reserved_qty(sp_ng)
+            self.validate_reserved_qty(sp_ok)
+            self.fill_done_qty(sp_ng)
+            self.fill_done_qty(sp_ok)
+
+            # Validate
+            sp_ng.button_validate()
+            sp_ok.button_validate()
+
+            self._count_stock_picking()
+
+    def validate_reserved_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_ids_without_package:
+                if line.reserved_availability < line.product_uom_qty:
+                    raise UserError(_('Item {} pada location {} diperlukan Qty {} {}.').format(
+                        line.product_id.name, 
+                        rec.location_id.location_id.name + '/' + rec.location_id.name,
+                        line.product_uom_qty,
+                        line.product_uom.name
+                    ))
+
+    def fill_done_qty(self, stock_picking):
+        for rec in stock_picking:
+            for line in rec.move_line_ids_without_package:
+                line.qty_done = line.product_uom_qty
 
 
 def _get_todo(self, production):
@@ -332,7 +433,7 @@ def _get_todo(self, production):
     return todo_quantity, todo_uom, serial_finished
 
     
-class WrappingDeadlineLine(models.Model):
+class WrappingDeadlineLine(inheritModel):
     _name = "wrapping.deadline.line"
     _description = "Wrapping Deadline Line"
     _rec_name = "shift_deadline"
@@ -358,7 +459,7 @@ class WrappingDeadlineLine(models.Model):
         domain=_get_domain_user
     )
     total_ok = fields.Integer(
-        string='Total OK', 
+        string='OK', 
         compute="_calculate_total_ok", 
         store=True, 
         help="Result Calculation from total output in Wrapping Working time")
@@ -393,26 +494,22 @@ class WrappingDeadlineLine(models.Model):
         for rec in self:
             rec.ng_uom = rec.total_output_uom = rec.total_ok_uom = rec.product.product_tmpl_id.uom_id.id
 
-    @api.depends('wrapping_deadline_working_time_line.output')
-    def _calculate_total_ok(self):
+    @api.depends('wrapping_deadline_working_time_line', 'wrapping_deadline_working_time_line.output')
+    def _calculate_total(self):
         """
         Calculate the total output of the wrapping_deadline_working output.
         """
-        total_ok = 0.0
         for rec in self:
-            for line in rec.wrapping_deadline_working_time_line:
-                total_ok += line.output
+            rec.total = sum([l.output for l in rec.wrapping_deadline_working_time_line]) or 0
 
-            self.total_ok = total_ok
-
-    @api.depends('total_ok', 'ng')
-    def _calculate_total(self):
+    @api.depends('total', 'ng')
+    def _calculate_total_ok(self):
         """
         Calculate the total output of the wrapping_deadline_working total_ok + ng.
         """
-        for wrapping_deadline_line in self:
-            wrapping_deadline_line.update({
-                'total': wrapping_deadline_line.total_ok + wrapping_deadline_line.ng
+        for rec in self:
+            rec.update({
+                'total_ok': rec.total - rec.ng
             })
 
     @api.model
@@ -445,7 +542,7 @@ class WrappingDeadlineLine(models.Model):
         return res
 
 
-class WrappingDeadlineWorkingtimeLine(models.Model):
+class WrappingDeadlineWorkingtimeLine(inheritModel):
     _name = "wrapping.deadline.working.time.line"
     _description = "Wrapping Deadline Working time Line"
 
@@ -463,7 +560,7 @@ class WrappingDeadlineWorkingtimeLine(models.Model):
         index=1
     )
     working_time = fields.Many2one('working.time', string='Working time', required=True)
-    output = fields.Integer(string='Output')
+    output = fields.Integer(string='Total')
     break_time = fields.Char(string='Jam Break')
     rest_time = fields.Char(string='Jam Istirahat')
     plastic_roll_change_time = fields.Char(string='Ganti Rol Plastik')

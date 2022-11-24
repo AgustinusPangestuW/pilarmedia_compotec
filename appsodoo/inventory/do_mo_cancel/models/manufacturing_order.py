@@ -51,7 +51,14 @@ class Stock_Move(models.Model):
 class ManufacturingOrder(models.Model):
     _inherit = "mrp.production"
 
+    def unlink(self):
+        self.button_unreserve()
+        super().unlink()
+
     def action_cancel(self):
+        # unreserve before cancel document
+        self.button_unreserve()
+
         quant_obj = self.env['stock.quant']
         account_move_obj = self.env['account.move']
         stk_mv_obj = self.env['stock.move']

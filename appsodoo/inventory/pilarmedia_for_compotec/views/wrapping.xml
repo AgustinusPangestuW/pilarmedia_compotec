@@ -36,15 +36,16 @@
                             type="object" attrs="{'invisible': [('state', 'in', [False, 'draft', 'submit'])]}"/>
                         <field name="state" widget="statusbar"/>
                         <field name="custom_css" invisible="1"/>    
-
-                        <button string="Create Manufacturing Order" name="create_mo" class="btn-primary"
-                            attrs="{'invisible':[('state', 'not in', ['submit'])]}" type="object" />
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
                             <button name="action_see_mo" type="object" class="oe_stat_button" 
                                 icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
                                 <field name="count_mo" widget="statinfo" string=" MO"/>
+                            </button>
+                            <button name="action_see_stock_picking" type="object" class="oe_stat_button" 
+                                icon="fa-truck" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_stock_picking" widget="statinfo" string="Move"/>
                             </button>
                         </div>
                         <group>
@@ -123,7 +124,7 @@
             <field name="search_view_id" ref="view_wrapping_search"/>
         </record>
 
-        <menuitem id="wrapping_root_menu" name="Wrapping" parent="compotec_root_menu" action="wrapping_action"/>
+        <menuitem id="wrapping_root_menu" name="Wrapping" parent="compotec_root_menu" action="wrapping_action" sequence="2"/>
 
         <!-- for menu item configuration -->
         <menuitem id="wrapping_config_menu" name="Wrapping" parent="stock.menu_stock_config_settings" action="wrapping_action" groups="stock.group_stock_manager"/>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="gen_mosp_bomlines_tree">
+            <field name="name">gen.mosp.bomlines.tree</field>
+            <field name="model">gen.mosp.bomlines</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="product_id"/>
+                    <field name="total"/>
+                    <field name="ok"/>
+                    <field name="ng"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="gen_mosp_bomlines_form">
+            <field name="name">gen.mosp.bomlines.form</field>
+            <field name="model">gen.mosp.bomlines</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="product_id"/>
+                                <field name="total"/>
+                            </group>
+                            <group>
+                                <field name="ok"/>
+                                <field name="ng"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="gen_mosp_bomlines_action">
+            <field name="name">Component BOM</field>
+            <field name="res_model">gen.mosp.bomlines</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+    </data>
+</odoo>

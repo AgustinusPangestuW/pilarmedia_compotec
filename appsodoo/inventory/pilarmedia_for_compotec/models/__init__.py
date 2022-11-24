@@ -1,4 +1,5 @@
 from . import (
+    inherit_models_model,
     inherit_stock_picking_type,
     wrapping, 
     sorting, 
@@ -15,5 +16,7 @@ from . import (
     inherit_res_users,
     log_outstanding_qty_by_sj,
     pricelist_subcon_base_on_stock_move,
-    inherit_product_template
+    inherit_product_template,
+    inherit_stock_move,
+    generator_mo_or_sp
 )
