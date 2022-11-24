@@ -2,6 +2,7 @@ from odoo import models, _
 from odoo.exceptions import ValidationError
 
 class inheritModel(models.Model):
+    _name = "inherit.models.model"
 
     def write(self, vals):
         vals = super().write(vals)
