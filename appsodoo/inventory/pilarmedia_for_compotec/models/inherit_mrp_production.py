@@ -4,10 +4,10 @@ from odoo.exceptions import UserError
 class MRPProduction(models.Model):
     _inherit = 'mrp.production'
 
-    peel_diss_assy_id = fields.Many2one('peel.diss.assy', string='Peel Diss Assy')
-    wrapping_id = fields.Many2one('wrapping', string='Wrapping')
-    wholesale_job_id = fields.Many2one('wholesale.job', string='Wholesale Job', readonly=True)
-    generator_mosp_id = fields.Many2one('generator.mo.or.sp', string='Generator MO or SP ID', readonly=True)
+    peel_diss_assy_id = fields.Many2one('peel.diss.assy', string='Peel Diss Assy', readonly=True, ondelete="restrict")
+    wrapping_id = fields.Many2one('wrapping', string='Wrapping', readonly=True, ondelete="restrict")
+    wholesale_job_id = fields.Many2one('wholesale.job', string='Wholesale Job', readonly=True, ondelete="restrict")
+    generator_mosp_id = fields.Many2one('generator.mo.or.sp', string='Generator MO or SP ID', readonly=True, ondelete="restrict")
 
     def button_mark_done(self):
         super(MRPProduction, self).button_mark_done()

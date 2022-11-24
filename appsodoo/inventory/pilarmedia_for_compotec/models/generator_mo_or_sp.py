@@ -36,7 +36,7 @@ class GeneratorMOorSP(inheritModel):
         ('cancel', "Canceled")], string='State', tracking=True, copy=True)
     custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
     line_ids = fields.One2many(
-        'generator.mosp.lines', 'generator_mosp_id', 'Line', states=READONLY_STATES, copy=True)
+        'generator.mosp.line', 'generator_mosp_id', 'Line', states=READONLY_STATES, copy=True)
     required_items = fields.One2many(
         'required.items', 'generator_mosp_id', 'required_items', readonly=True, copy=False)
     count_stock_picking = fields.Integer(
@@ -142,8 +142,9 @@ class GeneratorMOorSP(inheritModel):
         self.state = "draft"
 
     def unlink(self):
-        if self.state == 'submit':
-            raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (self.name, self.state)))
+        for rec in self:
+            if rec.state == 'submit':
+                raise ValidationError(_("You Cannot Delete %s as it is in %s State" % (rec.name, rec.state)))
         return super().unlink()
 
     def action_submit(self):        
@@ -357,7 +358,7 @@ class GeneratorMOorSP(inheritModel):
 
 
 class GeneratorMOSPLines(models.Model):
-    _name = "generator.mosp.lines"
+    _name = "generator.mosp.line"
 
     product_id = fields.Many2one(
         'product.product', string='Product', required=True, ondelete='cascade', 
@@ -374,7 +375,7 @@ class GeneratorMOSPLines(models.Model):
     bom_id = fields.Many2one(
         'mrp.bom', string='BOM ID', compute="get_first_bom", readonly=False, copy=True)
     bom_components = fields.One2many(
-        'gen.mosp.bomlines', 'generate_mosp_line_id', 'Component BOMs', compute="add_components",
+        'gen.mosp.comp.line', 'generate_mosp_line_id', 'Component BOMs', compute="add_components",
         store=True, readonly=False, copy=True)
 
     @api.depends('ok', 'ng')
@@ -427,10 +428,10 @@ class GeneratorMOSPLines(models.Model):
 
 
 class BOMComponents(models.Model):
-    _name = 'gen.mosp.bomlines'
+    _name = 'gen.mosp.comp.line'
 
     generate_mosp_line_id = fields.Many2one(
-        'generator.mosp.lines', string='Generate MO or SP ID', index=True, ondelete='cascade')
+        'generator.mosp.line', string='Generate MO or SP ID', index=True, ondelete='cascade')
     product_id = fields.Many2one('product.product', string='Product', readonly=True)
     qty_need = fields.Float(string='Qty Needed', readonly=True, help="information qty component needed from BOM")
     total = fields.Float(string='Total', readonly=True, compute="calculate_total", store=True)

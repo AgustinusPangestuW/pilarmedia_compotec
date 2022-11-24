@@ -2,9 +2,9 @@
 <odoo>
     <data>
         <!-- List View -->
-        <record model="ir.ui.view" id="gen_mosp_bomlines_tree">
-            <field name="name">gen.mosp.bomlines.tree</field>
-            <field name="model">gen.mosp.bomlines</field>
+        <record model="ir.ui.view" id="gen_mosp_comp_line_tree">
+            <field name="name">gen.mosp.comp.line.tree</field>
+            <field name="model">gen.mosp.comp.line</field>
             <field name="arch" type="xml">
                 <tree>
                     <field name="product_id"/>
@@ -16,9 +16,9 @@
         </record>
         
         <!-- Form View -->
-        <record model="ir.ui.view" id="gen_mosp_bomlines_form">
-            <field name="name">gen.mosp.bomlines.form</field>
-            <field name="model">gen.mosp.bomlines</field>
+        <record model="ir.ui.view" id="gen_mosp_comp_line_form">
+            <field name="name">gen.mosp.comp.line.form</field>
+            <field name="model">gen.mosp.comp.line</field>
             <field name="arch" type="xml">
                 <form>
                     <header>
@@ -39,9 +39,9 @@
             </field>
         </record>
 
-        <record model="ir.actions.act_window" id="gen_mosp_bomlines_action">
+        <record model="ir.actions.act_window" id="gen_mosp_comp_line_action">
             <field name="name">Component BOM</field>
-            <field name="res_model">gen.mosp.bomlines</field>
+            <field name="res_model">gen.mosp.comp.line</field>
             <field name="view_mode">tree,form</field>
         </record>
 

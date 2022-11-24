@@ -3,8 +3,8 @@
     <data>
         <!-- List View -->
         <record model="ir.ui.view" id="generator_mosp_lines_tree">
-            <field name="name">generator.mosp.lines.tree</field>
-            <field name="model">generator.mosp.lines</field>
+            <field name="name">generator.mosp.line.tree</field>
+            <field name="model">generator.mosp.line</field>
             <field name="arch" type="xml">
                 <tree>
                     <field name="product_id"/>
@@ -19,8 +19,8 @@
         
         <!-- Form View -->
         <record model="ir.ui.view" id="generator_mosp_lines_form">
-            <field name="name">generator.mosp.lines.form</field>
-            <field name="model">generator.mosp.lines</field>
+            <field name="name">generator.mosp.line.form</field>
+            <field name="model">generator.mosp.line</field>
             <field name="arch" type="xml">
                 <form>
                     <header>
@@ -65,7 +65,7 @@
 
         <record model="ir.actions.act_window" id="generator_mosp_lines_action">
             <field name="name">Generator MOSP Lines</field>
-            <field name="res_model">generator.mosp.lines</field>
+            <field name="res_model">generator.mosp.line</field>
             <field name="view_mode">tree,form</field>
         </record>
     </data>
