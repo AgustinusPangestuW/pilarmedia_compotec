@@ -67,6 +67,27 @@ class NamaModel(models.Model):
     _inherit = 'stock.location'
 
     nama_warehouse = fields.Char(string='Nama Warehouse',compute='_compute_warehouse')
+    
+    def _compute_warehouse(self):
+        def get_warehouse(location:object):
+            parent_loc = location.location_id
+
+            wrh_in_currenct_loc = self.env['stock.warehouse'].sudo().search([('view_location_id', '=', location.id)])
+            if wrh_in_currenct_loc:
+                return wrh_in_currenct_loc
+            
+            if parent_loc:
+                wrh_in_parent_loc = self.env['stock.warehouse'].sudo().search([('view_location_id', '=', parent_loc.id)])
+                if wrh_in_parent_loc:
+                    return wrh_in_parent_loc
+                else:
+                    self.get_warehouse(parent_loc)
+
+            return ""
+        
+        for rec in self:
+            rec.nama_warehouse = get_warehouse(rec)
+
 
     @api.depends('location_id')
     def _compute_company(self):
