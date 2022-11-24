@@ -5,15 +5,6 @@ from .api import ApiController
 
 
 class apiStockQuants(ApiController):
-    def get_location_from_warehouse(self, location_id, locations=[]):
-        locations_base_on_parent = request.env['stock.location'].sudo().search([('location_id', '=', location_id)])
-        
-        for i in locations_base_on_parent:
-            if i.id not in locations: locations.append(i.id)
-            
-            self.get_location_from_warehouse(i.id, locations)
-
-        return locations
 
     def get_income_stock(self, product_id, locations=[]):
         locations_str = [str(i) for i in locations]

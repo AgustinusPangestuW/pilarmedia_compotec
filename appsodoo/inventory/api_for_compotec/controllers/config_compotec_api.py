@@ -74,3 +74,21 @@ class ConfigCompotecApi(http.Controller):
             return ApiController().response_sucess({"shifts": shifts}, kwargs, "/getshift/")
         except Exception as e:
             return ApiController().response_failed(e, kwargs, "/getshift/")
+
+    @http.route(['/getwarehouse/'], type="json", auth="public", method=["GET"])
+    def getWarehouses(self, **kwargs):
+        """
+        REST API for get Warehouse
+        """
+        try:
+            model_wrh = request.env['stock.warehouse']
+            warehouses = model_wrh.sudo().search(kwargs.get('search') or [])
+            res = []
+            for i in warehouses:
+                res.append(i.read(list(set(model_wrh._fields)))[0])
+
+            return ApiController().response_sucess({"warehouses": res}, kwargs, "/getshift/")
+        except Exception as e:
+            return ApiController().response_failed(e, kwargs, "/getshift/")
+
+    

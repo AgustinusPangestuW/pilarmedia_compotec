@@ -107,6 +107,44 @@ class ApiController(http.Controller):
             'error-descrip': res
         }
 
+    def get_location_from_warehouse(self, location_id, locations=[]):
+        locations_base_on_parent = request.env['stock.location'].sudo().search([('location_id', '=', location_id)])
+        
+        for i in locations_base_on_parent:
+            if i.id not in locations: locations.append(i.id)
+            
+            self.get_location_from_warehouse(i.id, locations)
+
+        return locations
+
+    def get_location_base_on_warehouses(self, warehouse_ids:list, complt_inf=False):
+        """
+        get location base on warehouse
+
+        parameters:
+        -----------
+        warehouse_ids : list of integer
+            ex : [1, 2, 3]
+
+        return:
+        -------
+        locations : list
+        """
+        locations = []
+        for i in warehouse_ids:
+            wrh = request.env['stock.warehouse'].sudo().search([('id', '=', i)])
+            locations += (self.get_location_from_warehouse(wrh.view_location_id.id, []))
+
+        new_locations = []
+        model_loc = request.env['stock.location']
+        if complt_inf:
+            for i in locations:
+                new_locations.append(i.read(list(set(model_loc._fields)))[0])
+
+            locations = new_locations
+
+        return locations
+
     ############
     ### CRUD ###
     ############
