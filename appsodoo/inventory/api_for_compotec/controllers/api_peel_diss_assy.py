@@ -35,6 +35,48 @@ class APIPeelDissAssy(http.Controller):
             } for l in i.peel_diss_assy_line]
         } for i in peel_diss_assy]
 
+    ###########
+    # MAPPING #
+    ###########
+
+    def mapping_peeldissassy(self, peeldissassy:object, ret_lines=False):
+        res = []
+        model_obj = request.env['peel.diss.assy']
+        for i in peeldissassy:
+            temp_res = i.read(list(set(model_obj._fields)))
+
+            if ret_lines:
+                wholesalejob_lines = self.mapping_peeldissassy_lines(i.peel_diss_assy_line)
+                temp_res[0].update({'peel_diss_assy_line': wholesalejob_lines})
+            
+            res.append(temp_res[0])
+        
+        return res
+
+    def mapping_peeldissassy_lines(self, peel_diss_assy_line:object, ret_lines=False):
+        res = []
+        model_obj = request.env['peel.diss.assy.line']
+        for i in peel_diss_assy_line: 
+            res.append(i.read(list(set(model_obj._fields)))[0])
+
+            if ret_lines:
+                peel_diss_assy_components = self.mapping_peeldissassy_components(i.peel_diss_assy_component_line)
+                res[0].update({'peel_diss_assy_component_line': peel_diss_assy_components})
+        
+        return res
+
+    def mapping_peeldissassy_components(self, peel_diss_assy_components:object):
+        res = []
+        model_obj = request.env['peel.diss.assy.component.line']
+        for i in peel_diss_assy_components: 
+            res.append(i.read(list(set(model_obj._fields)))[0])
+
+        return res
+
+    ##################
+    # PEEL DISS ASSY #
+    ##################
+
     @http.route(['/peeldissassy/get'], type="json", auth="public", method="GET", csrf=False)
     def get(self, **kwargs):
         """
@@ -77,10 +119,10 @@ class APIPeelDissAssy(http.Controller):
             peel_diss_assys = self.mapping_values(res)
             request.env.cr.commit()                
 
-            return ApiController().response_sucess(self, peel_diss_assys, kwargs, "/peeldissassy/create")
+            return ApiController().response_sucess(peel_diss_assys, kwargs, "/peeldissassy/create")
         except Exception as e:
             request.env.cr.rollback()
-            return ApiController().response_failed(self, e, kwargs, "/peeldissassy/create")
+            return ApiController().response_failed(e, kwargs, "/peeldissassy/create")
 
     @http.route(['/peeldissassy/update'], type="json", auth="public", method="POST", csrf=False)
     def update(self, id, updates, **kwargs):
@@ -161,3 +203,165 @@ class APIPeelDissAssy(http.Controller):
         except Exception as e:
             request.env.cr.rollback()
             return ApiController().response_failed(e, params, "/peeldissassy/delete")
+
+    #######################
+    # PEEL DISS ASSY LINE #
+    #######################
+    
+    @http.route(["/peeldissassy/line/get"], type="json", auth="public", method="GET", scrf=False)
+    def get_peeldissassy_line(self, **kwargs):
+        """ get table peel.diss.assy.line """
+        try:
+            ret_lines = False
+            if kwargs.get('ret_lines'):
+                ret_lines = kwargs.get('ret_lines')
+                del kwargs['ret_lines']
+
+            peeldissassy_lines = request.env['peel.diss.assy.line'].sudo().search(kwargs.get('search') or [])
+            peeldissassy_lines = self.mapping_peeldissassy_lines(peeldissassy_lines, ret_lines)
+            return ApiController().response_sucess(peeldissassy_lines, kwargs, "/peeldissassy/line/get/")
+        except Exception as e:
+            return ApiController().response_failed(e, kwargs, "/peeldissassy/line/get/")
+
+    @http.route(['/peeldissassy/line/create'], type="json", auth="public", method="POST", scrf=False)
+    def create_peeldissassy_line(self, **kwargs):
+        """ create table peel.diss.assy.line """      
+        required_fields = ["peel_diss_assy_id", "user", "bom_id", "product_id"]
+        request.env.cr.savepoint()
+        try:
+            ret_lines = False
+            if kwargs.get('ret_lines'):
+                ret_lines = kwargs.get('ret_lines')
+                del kwargs['ret_lines']
+
+            res = ApiController().create_document('peel.diss.assy.line', required_fields, kwargs)
+            peeldissassy_lines = self.mapping_peeldissassy_lines(res, ret_lines)
+            if len(peeldissassy_lines) > 0: peeldissassy_lines = peeldissassy_lines[0]
+            request.env.cr.commit()   
+            
+            return ApiController().response_sucess(peeldissassy_lines, kwargs, "/peeldissassy/line/create")
+        except Exception as e:
+            request.env.cr.rollback()
+            return ApiController().response_failed(e, kwargs, "/peeldissassy/line/create")   
+
+    @http.route(["/peeldissassy/line/update"], type="json", auth="public", method="GET", scrf=False)
+    def update_peeldissassy_line(self, updates):
+        """ update table peel.diss.assy.line """
+        request.env.cr.savepoint()
+        require_fields = ['id']
+        result = []
+
+        # convert into list
+        if type(updates) == dict:
+            updates = [updates]
+
+        try:
+            for row in updates:
+                ret_lines = False
+                if row.get('ret_lines'):
+                    ret_lines = row.get('ret_lines')
+                    del row['ret_lines']
+
+                cur_peeldissassy_lines = ApiController().update_document(                    
+                    'peel.diss.assy.line',
+                    row, 
+                    require_fields
+                )
+
+                request.env.cr.commit()
+                peeldissassy_lines = self.mapping_peeldissassy_lines(cur_peeldissassy_lines, ret_lines)
+                if len(peeldissassy_lines) > 0: peeldissassy_lines = peeldissassy_lines[0]
+                result.append(peeldissassy_lines)
+
+            return ApiController().response_sucess(result, updates, "/peeldisaasy/line/update")
+        except Exception as e:
+            request.env.cr.rollback()   
+            return ApiController().response_failed(e, updates, "/peeldisaasy/line/update")
+
+    @http.route(["/peeldissassy/line/delete"], type="json", auth="public", method="POST", scrf=False)
+    def delete_detailsng(self, ids):
+        """ delete table peel.diss.assy.line
+
+        parameters
+        ----------
+        ids : list of integer
+            ex : [1,4,66,3]
+        """
+        request.env.cr.savepoint()
+
+        # VALIDATION
+        if type(ids) != list:
+            raise ApiController().RequestError(_("key ids must be list of integer")) 
+
+        try:
+            result = ApiController().delete_document('peel.diss.assy.line', ids)
+            request.env.cr.commit()
+            return ApiController().response_sucess(result, ids, "/peeldissassy/line/delete/")
+        except Exception as e:
+            request.env.cr.rollback()
+            return ApiController().response_failed(e, ids, "/peeldissassy/line/delete")
+
+    #############
+    # COMPONENTS #
+    #############
+
+    @http.route(["/peeldissassy/comp/get"], type="json", auth="public", method="GET", scrf=False)
+    def get_peeldissassy_comp_line(self, **kwargs):
+        """ get table peel.diss.assy.component.line """
+        try:
+            comp_lines = request.env['peel.diss.assy.component.line'].sudo().search(kwargs.get('search') or [])
+            comp_lines = self.mapping_peeldissassy_components(comp_lines)
+            return ApiController().response_sucess(comp_lines, kwargs, "/peeldissassy/comp/get/")
+        except Exception as e:
+            return ApiController().response_failed(e, kwargs, "/peeldissassy/comp/get/")
+
+    @http.route(['/peeldissassy/comp/create'], type="json", auth="public", method="POST", scrf=False)
+    def create_peeldissassy_comp_line(self, **kwargs):
+        """ create table peel.diss.assy.component.line """      
+        required_fields = ["peel_diss_assy_line_id", "product_id"]
+        request.env.cr.savepoint()
+        try:
+            res = ApiController().create_document('peel.diss.assy.component.line', required_fields, kwargs)
+            peeldissassy_components = self.mapping_peeldissassy_components(res)
+            if len(peeldissassy_components) > 0: peeldissassy_components = peeldissassy_components[0]
+            request.env.cr.commit()   
+            
+            return ApiController().response_sucess(peeldissassy_components, kwargs, "/peeldissassy/comp/create")
+        except Exception as e:
+            request.env.cr.rollback()
+            return ApiController().response_failed(e, kwargs, "/peeldissassy/comp/create")   
+
+    @http.route(["/peeldissassy/comp/update"], type="json", auth="public", method="GET", scrf=False)
+    def update_peeldissassy_comp_line(self, updates):
+        """ update table peel.diss.assy.component.line """
+        request.env.cr.savepoint()
+        require_fields = ['id']
+        result = []
+
+        # convert into list
+        if type(updates) == dict:
+            updates = [updates]
+
+        try:
+            for row in updates:
+                # cannot change product_id
+                if row.get('product_id'):
+                    raise RequestError(_("cannot change field product_id. cause product_id fetch from BOM ID."))
+
+                cur_peeldissassy_comp_lines = ApiController().update_document(                    
+                    'peel.diss.assy.component.line',
+                    row, 
+                    require_fields
+                )
+
+                request.env.cr.commit()
+                peeldissassy_components = self.mapping_peeldissassy_components(cur_peeldissassy_comp_lines)
+                if len(peeldissassy_components) > 0: peeldissassy_components = peeldissassy_components[0]
+                result.append(peeldissassy_components)
+
+            return ApiController().response_sucess(result, updates, "/peeldisaasy/comp/update")
+        except Exception as e:
+            request.env.cr.rollback()   
+            return ApiController().response_failed(e, updates, "/peeldisaasy/comp/update")
+
+    
