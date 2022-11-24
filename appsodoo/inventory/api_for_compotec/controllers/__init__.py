@@ -9,5 +9,6 @@ from . import (
     api_wrapping,
     api_peel_diss_assy,
     api_wholesale_job,
-    api_stock_opname
+    api_stock_opname,
+    api_generator_mo_sp
 )
