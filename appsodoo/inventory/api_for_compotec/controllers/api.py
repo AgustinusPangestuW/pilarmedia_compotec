@@ -27,8 +27,8 @@ class ApiController(http.Controller):
     
     def updates_lines(self, lines=[]):
         # lines
+        list_lines = []
         if type(lines) == list:
-            list_lines = []
             for line in lines:
                 dict_line = {}
                 for key, val in line.items():
@@ -73,9 +73,9 @@ class ApiController(http.Controller):
         return kwargs
 
     def response_sucess(self, res='', req={}, method=""):
-        # validate res must be filled
-        if type(res) == list and len(res) == 0:
-            return self.response_failed(self, "data result is null", req, method)
+        # # validate res must be filled
+        # if type(res) == list and len(res) == 0:
+        #     return self.response_failed("data result is null", req, method)
 
         request.env['api.log'].sudo().create({
             "datetime": datetime.datetime.now(),
@@ -104,8 +104,77 @@ class ApiController(http.Controller):
 
         return {
             'response': 'failed',
-            'error-descrip': str(res)
+            'error-descrip': res
         }
+
+    ############
+    ### CRUD ###
+    ############
+
+    def create_document(self, model, required_fields, kwargs):
+        def validate_required_field(kwargs, require_fields):
+            key_in_kwargs = list(kwargs.keys())
+            if not all(item in key_in_kwargs for item in require_fields):
+                raise RequestError(_("parameter %s need for process create document.") % (
+                    ", ".join(require_fields)
+                ))
+
+        validate_required_field(kwargs, required_fields)
+        for d in kwargs:
+            # rubah data kwargs yang bertipe list of dict menjadi list of tuple agar tidak hardcode
+            if type(kwargs[d]) == list:
+                # lines
+                if len(kwargs[d]) > 0 and type(kwargs[d][0]) == dict:
+                    kwargs[d] = [(0,0, 
+                        {
+                            # val Lines
+                            key: [(0,0,val_wt) for val_wt in val] 
+                            if type(val) == list and type(val[0]) == dict 
+                            else val
+                        for key, val in dl.items() } 
+                    ) for dl in kwargs[d]]
+
+        return request.env[model].sudo().create(kwargs)
+
+    def update_document(self, cur_model, row, required_fields, child_table=[]):
+        def validate_required_field(row, require_fields):
+            key_in_row = list(row.keys())
+            if not all(item in key_in_row for item in require_fields):
+                raise RequestError(_("parameter %s need for process update document.") % (
+                    ", ".join(require_fields)
+                ))
+        
+        validate_required_field(row, required_fields)
+        result = self.validate_base_on_id(cur_model, cur_model.replace('.', '_'), row.get('id'), return_res=True)
+        del row['id']
+        update_lines = copy.deepcopy(row)
+
+        for field in child_table:
+            if field in update_lines:
+                del update_lines[field]    
+            another_line = copy.deepcopy(row.get(field))
+
+            # update/new/delete line (child table in current line)
+            result[field] = self.updates_lines(another_line)
+
+        # current line
+        for k, v in update_lines.items():
+            result[k] = v
+
+        return result
+
+    def delete_document(self, model, ids):
+        result = []
+        for id in ids:
+            if type(id) != int:
+                raise self.RequestError(_("value in ids (%s) must be integer" % (id)))
+
+            res = self.validate_base_on_id(model, model.replace('.', '_'), id, return_res=True)
+            res.unlink()
+            if res:
+                result.append({"idx": id, "success": True})
+
+        return result
 
 class RequestError(Exception):
     def __init__(self, message):
@@ -115,3 +184,4 @@ class RequestError(Exception):
 
     def __str__(self):
         return self.message
+
