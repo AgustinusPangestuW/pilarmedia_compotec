@@ -1,6 +1,7 @@
 from . import (
     api, 
     config_compotec_api, 
+    api_master_ng,
     api_bom,
     api_stock_picking,
     api_stock_quants,
