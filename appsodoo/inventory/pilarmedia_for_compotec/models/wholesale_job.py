@@ -469,6 +469,12 @@ class WholesaleJobLine(inheritModel):
         'Lot Line', auto_join=True, copy=True)   
     reason_for_ng = fields.Text(string='Keterangan NG')
 
+    @api.depends("wholesale_job_lot_lines")
+    def _compute_get_biggest_lot(self):
+        for rec in self:
+            rec.biggest_lot = rec.wholesale_job_lot_lines[-1] \
+                if len(rec.wholesale_job_lot_lines) > 0 else None
+
     @api.depends('is_detail_ng', 'total_from_detail_ng', 'total_ng')
     def _comp_show_msg_error(self):
         for rec in self:
