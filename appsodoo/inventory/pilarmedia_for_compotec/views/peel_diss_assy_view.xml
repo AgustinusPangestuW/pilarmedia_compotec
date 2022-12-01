@@ -55,10 +55,11 @@
                         <notebook>
                             <page string="Detail">
                                 <field name="peel_diss_assy_line">
-                                    <tree>
+                                    <tree decoration-danger="valid_qty==False">
                                         <field name="user"/>
                                         <field name="product_id"/>
-                                        <field name="description"/>
+                                        <field name="description"/>                                        
+                                        <field name="valid_qty" invisible="1"/>
                                     </tree>
                                 </field>
                             </page>

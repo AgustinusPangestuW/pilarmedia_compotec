@@ -11,6 +11,7 @@
                     <field name="product_id"/>
                     <field name="qty"/>
                     <field name="description"/>
+                    <field name="valid_qty" invisible="1"/>
                 </tree>
             </field>
         </record>
@@ -30,6 +31,7 @@
                                 <field name="product_id" attrs="{'readonly': [('bom_id', '!=', False)]}" force_save="1"/>
                                 <field name="product_template_id" invisible="1"/>
                                 <field name="qty"/>
+                                <field name="valid_qty" invisible="1"/>
                             </group>
                             <group>
                                 <field name="bom_id" domain="[('product_tmpl_id', '=', product_template_id)]"/>
@@ -37,12 +39,26 @@
                             </group>
                         </group>
                         <notebook>
+                            <page string="Finish Product List">
+                                <field name="peel_diss_assy_fg_line">
+                                    <tree create="0" delete="0" editable="bottom" decoration-danger="valid_qty==False">
+                                        <field name="valid_qty" invisible="1"/>
+                                        <field name="product_id" force_save="1"/>
+                                        <field name="uom"/>
+                                        <field name="qty_in_bom" force_save="1"/>
+                                        <field name="peeled_total"/>
+                                        <field name="ok" readonly="False"/>
+                                        <field name="ng" readonly="False"/>
+                                    </tree>
+                                </field>    
+                            </page>
                             <page string="Component List">
                                 <field name="peel_diss_assy_component_line">
                                     <tree create="0" delete="0" editable="bottom">
                                         <field name="product_id" force_save="1"/>
-                                        <field name="peeled_total"/>
-                                        <field name="ok" readonly="False"/>
+                                        <field name="qty_in_bom" force_save="1"/>
+                                        <field name="total"/>
+                                        <field name="ok" force_save="1"/>
                                         <field name="ng" readonly="False"/>
                                     </tree>
                                 </field>    

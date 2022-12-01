@@ -66,7 +66,7 @@ class PeelDissAssy(inheritModel):
 
     def validate_qty_component(self):
         for idx, rec in enumerate(self.peel_diss_assy_line):
-            for line in rec.peel_diss_assy_component_line:
+            for line in rec.peel_diss_assy_fg_line:
                 if float(line.peeled_total) != float(rec.qty):
                     raise UserError(_("Product {} pada baris {}, total kupas componen {} ({}) harus sama dengan qty product acuan ({})".format(
                             rec.product_id.name, idx+1, line.product_id.name, line.peeled_total, rec.qty
@@ -194,7 +194,7 @@ class PeelDissAssy(inheritModel):
                     new_mo['move_raw_ids'].append([0,0, {
                         "product_id": c.product_id.id,
                         "product_uom": c.product_id.uom_id.id,
-                        "product_uom_qty": float(c.peeled_total),
+                        "product_uom_qty": float(c.total),
                         "name": "New",
                         "picking_type_id": rec.job.op_type_ok.id,
                         "location_id": rec.job.source_location_ok.id,
@@ -205,46 +205,92 @@ class PeelDissAssy(inheritModel):
                     mo = self.env['mrp.production'].sudo().create(new_mo)
                     mo.action_confirm()
                     mo.action_assign()
-                    for rec in mo:
+                    for cur_mo in mo:
                         if mo.reservation_state == "waiting":
                             raise UserError(_('stock is not enough.'))
                         else:
                             finished_lot_id = self.env['stock.production.lot'].create({
-                                'product_id': rec.product_id.id,
-                                'company_id': rec.company_id.id
+                                'product_id': cur_mo.product_id.id,
+                                'company_id': cur_mo.company_id.id
                             })
                             # create produce
-                            todo_qty, todo_uom, serial_finished = _get_todo(self, rec)
+                            todo_qty, todo_uom, serial_finished = _get_todo(self, cur_mo)
+
+                            finished_workorder_line_ids = []
+                            for fg in line.peel_diss_assy_fg_line:
+                                # FG another product
+                                if fg.product_id.id != cur_mo.product_id.id:
+                                    fg_lot_id = self.env['stock.production.lot'].create({
+                                        'product_id': fg.product_id.id,
+                                        'company_id': cur_mo.company_id.id
+                                    })
+                                    finished_workorder_line_ids.append((0,0,{
+                                        'product_id': fg.product_id.id,
+                                        'lot_id': fg_lot_id.id,
+                                        'qty_to_consume': fg.peeled_total,
+                                        'qty_done': fg.peeled_total,
+                                        'product_uom_id': fg.uom.id
+                                    }))
+                            
+
                             prod = mo.env['mrp.product.produce'].sudo().create({
-                                'production_id': rec.id,
-                                'product_id': rec.product_id.id,
+                                'production_id': cur_mo.id,
+                                'product_id': cur_mo.product_id.id,
                                 'qty_producing': todo_qty,
                                 'product_uom_id': todo_uom,
                                 'finished_lot_id': finished_lot_id.id,
                                 'consumption': line.bom_id.consumption,
-                                'serial': bool(serial_finished)
+                                'serial': bool(serial_finished),
+                                'finished_workorder_line_ids': finished_workorder_line_ids
                             })
                             prod._compute_pending_production()
                             prod.do_produce()
 
                     # set done qty in stock move line
                     # HACK: cause qty done doesn't change / trigger when execute do_produce
-                    for rec in mo.move_raw_ids:
+                    for mri in mo.move_raw_ids:
                         # stock tidak mencukupi
-                        if float(rec.reserved_availability) < float(rec.product_uom_qty):
+                        if float(mri.reserved_availability) < float(mri.product_uom_qty):
                             raise UserError(_("item {} pada location {} diperlukan qty {} untuk melanjutkan proses Manufacturing Order.".format(
-                                rec.product_id.name, 
-                                rec.location_id.location_id.name+'/'+rec.location_id.name, 
-                                str(rec.product_uom_qty)
+                                mri.product_id.name, 
+                                mri.location_id.location_id.name+'/'+mri.location_id.name, 
+                                str(mri.product_uom_qty)
                             )))
                             
-                        for line in rec.move_line_ids:
-                            line.qty_done = rec.product_uom_qty
-                            line.product_uom_qty = float(rec.product_uom_qty)
-                            line.lot_produced_ids = finished_lot_id
+                        for sml in mri.move_line_ids:
+                            sml.qty_done = mri.product_uom_qty
+                            sml.product_uom_qty = float(mri.product_uom_qty)
+                            sml.lot_produced_ids = finished_lot_id
 
+                    self.scrap_components(mo, mo.move_raw_ids, line.peel_diss_assy_component_line)
                     mo.button_mark_done()
                     self._count_mo()
+    
+    def scrap_components(self, production, move_raw_ids, peel_diss_assy_component_line):
+        def scrap_component(product_id, qty, src_location, dest_location, production, lot_id):
+            new_scrap = {
+                'product_id': product_id.id,
+                'scrap_qty': qty,
+                'product_uom_id': product_id.uom_id.id,
+                'location_id': src_location,
+                'scrap_location_id': dest_location,
+                'production_id': production.id,
+                'lot_id': lot_id.id
+            }
+            new_scrap = self.env['stock.scrap'].sudo().create(new_scrap)
+            new_scrap.action_validate()
+
+        for mri in move_raw_ids:
+            for c in peel_diss_assy_component_line:
+                if mri.product_id.id == c.product_id.id and c.ng > 0:
+                    src_loc = c.peel_diss_assy_line_id.peel_diss_assy_id.job.source_location_ng.id or None
+                    dest_loc = c.peel_diss_assy_line_id.peel_diss_assy_id.job.dest_location_ng.id or None
+                    lot_id = None
+                    for mvl in mri.move_line_ids:
+                        if mvl.qty_done >= c.ng:
+                            lot_id = mvl.lot_id
+
+                    scrap_component(c.product_id, c.ng, src_loc, dest_loc, production, lot_id)
 
     def create_stock_picking(self):
         def get_total_ok_ng_from_component(line):
@@ -359,13 +405,34 @@ class PeelDissAssyLine(inheritModel):
         'peel.diss.assy.component.line', 
         'peel_diss_assy_line_id', 
         'Peel Diss Assy Componen Line',
-        compute="fetch_component_bom",
+        compute="fetch_component_n_fg_bom",
+        store=True,
+        readonly=False,
+        copy=True,
+        auto_join=True
+    )
+    peel_diss_assy_fg_line = fields.One2many(
+        'peel.diss.assy.fg.line', 
+        'peel_diss_assy_line_id', 
+        'Peel Diss Assy Finished Good Line',
+        compute="fetch_component_n_fg_bom",
         store=True,
         readonly=False,
         copy=True,
         auto_join=True
     )
     qty = fields.Float(string='Quantity')
+    valid_qty = fields.Boolean(string='Valid Qty ?', compute="compute_valid_qty")
+
+    @api.depends('peel_diss_assy_fg_line.valid_qty', 'qty')
+    def compute_valid_qty(self):
+        for rec in self:
+            count_valid_qty = sum([int(i.valid_qty )for i in rec.peel_diss_assy_fg_line])
+            if rec.peel_diss_assy_fg_line and \
+                len(rec.peel_diss_assy_fg_line or 0) == count_valid_qty:
+                rec.valid_qty = 1
+            else:
+                rec.valid_qty = 0
 
     @api.depends('product_id')
     def get_product_template(self):
@@ -387,14 +454,34 @@ class PeelDissAssyLine(inheritModel):
             rec.update({'bom_id': bom})
                     
     @api.depends('bom_id')
-    def fetch_component_bom(self):
-        list_component = []
+    def fetch_component_n_fg_bom(self):
+        list_component, list_fg = [], []
         for rec in self:
             rec.peel_diss_assy_component_line = [(5,0,0)]
+            rec.peel_diss_assy_fg_line = [(5,0,0)]
             if 'bom_id' in rec and rec.bom_id:
+                list_fg.append((0,0,{
+                    'product_id': rec.product_id.id, 
+                    'qty_in_bom': rec.bom_id.product_qty,
+                    'uom': rec.bom_id.product_uom_id.id}
+                ))
+
                 for component in rec.bom_id.bom_line_ids or []:
-                    list_component.append((0,0,{'product_id': component.product_id.id}))
+                    list_component.append((0,0,{
+                        'product_id': component.product_id.id, 
+                        "qty_in_bom": component.product_qty, 
+                        "ok": rec.qty
+                    }))
+
+                for fg in rec.bom_id.byproduct_ids:
+                    list_fg.append((0,0,{
+                        'product_id': fg.product_id.id, 
+                        'qty_in_bom': fg.product_qty,
+                        'uom': fg.product_uom_id.id
+                    }))
+
             rec.peel_diss_assy_component_line =  list_component
+            rec.peel_diss_assy_fg_line = list_fg
 
     def write(self, vals):
         res = self.validate_peeled_total(stop=True)
@@ -408,8 +495,8 @@ class PeelDissAssyLine(inheritModel):
     @api.onchange('qty')
     def validate_peeled_total(self, stop=False):
         for rec in self:
-            for c in rec.peel_diss_assy_component_line:
-                if c.ng and c.ok and rec.qty != c.peeled_total:
+            for fg in rec.peel_diss_assy_fg_line:
+                if not fg.valid_qty:
                     return _warn_qty_not_valid(rec.qty, stop=stop)
 
 
@@ -424,27 +511,78 @@ class PeelDissAssyComponentLine(inheritModel):
         index=True
     )
     product_id = fields.Many2one('product.product', string='Component', required=True, readonly=True, store=True)
-    peeled_total = fields.Float(string="Total yang dikupas", compute="_validate_ng_ok", readonly=True, store=True)
-    ok = fields.Float(string='OK', store=True)
+    qty_in_bom = fields.Float(string='Qty in BOM', readonly=True)
+    total = fields.Float(string="Total", compute="_validate_ng_ok", readonly=True, store=True)
+    ok = fields.Float(string='OK', compute="get_qty_fg", store=True, readonly=True)
     ng = fields.Float(string='NG', store=True)
 
     def write(self, vals):
         return super(PeelDissAssyComponentLine, self).write(vals)
 
+    @api.depends('peel_diss_assy_line_id.qty')
+    def get_qty_fg(self):
+        for rec in self:
+            rec.ok = rec.peel_diss_assy_line_id.qty or 0
+            
     @api.depends('ok', 'ng')
     def _validate_ng_ok(self):
         """
-        validate field ng + ok = peeled_total
+        validate field ng + ok = total
         """
         for rec in self:
-            rec.peeled_total = rec.ng + rec.ok
+            rec.total = rec.ng + rec.ok
+            
 
-    @api.onchange('peeled_total')
-    def validate_peeled_total(self):
+class PeelDissAssyFGLine(inheritModel):
+    _name = "peel.diss.assy.fg.line"
+    _description = "Peel Diss Assy Finished Good Line"
+
+    peel_diss_assy_line_id = fields.Many2one(
+        'peel.diss.assy.line', 
+        string='Peel Diss Assy Line ID', 
+        ondelete="cascade", 
+        index=True
+    )
+    product_id = fields.Many2one('product.product', string='Component', required=True, readonly=True, store=True)
+    uom = fields.Many2one('uom.uom', string='UOM', store=True, readonly=True)
+    peeled_total = fields.Float(string="Total yang dikupas", compute="calc_peeled_total", readonly=True, store=True)
+    qty_in_bom = fields.Float(string='Qty in BOM', store=True, readonly=True)
+    ok = fields.Float(string='OK', store=True)
+    ng = fields.Float(string='NG', store=True)
+    valid_qty = fields.Boolean(
+        string='Valid with another Finished Good ?', compute="compute_valid_qty_fg", store=False)
+
+    @api.depends('peel_diss_assy_line_id.qty', 'ok', 'ng')
+    def compute_valid_qty_fg(self):
+        for rec in self:
+            rec.valid_qty = 0
+            if rec.peeled_total:
+                calc_total = rec.peeled_total / (rec.qty_in_bom or 1) 
+                if float(calc_total) == float(rec.peel_diss_assy_line_id.qty):
+                    rec.valid_qty = 1
+
+    @api.depends('ok', 'ng')
+    def calc_peeled_total(self):
+        for rec in self:
+            rec.peeled_total = rec.ok + rec.ng
+
+    @api.onchange('total')
+    def validate_total(self):
         qty = self.peel_diss_assy_line_id.qty
         for c in self:
-            if c.ng and c.ok and qty != c.peeled_total:
+            if c.ng and c.ok and qty != c.total:
                 return _warn_qty_not_valid(qty)
+
+    # def write(self, vals):
+    #     res = super().write(vals)
+    #     for rec in self:
+    #         if rec.peel_diss_assy_line_id and rec.product_id and rec.peel_diss_assy_line_id.qty:
+    #             product_id = rec.peel_diss_assy_line_id.product_id
+    #             if product_id.id == rec.product_id.id:
+    #                 rec.ok = rec.peel_diss_assy_line_id.qty
+
+         # return res
+
 
 def _warn_qty_not_valid(qty, stop=False):
     if stop:

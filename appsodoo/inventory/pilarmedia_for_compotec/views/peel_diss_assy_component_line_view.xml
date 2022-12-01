@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="product_id"/>
-                    <field name="peeled_total"/>
+                    <field name="total"/>
                     <field name="ok"/>
                     <field name="ng"/>
                 </tree>
@@ -27,7 +27,7 @@
                         <group>
                             <group>
                                 <field name="product_id"/>
-                                <field name="peeled_total"/>
+                                <field name="total"/>
                             </group>
                             <group>   
                                 <field name="ok" readonly="False"/>
