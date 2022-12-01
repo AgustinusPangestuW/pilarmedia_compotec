@@ -35,6 +35,7 @@
         "views/peel_diss_assy_view.xml",
         "views/peel_diss_assy_line_view.xml",
         "views/peel_diss_assy_component_line_view.xml",
+        "views/peel_diss_assy_fg_line_view.xml",
         "views/wholesale_job_view.xml",
         "views/wholesale_job_line_view.xml",
         "views/daily_wholesale_job_view.xml",
