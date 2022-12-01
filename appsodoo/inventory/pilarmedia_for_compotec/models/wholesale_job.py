@@ -472,7 +472,7 @@ class WholesaleJobLine(inheritModel):
     @api.depends("wholesale_job_lot_lines")
     def _compute_get_biggest_lot(self):
         for rec in self:
-            rec.biggest_lot = rec.wholesale_job_lot_lines[-1] \
+            rec.biggest_lot = rec.wholesale_job_lot_lines[-1].lot_id.id \
                 if len(rec.wholesale_job_lot_lines) > 0 else None
 
     @api.depends('is_detail_ng', 'total_from_detail_ng', 'total_ng')
