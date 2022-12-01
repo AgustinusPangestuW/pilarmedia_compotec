@@ -31,6 +31,8 @@
                                 <field name="name"/>
                                 <field name="active"/>
                                 <field name="for_form"/>
+                                <field name="with_component" force_save="1" attrs="{'invisible': [('for_form', '!=', 'wholesale_job')]}"/>
+                                <field name="ng_reason" force_save="1" attrs="{'invisible': [('for_form', '!=', 'wholesale_job')]}"/>
                                 <field name="generate_document"/>
                             </group>
                             <group>

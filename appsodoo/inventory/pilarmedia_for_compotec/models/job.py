@@ -52,6 +52,12 @@ class Job(inheritModel):
         compute="_compute_from_operation_ok",
         store=True
     )    
+    with_component = fields.Boolean(
+        string='NG Component ?', help="this field for show table for fill detail NG component",
+        store=True, readonly=False)
+    ng_reason = fields.Boolean(
+        string='Detail NG Keterangan ?', help="this field for show table for fill detail NG for reason Finished Good",
+        store=True, readonly=False)
 
     @api.depends("op_type_ng")
     def _compute_from_operation_ng(self):

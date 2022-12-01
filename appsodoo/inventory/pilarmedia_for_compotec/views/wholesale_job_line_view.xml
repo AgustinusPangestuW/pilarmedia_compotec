@@ -13,7 +13,7 @@
                     <field name="operator"/>
                     <field name="total_ok"/>
                     <field name="total_ng"/>
-                    <field name="total_from_detail_ng" invisible="1"/>
+                    <field name="total_from_ng_reason" invisible="1"/>
                     <field name="biggest_lot"/>
                     <field name="total_set"/>
                     <field name="total_pcs"/>
@@ -39,7 +39,7 @@
                                 <field name="is_set" attrs="{'readonly': [('biggest_lot', '!=', False)]}"/>
                                 <field name="biggest_lot" invisible="1"/>
                                 <field name="factor" attrs="{'invisible': [('is_set', '=', False)]}"/>
-                                <field name="with_component"/>
+                                <field name="with_component" force_save="1"/>
                                 <field name="bom_id" domain="[('product_tmpl_id', '=', product_template_id)]" 
                                     attrs="{'required': [('with_component', '!=', False)]}"/>
                                 
@@ -66,20 +66,20 @@
                                 </field>
                                 <group>
                                     <group>
-                                        <field name="is_detail_ng"/>
-                                        <field name="total_from_detail_ng" invisible="1"/>
-                                        <field name="ng_ids" widget="section_and_note_one2many" attrs="{'invisible': [('is_detail_ng', '=', False)]}">
+                                        <field name="ng_reason" force_save="1"/>
+                                        <field name="total_from_ng_reason" invisible="1"/>
+                                        <field name="ng_ids" widget="section_and_note_one2many" attrs="{'invisible': [('ng_reason', '=', False)]}">
                                             <tree editable="bottom">
                                                 <field name="ng_id"/>
                                                 <field name="total_ng"/>
                                             </tree>
                                         </field>
-                                        <field name="reason_for_ng" attrs="{'invisible': [('is_detail_ng', '!=', False)]}"/>
+                                        <field name="reason_for_ng" attrs="{'invisible': [('ng_reason', '!=', False)]}"/>
                                     </group>
                                     <group>
                                         <field name="total_ok"/>
                                         <field name="total_ng" force_save="1" attrs="{'readonly': [('is_set', '=', False)]}"
-                                            decoration-danger="total_from_detail_ng!=total_ng and is_detail_ng==True"/>
+                                            decoration-danger="total_from_ng_reason!=total_ng and ng_reason==True"/>
                                         <field name="show_msg_error" invisible="1"/>
                                         <field name="msg_error" decoration-danger="1" nolabel="1" force_save="1" 
                                             attrs="{'invisible': [('show_msg_error', '=', False)]}"/>

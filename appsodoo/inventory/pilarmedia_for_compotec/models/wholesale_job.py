@@ -273,6 +273,7 @@ class WholesaleJob(inheritModel):
                 if bom:
                     product_id_from_bom = self.env['product.product'].sudo().search([('product_tmpl_id', '=', line.product_id.product_tmpl_id.id)])
                     new_mo = {
+                        "name": "New",
                         "product_id": product_id_from_bom.id,
                         "bom_id": bom.id,
                         "product_qty": arr_total_per_product[line.product_id.id],
@@ -332,7 +333,7 @@ class WholesaleJob(inheritModel):
                         if line.with_component:
                             self.scrap_components(mo, mo.move_raw_ids, line.wholesale_job_component_lines)
 
-                        # mo.button_mark_done()
+                        mo.button_mark_done()
                         self._count_mo()
                     
                     except Exception as e:
@@ -487,8 +488,8 @@ class WholesaleJobLine(inheritModel):
         store=True, 
         help="this field for track last Lot ID"
     )
-    is_detail_ng = fields.Boolean(string='NG detail?')
-    total_from_detail_ng = fields.Float(
+    ng_reason = fields.Boolean(string='NG detail reason?', compute="fetch_from_job", store=True, readonly=False)
+    total_from_ng_reason = fields.Float(
         string='Total NG', 
         compute="_calculate_total_ng_from_detail_ng", 
         store=True,
@@ -502,11 +503,23 @@ class WholesaleJobLine(inheritModel):
         'wholesale.job.lot.line', 'wholesale_job_line_id', 
         'Lot Line', auto_join=True, copy=True)   
     reason_for_ng = fields.Text(string='Keterangan NG')
-    with_component = fields.Boolean(string='NG Component ?', store=True)
+    with_component = fields.Boolean(string='NG Component ?', store=True, compute="fetch_from_job", readonly=False)
     wholesale_job_component_lines = fields.One2many(
         'wholesale.job.component.line', 'wholesale_job_line_id', 'Lines', compute="get_component",
         store=True, readonly=False)
     bom_id = fields.Many2one('mrp.bom', string='BOM', compute="get_first_bom", store=True, readonly=False)
+
+    @api.depends('job')
+    def fetch_from_job(self):
+        for rec in self:
+            fill = {'ng_reason': 0, 'with_component': 0}
+            if rec.job and rec.job.for_form == "wholesale_job":
+                fill.update({
+                    'ng_reason': rec.job.ng_reason,
+                    'with_component': rec.job.with_component
+                })
+            rec.ng_reason = fill['ng_reason']
+            rec.with_component = fill['with_component']
 
     @api.depends('product_id')
     def get_first_bom(self):
@@ -546,11 +559,11 @@ class WholesaleJobLine(inheritModel):
             rec.biggest_lot = rec.wholesale_job_lot_lines[-1].lot_id.id \
                 if len(rec.wholesale_job_lot_lines) > 0 else None
 
-    @api.depends('is_detail_ng', 'total_from_detail_ng', 'total_ng')
+    @api.depends('ng_reason', 'total_from_ng_reason', 'total_ng')
     def _comp_show_msg_error(self):
         for rec in self:
             show_msg_error = 0
-            if rec.is_detail_ng and rec.total_from_detail_ng != rec.total_ng:
+            if rec.ng_reason and rec.total_from_ng_reason != rec.total_ng:
                 show_msg_error = 1
             rec.show_msg_error = show_msg_error
 
@@ -628,14 +641,14 @@ class WholesaleJobLine(inheritModel):
         else:
             raise exceptions.ValidationError(_("Kantong saat ini belum tersedia."))
 
-    @api.depends('ng_ids', 'is_detail_ng')
+    @api.depends('ng_ids', 'ng_reason')
     def _calculate_total_ng_from_detail_ng(self):
         for rec in self:
             total_ng = sum([i.total_ng for i in rec.ng_ids])
-            rec.total_from_detail_ng = total_ng
+            rec.total_from_ng_reason = total_ng
 
     @api.depends('is_set', 'wholesale_job_lot_lines.ng', 'wholesale_job_lot_lines.ok', \
-        'total_ng', 'total_from_detail_ng')
+        'total_ng', 'total_from_ng_reason')
     def _calc_total_ng_ok(self):
         for rec in self:
             # calculation NG & OK when is_set = FALSE (NON set)
@@ -645,7 +658,7 @@ class WholesaleJobLine(inheritModel):
             # calculation NG & OK when is_set = TRUE
             else:
                 # get total ng base on table detail_ng
-                rec.total_ng = rec.total_from_detail_ng
+                rec.total_ng = rec.total_from_ng_reason
 
                 self._calc_total_ok_n_set()
 
