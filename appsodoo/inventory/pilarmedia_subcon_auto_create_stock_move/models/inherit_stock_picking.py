@@ -75,8 +75,9 @@ class StockPicking(models.Model):
         # reset value `users_waiting_approval` 
         # filled value in field `users_waiting_approval` by system 
         # when auto create step2 stock picking (autocreate stock picking)
-        if self.state == 'done':
-            vals['users_waiting_approval'] = [(5,0,0)]
+        for rec in self:
+            if rec.state == 'done':
+                vals['users_waiting_approval'] = [(5,0,0)]
         return super().write(vals)
 
     def action_assign(self):
