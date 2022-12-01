@@ -265,8 +265,11 @@ class WholesaleJob(inheritModel):
                     product_done_to_process.append(line.product_id.id)
                 else:
                     continue
-
-                bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', line.product_id.product_tmpl_id.id)])
+                
+                bom = line.bom_id
+                if not bom:
+                    bom = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', line.product_id.product_tmpl_id.id)])
+                    bom = bom[0] if bom else None
                 if bom:
                     product_id_from_bom = self.env['product.product'].sudo().search([('product_tmpl_id', '=', line.product_id.product_tmpl_id.id)])
                     new_mo = {
@@ -321,11 +324,15 @@ class WholesaleJob(inheritModel):
                                     mri.reserved_availability
                                 ))
 
-                            for line in mri.move_line_ids:
-                                line.qty_done = line.product_uom_qty
-                                line.lot_produced_ids = finished_lot_id
+                            for mli in mri.move_line_ids:
+                                mli.qty_done = mo.product_uom_qty
+                                mli.lot_produced_ids = finished_lot_id
 
-                        mo.button_mark_done()
+                        # detail component NG
+                        if line.with_component:
+                            self.scrap_components(mo, mo.move_raw_ids, line.wholesale_job_component_lines)
+
+                        # mo.button_mark_done()
                         self._count_mo()
                     
                     except Exception as e:
@@ -335,6 +342,32 @@ class WholesaleJob(inheritModel):
                     raise ValidationError(_("BOM untuk item %s belum tersedia") % (
                         line.product.product_tmpl_id.name
                     ))
+
+    def scrap_components(self, production, move_raw_ids:list, component_line:object):
+        def scrap_component(product_id, qty, src_location, dest_location, production, lot_id):
+            new_scrap = {
+                'product_id': product_id.id,
+                'scrap_qty': qty,
+                'product_uom_id': product_id.uom_id.id,
+                'location_id': src_location,
+                'scrap_location_id': dest_location,
+                'production_id': production.id,
+                'lot_id': lot_id.id
+            }
+            new_scrap = self.env['stock.scrap'].sudo().create(new_scrap)
+            new_scrap.action_validate()
+
+        for mri in move_raw_ids:
+            if mri.product_id.id == component_line.product_id.id and component_line.ng > 0:
+                src_loc = component_line.wholesale_job_line_id.wholesale_job_id.job.source_location_ng.id or None
+                dest_loc = component_line.wholesale_job_line_id.wholesale_job_id.job.dest_location_ng.id or None
+                lot_id = None
+                for mvl in mri.move_line_ids:
+                    if mvl.qty_done >= component_line.ng:
+                        lot_id = mvl.lot_id
+                
+                scrap_component(component_line.product_id, component_line.ng, src_loc, dest_loc, production, lot_id)
+        
 
     def create_stock_picking(self):
         self.validate_wj_lines()
@@ -439,9 +472,10 @@ class WholesaleJobLine(inheritModel):
         domain=[('active', '=', 1)]
     )
     product_id = fields.Many2one('product.product', string='Produk', required=True)
+    product_template_id = fields.Many2one('product.template', string='Product Template', compute="get_product_template")
     operator = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
     total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True)
-    total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", store=True, copy=True)
+    total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", readonly=False, store=True, copy=True)
     total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
     total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
     factor = fields.Float(string='Isi Kantong', compute="_get_pocket_factor_in_product", store=True, readonly=False, copy=True)
@@ -468,6 +502,43 @@ class WholesaleJobLine(inheritModel):
         'wholesale.job.lot.line', 'wholesale_job_line_id', 
         'Lot Line', auto_join=True, copy=True)   
     reason_for_ng = fields.Text(string='Keterangan NG')
+    with_component = fields.Boolean(string='NG Component ?', store=True)
+    wholesale_job_component_lines = fields.One2many(
+        'wholesale.job.component.line', 'wholesale_job_line_id', 'Lines', compute="get_component",
+        store=True, readonly=False)
+    bom_id = fields.Many2one('mrp.bom', string='BOM', compute="get_first_bom", store=True, readonly=False)
+
+    @api.depends('product_id')
+    def get_first_bom(self):
+        for rec in self:
+            bom = None
+
+            if rec.product_id:
+                boms = self.env['mrp.bom'].sudo().search([('product_tmpl_id', '=', rec.product_id.product_tmpl_id.id)])
+                bom = boms[0] if boms else None
+            rec.bom_id = bom
+
+    @api.depends('bom_id')
+    def get_component(self):
+        for rec in self:
+            rec.wholesale_job_component_lines = [(5,0,0)]
+            list_component = []
+            for c in rec.bom_id.bom_line_ids:
+                list_component.append((0,0,{
+                    'product_id': c.product_id.id,
+                    'qty_in_bom': c.product_qty,
+                    'uom': c.product_uom_id.id,
+                }))
+
+            rec.wholesale_job_component_lines = list_component
+    
+    @api.depends('product_id')
+    def get_product_template(self):
+        for rec in self:
+            product_template = None
+            if rec.product_id:
+                product_template = rec.product_id.product_tmpl_id.id
+            rec.product_template_id = product_template
 
     @api.depends("wholesale_job_lot_lines")
     def _compute_get_biggest_lot(self):
@@ -654,3 +725,27 @@ class DetailsNG(inheritModel):
     wholesale_job_line_id = fields.Many2one('wholesale.job.line', 'Wholesale Job Line ID', ondelete='cascade', index=True)
     ng_id = fields.Many2one('master.ng', string='NG', domain="[('active', '=', True)]", required=True, copy=True)
     total_ng = fields.Float(string='NG Total')
+
+
+class WholesaleJobComponentLine(inheritModel):
+    _name = "wholesale.job.component.line"
+    _description = "Wholesale Job Component Line"
+
+    wholesale_job_line_id = fields.Many2one(
+        'wholesale.job.line', 'Wholesale Job Line ID', index=1, ondelete='cascade')
+    product_id = fields.Many2one('product.product', string='Product', readonly=True)
+    uom = fields.Many2one('uom.uom', string='UOM', readonly=True)
+    qty_in_bom = fields.Float(string='Qty in BOM', readonly=True)
+    total = fields.Float(string='Total', readonly=True, compute="calculate_total")
+    ok = fields.Float(string='OK', compute="get_total")
+    ng = fields.Float(string='NG')
+
+    @api.depends('wholesale_job_line_id.total_pcs', 'wholesale_job_line_id.total_set')
+    def get_total(self):
+        for rec in self:
+            rec.ok = rec.wholesale_job_line_id.total_pcs or rec.wholesale_job_line_id.total_set or 0
+
+    @api.depends('ok', 'ng')
+    def calculate_total(self):
+        for rec in self:
+            rec.total = rec.ok + rec.ng

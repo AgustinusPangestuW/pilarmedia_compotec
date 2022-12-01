@@ -18,6 +18,7 @@
 "access_wholesale_job","wholesale_job","model_wholesale_job","stock.group_stock_user",1,1,1,1
 "access_wholesale_job_line","wholesale_job_line","model_wholesale_job_line","stock.group_stock_user",1,1,1,1
 "access_wholesale_job_lot_line","wholesale_job_lot_line","model_wholesale_job_lot_line","stock.group_stock_user",1,1,1,1
+"access_wholesale_job_component_line","wholesale_job_component_line","model_wholesale_job_component_line","stock.group_stock_user",1,1,1,1
 "access_details_ng","details_ng","model_details_ng","stock.group_stock_user",1,1,1,1
 "access_master_ng","master_ng","model_master_ng","stock.group_stock_user",1,1,1,1
 "access_lot","lot","model_lot","stock.group_stock_user",1,1,1,1

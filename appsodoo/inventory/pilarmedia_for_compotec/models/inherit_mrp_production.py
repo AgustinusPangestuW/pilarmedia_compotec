@@ -23,20 +23,20 @@ class MRPProduction(models.Model):
                 temp_scrap.append({'product_id': self.product_id, 'total_ng': 0})
                 for wl in self.wrapping_id.wrapping_deadline_line:
                     if wl.product.id == self.product_id.id:
-                        temp_scrap['total_ng'] += wl.ng
+                        temp_scrap[0]['total_ng'] += wl.ng
             elif self.wholesale_job_id:
                 doc_creator = self.wholesale_job_id
                 op_type_ng = self.wholesale_job_id.job.op_type_ng
                 temp_scrap.append({'product_id': self.product_id, 'total_ng': 0})
                 for wsj in self.wholesale_job_id.wholesale_job_lines:
                     if wsj.product_id.id == self.product_id.id:
-                        temp_scrap['total_ng'] += wsj.total_ng
+                        temp_scrap[0]['total_ng'] += wsj.total_ng
             elif self.generator_mosp_id:
                 doc_creator = self.generator_mosp_id
                 temp_scrap.append({'product_id': self.product_id, 'total_ng': 0})
                 for line in self.generator_mosp_id.line_ids:
                     if line.product_id.id == self.product_id.id:
-                        temp_scrap['total_ng'] += line.ng
+                        temp_scrap[0]['total_ng'] += line.ng
             elif self.peel_diss_assy_id:
                 doc_creator = self.peel_diss_assy_id
                 op_type_ng = self.peel_diss_assy_id.job.op_type_ng
@@ -81,7 +81,7 @@ def validate_exist_stock(self, product, location, qty):
 
     current_stock = 0
     for s in stock_quants:
-        current_stock += s.inventory_quantity - s.reserved_quantity
+        current_stock += s.quantity - s.reserved_quantity
 
     if current_stock < qty:
         raise ValidationError(_("Item %s need stock %s %s in location %s for continue process scrap." % (
