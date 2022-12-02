@@ -52,6 +52,7 @@
         "views/generator_mosp_line_view.xml",
         "views/required_items.xml",
         "views/generate_mo_or_sp_bomlines.xml",
+        "views/inherit_stock_inventory_view.xml",
         "wizard/wholesale_job_report_wizz.xml",
         "data/ir_sequence_wrapping.xml",
         "data/ir_sequence_sorting.xml",

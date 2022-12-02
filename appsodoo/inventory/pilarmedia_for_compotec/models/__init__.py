@@ -1,6 +1,7 @@
 from . import (
     inherit_models_model,
     inherit_stock_picking_type,
+    inherit_stock_inventory,
     wrapping, 
     sorting, 
     job, 

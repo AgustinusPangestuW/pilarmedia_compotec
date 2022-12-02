@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="stock_inventory_form">
+            <field name="name">stock.inventory.form</field>
+            <field name="model">stock.inventory</field>
+            <field name="inherit_id" ref="stock.view_inventory_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='location_ids']" position="after">
+                    <button type="object" class="btn-primary oe_edit_only" id="fetch_all_location" name="fetch_all_location" string="Fetch all location" states="draft"/>
+                    <button type="object" class="btn-danger oe_edit_only" id="remove_all_location" name="remove_all_location" string="Remove all location" states="draft"/>
+                </xpath>
+                <xpath expr="//field[@name='product_ids']" position="before">
+                    <field name="group_by" attrs="{'readonly': [('state', '!=', 'draft')]}" states="draft"/>
+                </xpath>
+                <xpath expr="//field[@name='product_ids']" position="after">
+                    <button type="object" class="btn-primary oe_edit_only" id="fetch_all_product" name="fetch_all_product" string="Fetch All Product" states="draft"/>
+                    <button type="object" class="btn-danger oe_edit_only" id="remove_all_product" name="remove_all_product" string="Remove All Product" states="draft"/>
+                    <field name="product_category_ids" widget="many2many_tags" 
+                        attrs="{'readonly': [('state', '!=', 'draft')], 'invisible': [('group_by', '!=', 'product_category')]}"/>
+                    <field name="show_product_with_non_stock" 
+                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                    <field name="adj_with_value" 
+                        attrs="{'readonly': [('state', '!=', 'draft')]}"/>
+                </xpath>
+                <field name="product_ids" position="attributes">
+                    <attribute name="attrs">{'invisible':[('group_by','!=','product')]}</attribute>
+                </field>
+            </field>
+        </record>
+    </data>
+</odoo>
