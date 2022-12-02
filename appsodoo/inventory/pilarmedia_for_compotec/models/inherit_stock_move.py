@@ -12,7 +12,6 @@ class inheritStockMove(models.Model):
         copy=False
     )
 
-    @api.model
     def write(self, vals):
         res = super().write(vals)
         self.create_pricelist_subcon()
