@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sale_order_fleet_vehicle_sales_team,sale.order.fleet_vehicle,model_sale_order_fleet_vehicle,sales_team.group_sale_salesman,1,1,1,1
+access_sale_order_cargo,sale.order.cargo,model_sale_order_cargo,sales_team.group_sale_salesman,1,1,1,1
+access_sale_order_fleet_vehicle_hr,sale.order.fleet_vehicle,model_sale_order_fleet_vehicle,hr.group_hr_user,1,0,0,0
+access_sale_order_fleet_vehicle_base,sale.order.fleet_vehicle,model_sale_order_fleet_vehicle,base.group_user,1,0,0,0
+access_emloyee_transport_commission,employee.transport_commission,model_employee_transport_commission,sales_team.group_sale_salesman,1,1,1,1
