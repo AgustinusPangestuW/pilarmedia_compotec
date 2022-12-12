@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="inherit_product_form">
+            <field name="name">inherit.product.product.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='default_code']" position="after">
+                    <field name="supplier_item_code"/>
+                </xpath>
+                <xpath expr="//field[@name='supplier_taxes_id']" position="after">
+                    <field name="vendors" widget="many2many_tags"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
