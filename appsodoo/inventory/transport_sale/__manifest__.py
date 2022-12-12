@@ -7,7 +7,7 @@
     "website": "www.solog.co.id",
     "author": "Pilarmedia Indonesia (SOLOG)",
     "license": "AGPL-3",
-    "depends": ["stock", "hr", "fleet", "sale"],
+    "depends": ["stock", "hr", "fleet", "sale_management"],
     "installable": True,
     "data": [
         "security/ir.model.access.csv",
