@@ -8,9 +8,9 @@
             <field name="arch" type="xml">
                 <xpath expr="/form/sheet/group/group[3]" position="after">
                     <group>    
-                        <field name="valid_until"/>
-                        <field name="document_date"/>
-                        <field name="require_date"/>
+                        <field name="valid_until" attrs="{'readonly': [('is_editable','=', False)]}"/>
+                        <field name="document_date" attrs="{'readonly': [('is_editable','=', False)]}"/>
+                        <field name="require_date" attrs="{'readonly': [('is_editable','=', False)]}"/>
                     </group>
                 </xpath>
                 <xpath expr="//field[@name='line_ids']/tree//field[@name='company_id']" position="attributes">
