@@ -56,6 +56,69 @@
                         </group>
                     </page>
                 </xpath>
+
+                <xpath expr="//field[@name='name']" position="before">
+                    <field name="is_editable"/>
+                </xpath>
+
+                <!-- add attr readonly base on `is_editable` -->
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>  
+                <xpath expr="//field[@name='currency_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>  
+                <xpath expr="//field[@name='date_order']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>  
+                <xpath expr="//field[@name='posting_date']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>       
+                <xpath expr="//field[@name='document_date']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>       
+                <xpath expr="//field[@name='delivery_date']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>       
+                <xpath expr="//field[@name='partner_ref']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>                
+                <xpath expr="//field[@name='requisition_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>       
+                <xpath expr="//field[@name='origin']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>       
+                <xpath expr="//field[@name='incoterm_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='user_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='payment_term_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='fiscal_position_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='order_line']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('is_editable', '=', False)]}</attribute>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- SEARCH -->
+        <record model="ir.ui.view" id="inherit_view_purchase_order_filter">
+            <field name="name">request.quotation.select.inherit</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.view_purchase_order_filter"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='activities_exception']" position="after">
+                    <separator/>
+                    <filter name="need_approval_po" string="Need Approval" 
+                        domain="[('user_approval', 'in', uid)]"/>
+                    <field name="user_approval"/>
+                </xpath>
             </field>
         </record>
         

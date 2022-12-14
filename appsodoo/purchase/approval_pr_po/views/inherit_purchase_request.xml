@@ -10,6 +10,9 @@
                     <field name="with_approval"/>
                     <field name="need_approval_current_user"/>
                 </xpath>
+                <xpath expr="//field[@name='is_editable']" position="attributes">
+                    <attribute name="invisible"></attribute>
+                </xpath>
                 <xpath expr="//button[@name='button_approved']" position="attributes">
                     <attribute name="states"></attribute>
                     <attribute name="attrs">{'invisible': ['|','|',
@@ -59,6 +62,21 @@
             </field>
         </record>
 
+        <!-- SEARCH -->
+        <record model="ir.ui.view" id="inherit_view_purchase_request_search">
+            <field name="name">purchase.request.list.select.inherit</field>
+            <field name="model">purchase.request</field>
+            <field name="inherit_id" ref="purchase_request.view_purchase_request_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='my_requests']" position="after">
+                    <separator/>
+                    <filter name="need_approval_pr" string="Need Approval" 
+                        domain="[('user_approval', 'in', uid)]"/>
+                    <field name="user_approval"/>
+                </xpath>
+            </field>
+        </record>
+
         <record model="ir.ui.view" id="history_approval_form">
             <field name="name">history.approval.form</field>
             <field name="model">history.approval</field>
@@ -78,5 +96,15 @@
             </field>
         </record>
 
+        <record id="inherit_purchase_request_line_form" model="ir.ui.view">
+            <field name="name">inherit.purchase.request.line.form</field>
+            <field name="model">purchase.request.line</field>
+            <field name="inherit_id" ref="purchase_request.purchase_request_line_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='is_editable']" position="attributes">
+                    <attribute name="invisible"></attribute>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>

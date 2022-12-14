@@ -21,7 +21,8 @@ class InheritPurchaseRequest(models.Model):
         comodel_name='res.users', 
         string='User Approval',
         compute="get_user_approval",
-        readonly=1
+        readonly=1,
+        store=True
     )
     total_action_approve = fields.Integer("Total Action", compute="get_total_action")
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
@@ -149,3 +150,48 @@ class InheritPurchaseRequest(models.Model):
                 res['arch'] = etree.tostring(doc)
 
         return res
+
+    @api.depends("state")
+    def _compute_is_editable(self):
+        for rec in self:
+            if rec.with_approval:
+                if self.env.user in rec.user_approval:
+                    rec.is_editable = True
+                else: rec.is_editable = False
+            else:
+                if rec.state in ("to_approve", "approved", "rejected", "done"):
+                    rec.is_editable = False
+                else:
+                    rec.is_editable = True
+
+class InheritPurchaseRequestLines(models.Model):
+    _inherit = "purchase.request.line"
+
+    @api.depends(
+        "product_id",
+        "name",
+        "product_uom_id",
+        "product_qty",
+        "analytic_account_id",
+        "date_required",
+        "specifications",
+        "purchase_lines",
+    )
+    def _compute_is_editable(self):
+        for rec in self:
+            if rec.request_id.with_approval:
+                if self.env.user in rec.request_id.user_approval:
+                    rec.is_editable = True
+                else: rec.is_editable = False
+            else:
+                if rec.request_id.state in ("to_approve", "approved", "rejected", "done"):
+                    rec.is_editable = False
+                else:
+                    rec.is_editable = True
+        for rec in self.filtered(lambda p: p.purchase_lines):
+            if rec.request_id.with_approval:
+                if self.env.user in rec.request_id.user_approval:
+                    rec.is_editable = True
+                else: rec.is_editable = False
+            else:
+                rec.is_editable = False
