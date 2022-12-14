@@ -43,7 +43,7 @@
                     </attribute>
                 </xpath>
                 <xpath expr="/form/sheet/notebook/page" position="after">
-                    <page string="History Approval">
+                    <page string="History Approval" groups="purchase.group_purchase_manager">
                         <group>
                             <field name="user_approval" widget="many2many_tags" force_save="1"/>
                             <field name="history_approval_ids">
