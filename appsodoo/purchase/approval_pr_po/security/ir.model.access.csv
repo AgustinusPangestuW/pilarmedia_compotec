@@ -4,3 +4,4 @@
 "access_group_user_approval","group_user_approval","model_group_user_approval","purchase.group_purchase_manager",1,1,1,1
 "access_user_approval_line","user_approval_line","model_user_approval_line","purchase.group_purchase_manager",1,1,1,1
 "access_history_approval","history_approval","model_history_approval","purchase.group_purchase_manager",1,1,1,1
+"access_history_approval_user","history_approval","model_history_approval","purchase.group_purchase_user",1,0,0,0

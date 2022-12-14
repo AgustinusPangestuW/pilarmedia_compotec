@@ -12,8 +12,10 @@
                     <field name="receipt_done"/>
                 </xpath>
                 <xpath expr="//button[@name='action_rfq_send']" position="after">
+                    <button name="action_req_approval" string="Request Approval" type="object" class="btn-primary"
+                        attrs="{'invisible': ['|',('state', 'not in', ('draft','sent')),('with_approval', '=', False)]}"/>
                     <button name="action_approve" string="Approve" type="object" class="btn-primary"
-                        attrs="{'invisible': ['|','|',('state', 'not in', ('draft','sent','to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
+                        attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
                     <button name="action_reject" string="Reject" type="object" class="btn-danger"
                         attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
                     <button name="make_receipt" string="Make Receipt" type="object" class="btn-promary"

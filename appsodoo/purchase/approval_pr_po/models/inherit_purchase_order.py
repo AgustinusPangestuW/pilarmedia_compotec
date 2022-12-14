@@ -85,6 +85,10 @@ class InheritPurchaseOrder(models.Model):
             approval_setting = self._get_approval_setting()
             rec.with_approval = approval_setting[0].po_with_approval if approval_setting else 0
 
+    def action_req_approval(self):
+        for rec in self:
+            rec.state = 'to_approve'
+
     def action_approve(self):
         for rec in self:
             # validation 
