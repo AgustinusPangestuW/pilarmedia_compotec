@@ -45,4 +45,11 @@ class UserApprovalLine(models.Model):
     _name = "user.approval.line"
 
     user_approval_id = fields.Many2one('group.user.approval', 'User Approval ID', ondelete='cascade', index=True)
-    user_id = fields.Many2one('res.users', string='User', required=True)
+    user_id = fields.Many2one('res.users', string='User', required=True,domain=lambda self: [
+            (
+                "groups_id",
+                "in",
+                [self.env.ref("purchase_request.group_purchase_request_manager").id, 
+                self.env.ref("purchase.group_purchase_user")],
+            )
+        ])

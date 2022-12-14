@@ -15,6 +15,7 @@
     'data': [
         "security/ir.model.access.csv",
         "views/inherit_purchase_order.xml",
+        "views/inherit_purchase_request.xml",
         # "views/inherit_res_config_settings.xml"
         "views/approval_setting.xml"
     ],

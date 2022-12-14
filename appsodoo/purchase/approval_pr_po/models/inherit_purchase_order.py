@@ -40,7 +40,7 @@ class InheritPurchaseOrder(models.Model):
     def get_total_action(self):
         for rec in self:
             approval_setting = self._get_approval_setting()
-            rec.total_action_approve = approval_setting.total_action_po
+            rec.total_action_approve = approval_setting.total_action_po if approval_setting else 0
     
     @api.depends('with_approval', 'state', 'total_value_approve')
     def get_user_approval(self):
@@ -140,7 +140,16 @@ class InheritPurchaseOrder(models.Model):
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
         res = super().fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
         readonly = False
-        for rec in self:
+        
+        obj = None
+        if not self:
+            id = dict(self._context).get('params', {}).get('id', None) or None
+            model = dict(self._context).get('params', {}).get('model', None) or None
+            if id and model:
+                obj = self.env[model].sudo().search([('id', '=', id)])
+        else: obj = self
+
+        for rec in obj or []:
             if rec.with_approval and rec.env.user.id not in [i.id for i in rec.user_approval]:
                 readonly = True
         
