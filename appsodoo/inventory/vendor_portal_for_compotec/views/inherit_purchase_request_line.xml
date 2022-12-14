@@ -6,6 +6,9 @@
             <field name="model">purchase.request.line</field>
             <field name="inherit_id" ref="purchase_request.purchase_request_line_tree"/>
             <field name="arch" type="xml">
+                <xpath expr="//field[@name='cancelled']" position="attributes">
+                    <attribute name="invisible">1</attribute>
+                </xpath>
                 <xpath expr="//field[@name='company_id']" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>
@@ -22,6 +25,9 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='cancelled']" position="attributes">
                     <attribute name="invisible">1</attribute>
+                </xpath>
+                <xpath expr="//field[@name='is_editable']" position="attributes">
+                    <attribute name="invisible"></attribute>
                 </xpath>
             </field>
         </record>
