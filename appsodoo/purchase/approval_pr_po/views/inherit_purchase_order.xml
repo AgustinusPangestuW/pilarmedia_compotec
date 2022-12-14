@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="inherit_purchase_order_for_approval_form">
+            <field name="name">purchase.order.form</field>
+            <field name="model">purchase.order</field>
+            <field name="inherit_id" ref="purchase.purchase_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='button_cancel']" position="after">
+                    <field name="with_approval"/>
+                    <field name="need_approval_current_user"/>
+                    <field name="receipt_done"/>
+                </xpath>
+                <xpath expr="//button[@name='action_rfq_send']" position="after">
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary"
+                        attrs="{'invisible': ['|','|',('state', 'not in', ('draft','sent','to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
+                    <button name="action_reject" string="Reject" type="object" class="btn-danger"
+                        attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
+                    <button name="make_receipt" string="Make Receipt" type="object" class="btn-promary"
+                        attrs="{'invisible': ['|',('receipt_done', '=', True), ('state', 'not in', ('purchase'))]}"/>
+                </xpath>
+                <xpath expr="//button[@name='button_draft']" position="attributes">
+                    <attribute name="states">cancel,rejected</attribute>
+                </xpath>
+                <xpath expr="//button[@id='bid_confirm']" position="attributes">
+                    <attribute name="states"></attribute>
+                    <attribute name="attrs">{'invisible': [
+                        ('with_approval', '=', True),('state', '!=', 'approved')]}
+                    </attribute>
+                    <!-- <attribute name="attrs">{'invisible': [
+                        ('with_approval', '=', False),'|',('state', '!=', 'sent'),
+                        ('with_approval', '=', True),('state', '!=', 'approved')]}
+                    </attribute> -->
+                </xpath>
+                <xpath expr="//button[@id='draft_confirm']" position="attributes">
+                    <attribute name="states"></attribute>
+                    <attribute name="invisible">1</attribute>
+                    <!-- <attribute name="invisible">[('state', '!=', 'draft'),'|',
+                        ('with_approval', '=', False),('with_approval', '=', True)]
+                    </attribute> -->
+                </xpath>
+                <xpath expr="//page[@name='purchase_delivery_invoice']" position="after">
+                    <page string="History Approval">
+                        <group>
+                            <field name="user_approval" widget="many2many_tags" force_save="1"/>
+                            <field name="history_approval_ids">
+                                <tree update="0" create="0" delete="0">
+                                    <field name ="user_id"/>
+                                    <field name="approve"/>
+                                    <field name="value"/>
+                                    <field name="datetime"/>
+                                </tree>
+                            </field>
+                            <field name="total_value_approve"/>
+                            <field name="total_action_approve"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        
+        <record model="ir.ui.view" id="history_approval_form">
+            <field name="name">history.approval.form</field>
+            <field name="model">history.approval</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name ="user_id" force_save="1"/>
+                                <field name="approve" force_save="1"/>
+                                <field name="value" force_save="1"/>
+                                <field name="datetime" force_save="1"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

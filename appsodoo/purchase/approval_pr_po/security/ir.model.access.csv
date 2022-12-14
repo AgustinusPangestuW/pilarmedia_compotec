@@ -1,0 +1,6 @@
+"id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
+"access_approval_setting","approval_setting","model_approval_setting","purchase.group_purchase_manager",1,1,1,1
+"access_list_approval","list_approval","model_list_approval","purchase.group_purchase_manager",1,1,1,1
+"access_group_user_approval","group_user_approval","model_group_user_approval","purchase.group_purchase_manager",1,1,1,1
+"access_user_approval_line","user_approval_line","model_user_approval_line","purchase.group_purchase_manager",1,1,1,1
+"access_history_approval","history_approval","model_history_approval","purchase.group_purchase_manager",1,1,1,1

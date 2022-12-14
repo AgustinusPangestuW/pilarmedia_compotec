@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>        
+        <!-- List View -->
+        <record model="ir.ui.view" id="approval_setting_tree">
+            <field name="name">approval.setting.tree</field>
+            <field name="model">approval.setting</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="pr_with_approval"/>
+                    <field name="total_action_pr"/>
+                    <field name="po_with_approval"/>
+                    <field name="total_action_po"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form View -->
+        <record model="ir.ui.view" id="approval_setting_form">
+            <field name="name">approval.setting.form</field>
+            <field name="model">approval.setting</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group class='col-xs-12'>
+                            <group class="col-xs-6">
+                                <field name="pr_with_approval"/>
+                                <field name="list_approval_pr">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="group_user_approval"/>
+                                        <field name="total_action"/>
+                                    </tree>
+                                </field>
+                                <field name="total_action_pr"/>
+                            </group>
+                            <group class="col-xs-6">
+                                <field name="po_with_approval"/>
+                                <field name="list_approval_po">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="group_user_approval"/>
+                                        <field name="total_action"/>
+                                    </tree>
+                                </field>
+                                <field name="total_action_po"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="group_user_approval_form">
+            <field name="name">group.user.approval</field>
+            <field name="model">group.user.approval</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="user_approval_ids">
+                                    <tree editable="bottom">
+                                        <field name="user_id"/>
+                                    </tree>
+                                </field>
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                    </sheet>
+                    <!-- <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div> -->
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="approval_setting_action">
+            <field name="name">approval.setting</field>
+            <field name="res_model">approval.setting</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- for menu item configuration -->
+        <menuitem id="approval_setting_menu" 
+            name="Approval Setting" 
+            parent="purchase.menu_purchase_config" 
+            groups="purchase.group_purchase_manager"
+            action="approval_setting_action"/>
+        <!-- <menuitem
+            id="menu_approval_settingaaaaaaaa"
+            parent="purchase.menu_purchase_config"
+            action="approval_setting_action"/> -->
+        
+    </data>
+</odoo>
