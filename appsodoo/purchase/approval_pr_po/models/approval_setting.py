@@ -50,6 +50,6 @@ class UserApprovalLine(models.Model):
                 "groups_id",
                 "in",
                 [self.env.ref("purchase_request.group_purchase_request_manager").id, 
-                self.env.ref("purchase.group_purchase_user")],
+                self.env.ref("purchase.group_purchase_user").id],
             )
         ])
