@@ -30,14 +30,17 @@ class InheritPurchaseOrder(models.Model):
     )
     total_action_approve = fields.Integer("Total Action", compute="get_total_action")
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
-    receipt_done = fields.Boolean(string='Receipt Done ?', store=True, readonly=True)
+    receipt_done = fields.Boolean(string='Receipt Done ?', store=True, readonly=True, default=0)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
 
     @api.depends('state')
     def _compute_is_editable(self):
         for rec in self:
-            if rec.with_approval and self.env.user in rec.user_approval or \
-                not rec.with_approval:
+            if rec.with_approval and (
+                self.env.user in rec.user_approval or 
+                rec.state not in ['to_approve', 'approved'] or
+                not rec.with_approval
+            ):
                 rec.is_editable = True
             else: 
                 rec.is_editable = False
@@ -194,8 +197,10 @@ class InheritPurchaseOrderLine(models.Model):
                 (
                     rec.order_id.with_approval and 
                     self.env.user in rec.order_id.user_approval 
-                    and rec.order_id.state not in ['to_approve', 'approved']
-                ) \
+                    and rec.order_id.state in ['to_approve', 'approved']
+                ) or (
+                    rec.order_id.state not in ['to_approve', 'approved']
+                )\
                 or not rec.order_id.with_approval:
                 rec.is_editable = True                
             else:

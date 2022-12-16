@@ -17,10 +17,12 @@
                     <attribute name="invisible">1</attribute>
                 </xpath>
                 <xpath expr="//field[@name='line_ids']/tree//field[@name='estimated_cost']" position="after">
-                    <field name="expense"/>
+                    <field name="is_editable"/>
+                    <field name="expense" attrs="{'readonly': [('is_editable','=', False)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='line_ids']/form//field[@name='estimated_cost']" position="after">
-                    <field name="expense"/>
+                    <field name="is_editable"/>
+                    <field name="expense" attrs="{'readonly': [('is_editable','=', False)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='line_ids']/form/sheet/group[1]/group" position="after">
                     <group>

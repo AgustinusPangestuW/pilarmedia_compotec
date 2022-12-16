@@ -32,7 +32,8 @@ class InheritPurchaseOrder(models.Model):
 class INheritPurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
 
-    expense = fields.Selection([("opex","OPEX"),("capex","CAPEX")], string='Expense', compute='get_from_pr', store=True)
+    expense = fields.Selection([("opex","OPEX"),("capex","CAPEX")], string='Expense', 
+        compute='get_from_pr', store=True, readonly=False)
     remarks = fields.Text(string='Remarks')
     base_on_purchase_requests = fields.Text(string='PR Code', compute="get_from_pr", store=True)
     item_code = fields.Char(string='Item Code', compute="fetch_info_item")

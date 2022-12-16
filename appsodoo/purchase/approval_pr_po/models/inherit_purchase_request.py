@@ -155,7 +155,8 @@ class InheritPurchaseRequest(models.Model):
     def _compute_is_editable(self):
         for rec in self:
             if rec.with_approval:
-                if self.env.user in rec.user_approval:
+                if self.env.user in rec.user_approval or \
+                    rec.state not in ("to_approve", "approved", "rejected", "done"):
                     rec.is_editable = True
                 else: rec.is_editable = False
             else:
@@ -166,6 +167,8 @@ class InheritPurchaseRequest(models.Model):
 
 class InheritPurchaseRequestLines(models.Model):
     _inherit = "purchase.request.line"
+
+    is_editable = fields.Boolean(default=1)
 
     @api.depends(
         "product_id",
@@ -180,7 +183,8 @@ class InheritPurchaseRequestLines(models.Model):
     def _compute_is_editable(self):
         for rec in self:
             if rec.request_id.with_approval:
-                if self.env.user in rec.request_id.user_approval:
+                if self.env.user in rec.request_id.user_approval or \
+                    rec.request_id.state not in ("to_approve", "approved", "rejected", "done"):
                     rec.is_editable = True
                 else: rec.is_editable = False
             else:
