@@ -7,11 +7,11 @@ class approval_setting(models.Model):
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
     pr_with_approval = fields.Boolean(string='PR with Approval ?', tracking=True)
-    list_approval_pr = fields.One2many('list.approval', 'approval_line_id', 'Line')
+    list_approval_pr = fields.One2many('list.approval', 'approval_line_pr_id', 'Line PR')
     total_action_pr = fields.Integer(string='Total Action', compute="calculate_total_action", 
         store=True)
     po_with_approval = fields.Boolean(string='PO with Approval ?', tracking=True)
-    list_approval_po = fields.One2many('list.approval', 'approval_line_id', 'Line')
+    list_approval_po = fields.One2many('list.approval', 'approval_line_po_id', 'Line PO')
     total_action_po = fields.Integer(string='Total Action', compute="calculate_total_action", 
         store=True)
 
@@ -26,7 +26,9 @@ class ApprovalList(models.Model):
     _name = "list.approval"
     _description = "List Approval"
 
-    approval_line_id = fields.Many2one('approval.setting', 'Approval ID', 
+    approval_line_pr_id = fields.Many2one('approval.setting', 'Approval PR ID', 
+        ondelete='cascade', index=True)
+    approval_line_po_id = fields.Many2one('approval.setting', 'Approval PO ID', 
         ondelete='cascade', index=True)
     sequence = fields.Integer(string='Sequence')
     group_user_approval = fields.Many2one('group.user.approval', 
