@@ -31,7 +31,7 @@ class InheritPurchaseRequest(models.Model):
             for l in rec.line_ids:
                 if l.pending_qty_to_receive - l.qty_in_progress < l.product_qty:
                     process_to_po = True
-                    if l.pending_qty_to_receive - l.qty_in_progress != 0:
+                    if l.pending_qty_to_receive - l.qty_in_progress > 0:
                         full_po = False
 
             if process_to_po:
@@ -42,8 +42,7 @@ class InheritPurchaseRequest(models.Model):
     def action_view_purchase_order_history(self):
         action = self.env.ref("purchase.purchase_rfq").read()[0]
         lines = self.mapped("line_ids.purchase_lines.order_id")
-        if len(lines) > 1:
-            action["domain"] = [("id", "in", lines.ids)]
+        action["domain"] = [("id", "in", lines.ids)]
         return action
         
 
