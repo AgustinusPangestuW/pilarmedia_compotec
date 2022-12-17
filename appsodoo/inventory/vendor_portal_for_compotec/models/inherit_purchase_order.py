@@ -12,6 +12,25 @@ class InheritPurchaseOrder(models.Model):
     document_date = fields.Date(string='Document Date')
     delivery_date = fields.Date(string='Delivery Date')
     with_confirm_date = fields.Boolean(string='with confirm date?', store=1, compute="get_from_res_partner")
+    payment_method = fields.Selection([("cash","Cash"),("card","Card")], string='Payment Method')
+    pr_state = fields.Selection([
+            ("no_receipt","No Receipt"),
+            ("partial","Receipt Partially"), 
+            ('full', 'Receipt Finished')
+        ], string='Receipt Status', compute="_compute_pr_state", store=True, default="no_receipt")
+
+    @api.depends('order_line', 'order_line.qty_received')
+    def _compute_pr_state(self):
+        for rec in self:
+            for i in rec.order_line:
+                qty_need_receipt = i.qty_received - i.product_qty
+                if qty_need_receipt < 0 and abs(qty_need_receipt) != i.product_qty:
+                    rec.pr_state = "partial"
+                    break
+                elif qty_need_receipt >= 0:
+                    rec.pr_state = "full"
+                else:
+                    rec.pr_state = "no_receipt"
 
     @api.depends('partner_id', 'partner_id.with_confirm_date')
     def get_from_res_partner(self):
