@@ -27,18 +27,20 @@ class InheritPurchaseOrder(models.Model):
         string='User Approval',
         compute="get_user_approval",
         readonly=1,
-        store=True
+        store=True,
+        copy=False
     )
     department_approvals = fields.Many2many(
         comodel_name='hr.department', 
         string='Department Approval',
         compute="get_user_approval",
         readonly=1,
-        store=True
+        store=True,
+        copy=False
     )
     total_action_approve = fields.Integer("Total Action", compute="get_total_action", store=1)
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
-    receipt_done = fields.Boolean(string='Receipt Done ?', store=True, readonly=True, default=0)
+    receipt_done = fields.Boolean(string='Receipt Done ?', compute="set_receipt_done", store=True, readonly=True, default=0, copy=False)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
     
     def get_department_base_on_user_login(self):
@@ -46,6 +48,11 @@ class InheritPurchaseOrder(models.Model):
         return user.employee_id.department_id.id or None
 
     department = fields.Many2one('hr.department', string='Department', required=True, default=get_department_base_on_user_login)
+
+    @api.depends('picking_count')
+    def set_receipt_done(self):
+        for rec in self:
+            rec.receipt_done = 1 if rec.picking_count else 0
 
     @api.depends('state')
     def _compute_is_editable(self):
@@ -196,14 +203,11 @@ class InheritPurchaseOrder(models.Model):
 
     def make_receipt(self):
         res = super()._create_picking()
-        for rec in self: 
-            rec.receipt_done = 1
         return res
 
     def _create_picking(self):
         for rec in self:
             if not rec.with_approval:
-                rec.receipt_done = 1
                 return super()._create_picking()
         return True
 
