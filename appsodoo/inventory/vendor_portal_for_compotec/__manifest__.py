@@ -21,7 +21,7 @@
         "views/inherit_perm_purchase.xml",
         "views/inherit_purchase_request.xml",
         "views/inherit_purchase_request_line.xml",
-        "views/inherit_purchase_order.xml"
+        "views/inherit_purchase_requisition.xml"
     ],
     # 'demo': ['data/sale_order_demo.xml'],
     # report
