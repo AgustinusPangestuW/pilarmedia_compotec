@@ -100,6 +100,23 @@
                 <xpath expr="//field[@name='date_approve']" position="attributes">
                     <attribute name="attrs">{'invisible':[('with_confirm_date', '=', False)]}</attribute>
                 </xpath>
+
+                <!-- hidden button -->
+                <!-- <xpath expr="//button[@name='action_view_picking']" position="attribute">
+                    <attribute name="groups">purchase.group_purchase_user</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_rfq_send']" position="attribute">
+                    <attribute name="groups">purchase.group_purchase_user</attribute>
+                </xpath>
+                <xpath expr="//button[@name='action_view_invoice']" position="attribute">
+                    <attribute name="groups">purchase.group_purchase_user</attribute>
+                </xpath>
+                <xpath expr="//button[@name='button_cancel']" position="attribute">
+                    <attribute name="groups">purchase.group_purchase_user</attribute>
+                </xpath>
+                <xpath expr="//button[@name='button_done']" position="attribute">
+                    <attribute name="groups">purchase.group_purchase_user</attribute>
+                </xpath> -->
             </field>
         </record>
         
