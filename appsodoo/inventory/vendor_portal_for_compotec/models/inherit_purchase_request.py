@@ -44,7 +44,17 @@ class InheritPurchaseRequest(models.Model):
         lines = self.mapped("line_ids.purchase_lines.order_id")
         action["domain"] = [("id", "in", lines.ids)]
         return action
+
+    def create_po_base_on_pr(self):
+        approved_ids = []
+        for rec in self:
+            if rec.state == "approved":
+                approved_ids.append(rec.id)
         
+        action = self.env.ref('purchase_request.action_purchase_request_line_make_purchase_order').read()[0]   
+        action['context'] = dict(self.env.context)
+        action['context']['active_ids'] = approved_ids
+        return action
 
 class InheritPurchaseOrderLine(models.Model):
     _inherit = 'purchase.request.line'
