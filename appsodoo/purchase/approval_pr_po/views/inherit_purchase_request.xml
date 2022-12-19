@@ -24,6 +24,9 @@
                 <xpath expr="//field[@name='assigned_to']" position="attributes">
                     <attribute name="attrs">{'invisible': [('with_approval', '=', True)]}</attribute>
                 </xpath>
+                <xpath expr="//field[@name='assigned_to']" position="after">
+                    <field name="department"/>
+                </xpath>
                 <xpath expr="//button[@name='button_rejected']" position="attributes">
                     <attribute name="states"></attribute>
                     <attribute name="attrs">{'invisible': ['|','|',
@@ -46,6 +49,7 @@
                     <page string="History Approval" groups="purchase.group_purchase_manager">
                         <group>
                             <field name="user_approval" widget="many2many_tags" force_save="1"/>
+                            <field name="department_approvals" widget="many2many_tags" force_save="1"/>
                             <field name="history_approval_ids">
                                 <tree update="0" create="0" delete="0">
                                     <field name ="user_id"/>
@@ -71,8 +75,8 @@
                 <xpath expr="//filter[@name='my_requests']" position="after">
                     <separator/>
                     <filter name="need_approval_pr" string="Need Approval" 
-                        domain="[('user_approval', 'in', uid)]"/>
-                    <field name="user_approval"/>
+                        domain="[('need_approval_current_user', '=', True)]"/>
+                    <field name="need_approval_current_user"/>
                 </xpath>
             </field>
         </record>

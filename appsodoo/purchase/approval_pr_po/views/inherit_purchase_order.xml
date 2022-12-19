@@ -26,8 +26,10 @@
                 </xpath>
                 <xpath expr="//button[@id='bid_confirm']" position="attributes">
                     <attribute name="states"></attribute>
-                    <attribute name="attrs">{'invisible': [
-                        ('with_approval', '=', True),('state', '!=', 'approved')]}
+                    <attribute name="attrs">{'invisible': ["|", 
+                        ('state', '!=', 'sent'),
+                        ('with_approval', '=', True),
+                        ('state', '!=', 'approved')]}
                     </attribute>
                     <!-- <attribute name="attrs">{'invisible': [
                         ('with_approval', '=', False),'|',('state', '!=', 'sent'),
@@ -36,15 +38,17 @@
                 </xpath>
                 <xpath expr="//button[@id='draft_confirm']" position="attributes">
                     <attribute name="states"></attribute>
-                    <attribute name="invisible">1</attribute>
-                    <!-- <attribute name="invisible">[('state', '!=', 'draft'),'|',
-                        ('with_approval', '=', False),('with_approval', '=', True)]
-                    </attribute> -->
+                    <!-- <attribute name="invisible">1</attribute> -->
+                    <attribute name="attrs">{'invisible':['|',
+                        ('state', '!=', 'draft'),
+                        ('with_approval', '=', True)]}
+                    </attribute>
                 </xpath>
                 <xpath expr="//page[@name='purchase_delivery_invoice']" position="after">
                     <page string="History Approval">
                         <group>
                             <field name="user_approval" widget="many2many_tags" force_save="1"/>
+                            <field name="department_approvals" widget="many2many_tags" force_save="1"/>
                             <field name="history_approval_ids">
                                 <tree update="0" create="0" delete="0">
                                     <field name ="user_id"/>
@@ -61,6 +65,9 @@
 
                 <xpath expr="//field[@name='name']" position="before">
                     <field name="is_editable"/>
+                </xpath>                
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="department" attrs="{'readonly': [('is_editable', '=', False)]}"/>
                 </xpath>
 
                 <!-- add attr readonly base on `is_editable` -->
@@ -117,9 +124,9 @@
             <field name="arch" type="xml">
                 <xpath expr="//filter[@name='activities_exception']" position="after">
                     <separator/>
-                    <filter name="need_approval_po" string="Need Approval" 
-                        domain="[('user_approval', 'in', uid)]"/>
-                    <field name="user_approval"/>
+                    <filter name="need_approval_pr" string="Need Approval" 
+                        domain="[('need_approval_current_user', '=', True)]"/>
+                    <field name="need_approval_current_user"/>
                 </xpath>
             </field>
         </record>

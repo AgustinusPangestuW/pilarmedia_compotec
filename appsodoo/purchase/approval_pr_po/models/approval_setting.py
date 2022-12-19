@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
+from odoo.http import request
 
 class approval_setting(models.Model):
     _name = "approval.setting"
@@ -7,51 +8,40 @@ class approval_setting(models.Model):
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
     pr_with_approval = fields.Boolean(string='PR with Approval ?', tracking=True)
-    list_approval_pr = fields.One2many('list.approval', 'approval_line_pr_id', 'Line PR')
-    total_action_pr = fields.Integer(string='Total Action', compute="calculate_total_action", 
-        store=True)
     po_with_approval = fields.Boolean(string='PO with Approval ?', tracking=True)
-    list_approval_po = fields.One2many('list.approval', 'approval_line_po_id', 'Line PO')
-    total_action_po = fields.Integer(string='Total Action', compute="calculate_total_action", 
-        store=True)
-
-    @api.depends('list_approval_po.total_action', 'list_approval_pr.total_action')
-    def calculate_total_action(self):
-        for rec in self:
-            rec.total_action_po = sum([i.total_action for i in rec.list_approval_po])
-            rec.total_action_pr = sum([i.total_action for i in rec.list_approval_pr])
 
 
-class ApprovalList(models.Model):
-    _name = "list.approval"
-    _description = "List Approval"
+class InheritResConfigSettings(models.TransientModel):
+    _inherit = "res.config.settings"
 
-    approval_line_pr_id = fields.Many2one('approval.setting', 'Approval PR ID', 
-        ondelete='cascade', index=True)
-    approval_line_po_id = fields.Many2one('approval.setting', 'Approval PO ID', 
-        ondelete='cascade', index=True)
-    sequence = fields.Integer(string='Sequence')
-    group_user_approval = fields.Many2one('group.user.approval', 
-        string='Group User Approval', required=True)
-    total_action = fields.Integer(string='Total Action', default="1", required=True)
+    def fetch_pr(self):
+        approval_setting = self.env['approval.setting'].sudo().search([])
+        pr_approval = 0
+        for i in approval_setting:
+            if i.pr_with_approval: pr_approval = 1
+        return pr_approval
 
+    def fetch_po(self):
+        approval_setting = self.env['approval.setting'].sudo().search([])
+        po_approval = 0
+        for i in approval_setting:
+            if i.po_with_approval: po_approval = 1
+        return po_approval
 
-class GroupUserApproval(models.Model):
-    _name = "group.user.approval"
+    pr_with_approval = fields.Boolean(string='PR with Approval ?', default=fetch_pr, readonly=False)
+    po_with_approval = fields.Boolean(string='PO with Approval ?', default=fetch_po, readonly=False)
 
-    name = fields.Char("Name")
-    user_approval_ids = fields.One2many('user.approval.line', 'user_approval_id', 'Line')
-   
-   
-class UserApprovalLine(models.Model):
-    _name = "user.approval.line"
+    def write(self, vals):
+        if 'pr_with_approval' in self or 'po_with_approval' in self:
+            approval_setting = self.env['approval.setting'].sudo().search([])
+            if approval_setting:
+                approval_setting.pr_with_approval = self.pr_with_approval or 0
+                approval_setting.po_with_approval = self.po_with_approval or 0
+            else:
+                self.env['approval.setting'].sudo().create({
+                    'pr_with_approval': self.pr_with_approval or 0,
+                    'po_with_approval': self.po_with_approval or 0
+                })
 
-    user_approval_id = fields.Many2one('group.user.approval', 'User Approval ID', ondelete='cascade', index=True)
-    user_id = fields.Many2one('res.users', string='User', required=True,domain=lambda self: [
-            (
-                "groups_id",
-                "in",
-                [self.env.ref("purchase_request.group_purchase_request_manager").id, 
-                self.env.ref("purchase.group_purchase_user").id],
-            )
-        ])
+        res = super().write(vals)
+        return res

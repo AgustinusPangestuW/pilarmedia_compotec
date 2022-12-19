@@ -18,6 +18,7 @@ class InheritPurchaseOrder(models.Model):
         ('done', 'Locked'),
         ('cancel', 'Cancelled')
     ])
+    
     with_approval = fields.Boolean("With Approval", compute="get_approval_setting")
     history_approval_ids = fields.One2many('history.approval', 'po_id', 'History Approvals')
     total_value_approve = fields.Integer(string='Value Approve', compute="calculate_total_val_approve", store=True)
@@ -28,50 +29,87 @@ class InheritPurchaseOrder(models.Model):
         readonly=1,
         store=True
     )
-    total_action_approve = fields.Integer("Total Action", compute="get_total_action")
+    department_approvals = fields.Many2many(
+        comodel_name='hr.department', 
+        string='Department Approval',
+        compute="get_user_approval",
+        readonly=1,
+        store=True
+    )
+    total_action_approve = fields.Integer("Total Action", compute="get_total_action", store=1)
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
     receipt_done = fields.Boolean(string='Receipt Done ?', store=True, readonly=True, default=0)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
+    
+    def get_department_base_on_user_login(self):
+        user = self.env.user
+        return user.employee_id.department_id.id or None
+
+    department = fields.Many2one('hr.department', string='Department', required=True, default=get_department_base_on_user_login)
 
     @api.depends('state')
     def _compute_is_editable(self):
         for rec in self:
             if rec.with_approval and (
-                self.env.user in rec.user_approval or 
-                rec.state not in ['to_approve', 'approved'] or
-                not rec.with_approval
-            ):
+                rec.need_approval_current_user or 
+                rec.state not in ['to_approve', 'approved'] 
+            ) or not rec.with_approval:
                 rec.is_editable = True
             else: 
                 rec.is_editable = False
 
-    @api.depends('with_approval', 'user_approval')
+    @api.depends('with_approval', 'department_approvals')
     def _need_approval_current_user(self):
         for rec in self:
-            rec.need_approval_current_user = 1 if self.env.user in rec.user_approval else 0
+            approved_users = [i.user_id.id for i in rec.history_approval_ids if i.value == 1]
+            rec.need_approval_current_user = 1 if self.env.user not in approved_users and \
+                self.env.user.employee_id.department_id in rec.department_approvals else 0
 
-    @api.depends('with_approval', 'state', 'with_approval')
+    @api.depends('with_approval', 'state', 'department')
     def get_total_action(self):
         for rec in self:
-            approval_setting = self._get_approval_setting()
-            rec.total_action_approve = approval_setting.total_action_po if approval_setting else 0
+            # approval_setting = self._get_approval_setting()
+            list_approval_po = self._get_approval_base_on_department(based_nominal=True)
+            rec.total_action_approve = sum([l.total_action for l in list_approval_po])
     
+    def _get_approval_base_on_department(self, based_nominal=False):
+        for rec in self:
+            list_approval = self.env['list.approval.po'].sudo().search([
+                ('active', '=', 1), 
+                ('department', '=', rec.department.id)
+            ])
+
+            if based_nominal:
+                new_list_approval = []
+                # check berdsasarkan nominal
+                list_approval = self._get_approval_base_on_department()
+                for aprv in list_approval:
+                    min_amount = self.env.company.currency_id._convert(aprv.min_amount, rec.currency_id, rec.company_id, rec.date_order or fields.Date.today())
+                    max_amount = self.env.company.currency_id._convert(aprv.max_amount, rec.currency_id, rec.company_id, rec.date_order or fields.Date.today())
+                    if rec.amount_total >= min_amount and rec.amount_total <= max_amount:
+                        new_list_approval.append(aprv)
+                list_approval = new_list_approval
+
+            return list_approval
+
     @api.depends('with_approval', 'state', 'total_value_approve')
     def get_user_approval(self):
         for rec in self:
-            rec.user_approval = [(6,0,[])]
+            rec.department_approvals = [(6,0,[])]
 
+            list_approval_po = self._get_approval_base_on_department()
             approval_setting = self._get_approval_setting()
             if not approval_setting: return
-            
+
+            # check berdsasarkan nominal
+            list_approval = self._get_approval_base_on_department(based_nominal=True)
             accumulate_value = 0
-            approved_users = [i.user_id.id for i in rec.history_approval_ids if i.value == 1]
-            for i in approval_setting.list_approval_po:
-                accumulate_value += i.total_action
-                if accumulate_value > rec.total_value_approve:
-                    rec.user_approval = [(4,u.user_id.id) for u in i.group_user_approval.user_approval_ids \
-                        if u.user_id.id not in approved_users]
-                    break
+            for aprv in list_approval:            
+                for l in aprv.approval_ids:
+                    accumulate_value += l.total_action
+                    if accumulate_value > rec.total_value_approve:
+                        rec.department_approvals = [(4,l.department.id)]
+                        break
                     
     @api.depends('history_approval_ids.value')
     def calculate_total_val_approve(self):
@@ -85,8 +123,22 @@ class InheritPurchaseOrder(models.Model):
     @api.depends('state')
     def get_approval_setting(self):
         for rec in self:
+            with_approval = 0
             approval_setting = self._get_approval_setting()
-            rec.with_approval = approval_setting[0].po_with_approval if approval_setting else 0
+            if (approval_setting and not approval_setting[0].po_with_approval) or\
+                not approval_setting: 
+                rec.with_approval = 0
+                return 
+                
+            # check berdsasarkan nominal
+            list_approval = self._get_approval_base_on_department()
+            for aprv in list_approval:
+                min_amount = self.env.company.currency_id._convert(aprv.min_amount, rec.currency_id, rec.company_id, rec.date_order or fields.Date.today())
+                max_amount = self.env.company.currency_id._convert(aprv.max_amount, rec.currency_id, rec.company_id, rec.date_order or fields.Date.today())
+                if rec.amount_total >= min_amount and rec.amount_total <= max_amount:
+                    with_approval = 1
+
+            rec.with_approval = with_approval
 
     def action_req_approval(self):
         for rec in self:
@@ -95,7 +147,7 @@ class InheritPurchaseOrder(models.Model):
     def action_approve(self):
         for rec in self:
             # validation 
-            if rec.env.user not in rec.user_approval:
+            if not rec.need_approval_current_user:
                 raise UserError("""You donot have permission for approve this document. please refresh this page for get current state of the document.""")
 
             rec.history_approval_ids = [(0,0, {
@@ -112,7 +164,7 @@ class InheritPurchaseOrder(models.Model):
     def action_reject(self):
         for rec in self:
             # validation 
-            if rec.env.user not in rec.user_approval:
+            if not rec.need_approval_current_user:
                 raise UserError("""You donot have permission for approve this document. please refresh this page for get current state of the document.""")
 
             rec.history_approval_ids = [(0,0, {
@@ -153,6 +205,7 @@ class InheritPurchaseOrder(models.Model):
             if not rec.with_approval:
                 rec.receipt_done = 1
                 return super()._create_picking()
+        return True
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
@@ -168,7 +221,7 @@ class InheritPurchaseOrder(models.Model):
         else: obj = self
 
         for rec in obj or []:
-            if rec.with_approval and rec.env.user.id not in [i.id for i in rec.user_approval]:
+            if rec.with_approval and not rec.need_approval_current_user:
                 readonly = True
         
         if readonly:
@@ -184,6 +237,24 @@ class InheritPurchaseOrder(models.Model):
 
         return res
 
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        res = super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
+
+        show_by_department = 0
+        for d in domain:
+            if 'need_approval_current_user' in d: 
+                show_by_department = 1 
+                break
+
+        if show_by_department:
+            new_res = []
+            for r in res:
+                if self.env['purchase.order'].sudo().search([('id', '=', r['id'])]).need_approval_current_user:
+                    new_res.append(r)
+            res = new_res
+        return res
+
 
 class InheritPurchaseOrderLine(models.Model):
     _inherit = "purchase.order.line"
@@ -196,7 +267,7 @@ class InheritPurchaseOrderLine(models.Model):
             if rec.order_id and \
                 (
                     rec.order_id.with_approval and 
-                    self.env.user in rec.order_id.user_approval 
+                    rec.order_id.need_approval_current_user 
                     and rec.order_id.state in ['to_approve', 'approved']
                 ) or (
                     rec.order_id.state not in ['to_approve', 'approved']

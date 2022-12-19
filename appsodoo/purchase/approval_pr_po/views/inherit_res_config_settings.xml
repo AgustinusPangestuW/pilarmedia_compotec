@@ -22,28 +22,55 @@
         </record> -->
 
         <record id="temp_res_config_settings_view_form_purchase" model="ir.ui.view">
-            <field name="name">inherit. res.config.settings.view.form.inherit.purchase</field>
+            <field name="name">inherit.res.config.settings.view.form.inherit.purchase</field>
             <field name="model">res.config.settings</field>
             <field name="priority" eval="25"/>
             <field name="inherit_id" ref="base.res_config_settings_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//div[hasclass('settings')]//div[@data-key='purchase']" position="inside">
-                    <div class="row mt16 o_settings_container">
-                        <field name="po_with_approval"/>
-                        <field name="list_approval">
+                    <div class="row mt16 o_settings_container">                    
+                        <div class="o_setting_left_pane">
+                            <field name="pr_with_approval"/>
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="pr_with_approval"/>
+                            <div class="text-muted">
+                                Set list of Approval for Purchase Request.
+                            </div>
+                            <div class="content-group" attrs="{'invisible': [('pr_with_approval' ,'=', False)]}">
+                                <div class="mt8">
+                                    <button name="%(list_approval_pr_action)d" icon="fa-arrow-right" type="action" string="List Approval PR" class="btn-link"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="o_setting_left_pane">
+                            <field name="po_with_approval"/>
+                        </div>
+                        <div class="o_setting_right_pane">
+                            <label for="po_with_approval"/>
+                            <div class="text-muted">
+                                Set list of Approval for Purchase Order.
+                            </div>
+                            <div class="content-group" attrs="{'invisible': [('po_with_approval' ,'=', False)]}">
+                                <div class="mt8">
+                                    <button name="%(list_approval_po_action)d" icon="fa-arrow-right" type="action" string="List Approval PO" class="btn-link"/>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <field name="list_approval">
                             <tree editable="bottom">
                                 <field name="sequence" widget="handle"/>
                                 <field name="group_user_approval"/>
                                 <field name="total_action"/>
                             </tree>
-                        </field>
+                        </field> -->
                     </div>
                 </xpath>
             </field>
         </record>
         
         <!-- Form View -->
-        <record model="ir.ui.view" id="group_user_approval_form">
+        <!-- <record model="ir.ui.view" id="group_user_approval_form">
             <field name="name">group.user.approval</field>
             <field name="model">group.user.approval</field>
             <field name="arch" type="xml">
@@ -64,6 +91,6 @@
                     </sheet>
                 </form>
             </field>
-        </record>
+        </record> -->
     </data>
 </odoo>

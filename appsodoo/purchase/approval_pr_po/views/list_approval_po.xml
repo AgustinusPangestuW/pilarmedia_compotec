@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="list_approval_po_tree">
+            <field name="name">list.approval.po.tree</field>
+            <field name="model">list.approval.po</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="sequence" widget="handle"/>
+                    <field name="active"/>
+                    <field name="department"/>
+                    <field name="total_action"/>
+                    <field name="min_amount" widget="monetary"/>
+                    <field name="max_amount" widget="monetary"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="list_approval_po_form">
+            <field name="name">list.approval.po.form</field>
+            <field name="model">list.approval.po</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="active"/>
+                                <field name="department"/>
+                            </group>
+                            <group>
+                                <field name="total_action"/>
+                                <field name="min_amount" widget="monetary"/>
+                                <field name="max_amount" widget="monetary"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Approval Lines">
+                                <field name="approval_ids">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="department"/>
+                                        <field name="total_action"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="list_approval_po_action">
+            <field name="name">list Approval PO</field>
+            <field name="res_model">list.approval.po</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+        <menuitem id="approval_list_menu" 
+            name="Approval list" 
+            parent="purchase.menu_purchase_config" 
+            groups="purchase.group_purchase_manager"
+            action="list_approval_po_action"/>
+    </data>
+</odoo>

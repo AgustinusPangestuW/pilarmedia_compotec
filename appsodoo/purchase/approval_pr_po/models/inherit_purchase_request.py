@@ -14,6 +14,13 @@ class InheritPurchaseRequest(models.Model):
         ("rejected", "Rejected"),
         ("done", "Done"),
     ])
+
+    def _domain_base_approval_pr(self):
+        """ this code is to validate department must be in `list.approval.pr` """
+        list_approval_pr = self.env['list.approval.pr'].sudo().search([('active', '=', 1)])
+        list_department_ids = [i.department.id for i in list_approval_pr]
+        return [('id', 'in', list_department_ids)]
+
     with_approval = fields.Boolean("With Approval", compute="get_approval_setting")
     history_approval_ids = fields.One2many('history.approval', 'pr_id', 'History Approvals')
     total_value_approve = fields.Integer(string='Value Approve', compute="calculate_total_val_approve", store=True)
@@ -24,36 +31,61 @@ class InheritPurchaseRequest(models.Model):
         readonly=1,
         store=True
     )
+    department_approvals = fields.Many2many(
+        comodel_name='hr.department', 
+        string='Department Approval',
+        compute="get_user_approval",
+        readonly=1,
+        store=True
+    )
     total_action_approve = fields.Integer("Total Action", compute="get_total_action")
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
+    
+    def get_department_base_on_user_login(self):
+        user = self.env.user
+        return user.employee_id.department_id.id or None
 
-    @api.depends('with_approval', 'user_approval')
+    department = fields.Many2one('hr.department', string='Department', required=True, 
+        default=get_department_base_on_user_login, domain=_domain_base_approval_pr)
+
+    @api.depends('with_approval', 'department_approvals')
     def _need_approval_current_user(self):
         for rec in self:
-            rec.need_approval_current_user = 1 if self.env.user in rec.user_approval else 0
+            approved_users = [i.user_id.id for i in rec.history_approval_ids if i.value == 1]
+            rec.need_approval_current_user = 1 if self.env.user not in approved_users and \
+                self.env.user.employee_id.department_id in rec.department_approvals else 0
 
-    @api.depends('with_approval', 'state', 'with_approval')
+    @api.depends('with_approval', 'state')
     def get_total_action(self):
         for rec in self:
             approval_setting = self._get_approval_setting()
-            rec.total_action_approve = approval_setting.total_action_pr
+            list_approval_pr = self._get_approval_base_on_department()
+            rec.total_action_approve = sum(i.total_action for i in list_approval_pr)
+
+    def _get_approval_base_on_department(self):
+        for rec in self:
+            list_approval = self.env['list.approval.pr'].sudo().search([
+                ('active', '=', 1), 
+                ('department', '=', rec.department.id)
+            ])
+            return list_approval
     
     @api.depends('with_approval', 'state', 'total_value_approve')
     def get_user_approval(self):
         for rec in self:
-            rec.user_approval = [(6,0,[])]
+            rec.department_approvals = [(6,0,[])]
 
+            list_approval_pr = self._get_approval_base_on_department()
             approval_setting = self._get_approval_setting()
             if not approval_setting: return
             
             accumulate_value = 0
-            approved_users = [i.user_id.id for i in rec.history_approval_ids if i.value == 1]
-            for i in approval_setting.list_approval_pr:
-                accumulate_value += i.total_action
-                if accumulate_value > rec.total_value_approve:
-                    rec.user_approval = [(4,u.user_id.id) for u in i.group_user_approval.user_approval_ids \
-                        if u.user_id.id not in approved_users]
-                    break
+            for i in list_approval_pr:
+                for l in i.approval_ids:
+                    accumulate_value += l.total_action
+                    if accumulate_value > rec.total_value_approve:
+                        rec.department_approvals = [(4,l.department.id)]
+                        break
                     
     @api.depends('history_approval_ids.value')
     def calculate_total_val_approve(self):
@@ -64,16 +96,22 @@ class InheritPurchaseRequest(models.Model):
         approval_setting = self.env['approval.setting'].sudo().search([('id', '=', 1)])
         return approval_setting or None
 
-    @api.depends('state')
+    # @api.depends('state')
     def get_approval_setting(self):
         for rec in self:
             approval_setting = self._get_approval_setting()
-            rec.with_approval = approval_setting[0].pr_with_approval if approval_setting else 0
+            list_approval_pr = self._get_approval_base_on_department()
+            
+            if approval_setting and approval_setting[0].pr_with_approval \
+                and list_approval_pr:
+                rec.with_approval = 1
+            else:
+                rec.with_approval = 0
 
     def button_approved(self):
         for rec in self:
             # validation 
-            if rec.env.user not in rec.user_approval:
+            if not rec.need_approval_current_user:
                 raise UserError("""You donot have permission for approve this document. please refresh this page for get current state of the document.""")
 
             rec.history_approval_ids = [(0,0, {
@@ -90,7 +128,7 @@ class InheritPurchaseRequest(models.Model):
     def button_rejected(self):
         for rec in self:
             # validation 
-            if rec.env.user not in rec.user_approval:
+            if not rec.need_approval_current_user:
                 raise UserError("""You donot have permission for approve this document. please refresh this page for get current state of the document.""")
 
             rec.history_approval_ids = [(0,0, {
@@ -135,7 +173,7 @@ class InheritPurchaseRequest(models.Model):
         else: obj = self
 
         for rec in obj or []:
-            if rec.with_approval and rec.env.user.id not in [i.id for i in rec.user_approval]:
+            if rec.with_approval and not rec.need_approval_current_user:
                 readonly = True
         
         if readonly:
@@ -155,7 +193,7 @@ class InheritPurchaseRequest(models.Model):
     def _compute_is_editable(self):
         for rec in self:
             if rec.with_approval:
-                if self.env.user in rec.user_approval or \
+                if rec.need_approval_current_user or \
                     rec.state not in ("to_approve", "approved", "rejected", "done"):
                     rec.is_editable = True
                 else: rec.is_editable = False
@@ -164,6 +202,25 @@ class InheritPurchaseRequest(models.Model):
                     rec.is_editable = False
                 else:
                     rec.is_editable = True
+
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        res = super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
+
+        show_by_department = 0
+        for d in domain:
+            if 'need_approval_current_user' in d: 
+                show_by_department = 1 
+                break
+
+        if show_by_department:
+            new_res = []
+            for r in res:
+                if self.env['purchase.request'].sudo().search([('id', '=', r['id'])]).need_approval_current_user:
+                    new_res.append(r)
+            res = new_res
+        return res
+
 
 class InheritPurchaseRequestLines(models.Model):
     _inherit = "purchase.request.line"
@@ -183,7 +240,7 @@ class InheritPurchaseRequestLines(models.Model):
     def _compute_is_editable(self):
         for rec in self:
             if rec.request_id.with_approval:
-                if self.env.user in rec.request_id.user_approval or \
+                if rec.request_id.need_approval_current_user or \
                     rec.request_id.state not in ("to_approve", "approved", "rejected", "done"):
                     rec.is_editable = True
                 else: rec.is_editable = False
@@ -194,7 +251,7 @@ class InheritPurchaseRequestLines(models.Model):
                     rec.is_editable = True
         for rec in self.filtered(lambda p: p.purchase_lines):
             if rec.request_id.with_approval:
-                if self.env.user in rec.request_id.user_approval:
+                if rec.request_id.need_approval_current_user:
                     rec.is_editable = True
                 else: rec.is_editable = False
             else:
