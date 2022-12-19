@@ -84,7 +84,7 @@ class INheritPurchaseOrderLine(models.Model):
     base_on_purchase_requests = fields.Text(string='PR Code', compute="get_from_pr", store=True)
     item_code = fields.Char(string='Item Code', compute="fetch_info_item")
     item_name = fields.Char(string='Item Name', compute="fetch_info_item")
-    supplier_item_code = fields.Char(string='Supplier Item Code', compute="fetch_info_item")
+    supplier_item_code = fields.Char(string='Supplier Item Code', compute="fetch_info_item", readonly=False, store=True)
 
     @api.depends('purchase_request_lines')
     def get_from_pr(self):

@@ -62,7 +62,7 @@ class InheritPurchaseOrderLine(models.Model):
     expense = fields.Selection([("capex","CAPEX"),("opex","OPEX")], string='Expense', store=True)
     item_code = fields.Char(string='Item Code', compute="fetch_info_item")
     item_name = fields.Char(string='Item Name', compute="fetch_info_item")
-    supplier_item_code = fields.Char(string='Supplier Item Code', compute="fetch_info_item")
+    supplier_item_code = fields.Char(string='Supplier Item Code', compute="fetch_info_item", store=True, readonly=False)
     
     @api.depends('product_id')
     def fetch_info_item(self):
