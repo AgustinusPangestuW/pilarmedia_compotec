@@ -21,6 +21,7 @@
     'depends': ['base', 'stock', 'pilar_subcont_transfer'],
     'data': [
         "security/ir.model.access.csv",
+        # "views/inherit_perm_purchase.xml",
         "views/cleaning_view.xml",
         "views/wrapping.xml",
         "views/shift_view.xml",

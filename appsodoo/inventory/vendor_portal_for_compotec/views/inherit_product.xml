@@ -14,5 +14,19 @@
                 </xpath>
             </field>
         </record>
+
+        <!-- <record model="ir.ui.view" id="product_form">
+            <field name="name">product.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='qty_available']" position="attributes">
+                    <attribute name="groups">stock.group_stock_manager</attribute>
+                </xpath>
+                <xpath expr="//button[@name='virtual_available']" position="attributes">
+                    <attribute name="groups">stock.group_stock_manager</attribute>
+                </xpath>
+            </field>
+        </record> -->
     </data>
 </odoo>
