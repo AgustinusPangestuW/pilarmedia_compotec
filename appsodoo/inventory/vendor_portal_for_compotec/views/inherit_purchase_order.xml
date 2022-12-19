@@ -10,8 +10,11 @@
                     <field name="base_on_purchase_requests"/>
                 </xpath>
                 <xpath expr="//field[@name='date_order']" position="after">
-                    <field name="posting_date"/>
-                    <field name="document_date"/>
+                    <field name="posting_date" readonly="1"/>
+                    <field name="document_date" readonly="1"/>
+                </xpath>
+                <xpath expr="//field[@name='state']" position="before">
+                    <field name="pr_state"/>
                 </xpath>
                 
                 <!-- HIDE COLUMN -->
@@ -98,6 +101,14 @@
                     <attribute name="attrs">{'invisible':[('with_confirm_date', '=', False)]}</attribute>
                 </xpath>
             </field>
+        </record>
+        
+        <record id="multi_crate_receipt_from_po" model="ir.actions.server">
+            <field name="name">Create Receipt (Stock Picking)</field>
+            <field name="model_id" ref="purchase.model_purchase_order"/>
+            <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+            <field name="state">code</field>
+            <field name="code">action = records.create_receipt_base_on_po(ret_raise=True)</field>
         </record>
     </data>
 </odoo>

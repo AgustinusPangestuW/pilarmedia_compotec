@@ -45,7 +45,34 @@ class InheritPurchaseOrder(models.Model):
                 purchase_requests = [pr.request_id.name for pr in line.purchase_request_lines]
 
             purchase_requests = [k for k,_ in groupby(purchase_requests)]
-            rec.base_on_purchase_requests = ",".join(purchase_requests) or ""
+            rec.base_on_purchase_requests = ",".join(purchase_requests) or ""    
+
+    def create_receipt_base_on_po(self, ret_raise=False):
+        receipt_created = []
+        for rec in self:
+            if rec.state == "purchase" and not rec.receipt_done:
+                rec.make_receipt()
+                sp = self.env['stock.picking'].sudo().search([('origin', '=', rec.display_name)])
+                if sp:
+                    receipt_created.append(str(sp[0].display_name))
+
+        if ret_raise:
+            type = ''
+            if receipt_created:
+                message = _("Sucessfull Create Stock picking at [%s]" % (", ".join(receipt_created))) 
+                type = 'success'
+            else:
+                message = _("Sucessfull, nothing create receipt / Stock Picking. system will create stock picking at PO (state = 'Purchase Order' & don't have receipt) ") 
+                type = 'primary'
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'message': message,
+                    'type': type,
+                    'sticky': True
+                }
+            }
 
 
 class INheritPurchaseOrderLine(models.Model):
