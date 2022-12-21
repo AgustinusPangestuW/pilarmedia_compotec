@@ -30,7 +30,7 @@ class SettingApprovalPO(models.Model):
     max_amount = fields.Float(string='Max Amount')
 
     _sql_constraints = [
-        ('department', 'unique(department, min_amount, max_amount)', 'Department, Min Amount and Max Amount must be unique!'),
+        ('apprv_department_unique', 'unique(department, min_amount, max_amount)', 'Department, Min Amount and Max Amount must be unique!'),
     ]
 
     @api.depends('approval_ids')
