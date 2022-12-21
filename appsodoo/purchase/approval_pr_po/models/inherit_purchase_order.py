@@ -42,6 +42,7 @@ class InheritPurchaseOrder(models.Model):
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
     receipt_done = fields.Boolean(string='Receipt Done ?', compute="set_receipt_done", store=True, readonly=True, default=0, copy=False)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", readonly=True, store=True)
     
     def get_department_base_on_user_login(self):
         user = self.env.user
@@ -54,12 +55,14 @@ class InheritPurchaseOrder(models.Model):
         for rec in self:
             rec.receipt_done = 1 if rec.picking_count else 0
 
-    @api.depends('state')
+    @api.depends('state', 'cannot_to_draft')
     def _compute_is_editable(self):
         for rec in self:
             if rec.with_approval and (
-                rec.need_approval_current_user or 
-                rec.state not in ['to_approve', 'approved'] 
+                (
+                    rec.need_approval_current_user or 
+                    rec.state not in ['to_approve', 'approved'] 
+                ) and not rec.cannot_to_draft  
             ) or not rec.with_approval:
                 rec.is_editable = True
             else: 
@@ -168,6 +171,14 @@ class InheritPurchaseOrder(models.Model):
             else:
                 rec.state = "to_approve"
 
+    def button_draft(self):
+        # validate
+        for rec in self:
+            if rec.cannot_to_draft:
+                raise UserError('Document cannot set to draft from approval User.')
+
+        return super().button_draft()
+
     def action_reject(self):
         for rec in self:
             # validation 
@@ -184,6 +195,11 @@ class InheritPurchaseOrder(models.Model):
                 i.value = 0
 
             rec.state = "rejected"
+
+    def action_reject_without_set_to_draft(self):
+        self.action_reject()
+        for rec in self:
+            rec.cannot_to_draft = 1
 
     def button_confirm(self):
         for order in self:
@@ -213,7 +229,7 @@ class InheritPurchaseOrder(models.Model):
 
     @api.model
     def fields_view_get(self, view_id=None, view_type='form', toolbar=False, submenu=False):
-        res = super().fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        res = super().fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)        
         readonly = False
         
         obj = None
@@ -223,6 +239,9 @@ class InheritPurchaseOrder(models.Model):
             if id and model:
                 obj = self.env[model].sudo().search([('id', '=', id)])
         else: obj = self
+
+        if model and model != "purchase.order":
+            return res
 
         for rec in obj or []:
             if rec.with_approval and not rec.need_approval_current_user:
@@ -263,7 +282,13 @@ class InheritPurchaseOrder(models.Model):
 class InheritPurchaseOrderLine(models.Model):
     _inherit = "purchase.order.line"
 
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", compute="set_cannot_to_draft", store=True)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
+
+    @api.depends('order_id', 'order_id.cannot_to_draft')
+    def set_cannot_to_draft(self):
+        for rec in self:
+            rec.cannot_to_draft = 1 if rec.order_id and rec.order_id.cannot_to_draft else 0
 
     @api.depends('order_id', 'order_id.state', 'order_id.is_editable')
     def _compute_is_editable(self):

@@ -10,6 +10,7 @@
                     <field name="with_approval"/>
                     <field name="need_approval_current_user"/>
                     <field name="receipt_done"/>
+                    <field name="cannot_to_draft"/>
                 </xpath>
                 <xpath expr="//button[@name='action_rfq_send']" position="after">
                     <button name="action_req_approval" string="Request Approval" type="object" class="btn-primary"
@@ -18,11 +19,16 @@
                         attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
                     <button name="action_reject" string="Reject" type="object" class="btn-danger"
                         attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
+                    <button name="action_reject_without_set_to_draft" string="Reject Without set To Draft" type="object" class="btn-danger"
+                        attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
                     <button name="make_receipt" string="Make Receipt" type="object" class="btn-promary"
                         attrs="{'invisible': ['|',('receipt_done', '=', True), ('state', 'not in', ('purchase'))]}"/>
                 </xpath>
                 <xpath expr="//button[@name='button_draft']" position="attributes">
-                    <attribute name="states">cancel,rejected</attribute>
+                    <attribute name="attrs">{'invisible': ['|',
+                        ('state', 'in', ('cancel','rejected')),
+                        ('cannot_to_draft', '=', True)]}
+                    </attribute>
                 </xpath>
                 <xpath expr="//button[@id='bid_confirm']" position="attributes">
                     <attribute name="states"></attribute>
