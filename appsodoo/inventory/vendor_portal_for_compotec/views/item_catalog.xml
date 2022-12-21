@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="item_catalog_tree">
+            <field name="name">item.catalog.tree</field>
+            <field name="model">item.catalog</field>
+            <field name="arch" type="xml">
+                <tree default_order="create_date desc">
+                    <field name="name"/>
+                    <field name="category_id"/>
+                    <field name="description"/>
+                    <field name="price"/>
+                    <field name="supplier_id"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="item_catalog_form">
+            <field name="name">item.catalog.form</field>
+            <field name="model">item.catalog</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="category_id"/>
+                                <field name="supplier_id"/>
+                            </group>
+                            <group>
+                                <field name="tender_name"/>
+                                <field name="tender_date"/>
+                                <field name="price"/>
+                            </group>
+                        </group>
+                        <group>
+                            <field name="description"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="item_catalog_action">
+            <field name="name">Item Catalog</field>
+            <field name="res_model">item.catalog</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem 
+            id="menu_item_catalog"
+            name="Item Catalog"
+            parent="purchase.menu_purchase_root"
+            action="item_catalog_action"
+        />
+
+    </data>
+</odoo>

@@ -7,7 +7,7 @@ class InheritProductTemplate(models.Model):
     supplier_item_code = fields.Char(string='Supplier Item Code')
     vendors = fields.Many2many(
         comodel_name='res.partner', 
-        relation='res_partner_product',
+        relation='res_partner_product_template',
         string='Vendors',
         compute="get_vendor_from_seller_ids",
         store=True
@@ -19,10 +19,10 @@ class InheritProductTemplate(models.Model):
 
     def fill_base_on_partner(self):
         user = self.env.user
-        if user and user.partner_id.is_approve:
-            return 1
-        else: 
+        if user and user.partner_id.supplier_rank:
             return 0
+        else: 
+            return 1
 
     sale_ok = fields.Boolean('Can be Sold', default=fill_base_on_partner)
     purchase_ok = fields.Boolean('Can be Purchased', default=fill_base_on_partner)
@@ -31,6 +31,13 @@ class InheritProductTemplate(models.Model):
     def get_vendor_from_seller_ids(self):
         for rec in self:
             rec.vendors = [(4, i.name.id) for i in rec.seller_ids]
+
+    @api.model
+    def create(self, vals):
+        if self.env.user.partner_id.supplier_rank:
+            vals['vendors'] = [(4,self.env.user.partner_id.id)]
+
+        return super().create(vals)
 
 class InheritProduct(models.Model):
     _inherit = 'product.product'

@@ -15,6 +15,21 @@
             </field>
         </record>
 
+        
+        <record model="ir.ui.view" id="inherit_product_template_form">
+            <field name="name">inherit.product.template.form</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='default_code']" position="after">
+                    <field name="supplier_item_code"/>
+                </xpath>
+                <xpath expr="//field[@name='supplier_taxes_id']" position="after">
+                    <field name="vendors" widget="many2many_tags"/>
+                </xpath>
+            </field>
+        </record>
+
         <!-- <record model="ir.ui.view" id="product_form">
             <field name="name">product.form</field>
             <field name="model">product.product</field>

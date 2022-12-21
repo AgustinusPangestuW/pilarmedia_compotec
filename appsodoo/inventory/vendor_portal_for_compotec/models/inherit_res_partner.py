@@ -6,6 +6,7 @@ class InheritResPartner(models.Model):
 
     code = fields.Char(string='Code', copy=False)
     is_approve = fields.Boolean(string='Approve?', copy=False, default=1)
+    is_supplier = fields.Boolean(string='Is Supplier?', copy=False)
     with_confirm_date = fields.Boolean(string='With Confirmation Date ?', default=1)
     npwp = fields.Char(string='NPWP')
     npwp_name = fields.Char(string='Nama NPWP')
