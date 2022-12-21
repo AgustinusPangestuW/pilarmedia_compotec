@@ -28,7 +28,7 @@ class ItemCatalog(models.Model):
         return partner_id.id if partner_id.is_supplier else ""
 
     supplier_id = fields.Many2one('res.partner', string='Supplier', required=True, 
-        default=get_current_supplier, readonly=0)
+        default=get_current_supplier, readonly=1)
 
     _sql_constraints = [
         ('unique_name_catalog_supplier', 'unique(name, supplier_id)', 'Catalog must be unique per Supplier!'),

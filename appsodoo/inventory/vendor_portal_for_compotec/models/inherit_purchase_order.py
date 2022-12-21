@@ -74,6 +74,15 @@ class InheritPurchaseOrder(models.Model):
                 }
             }
 
+    @api.onchange('partner_id')
+    def _set_supplier_item_code(self):
+        for rec in self:
+            for line in rec.order_line:
+                if line.product_id and rec.partner_id:
+                    for i in line.product_id.seller_ids:
+                        if i.name.id == rec.partner_id.id:
+                            line.supplier_item_code = i.product_code
+
 
 class INheritPurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
@@ -85,6 +94,21 @@ class INheritPurchaseOrderLine(models.Model):
     item_code = fields.Char(string='Item Code', compute="fetch_info_item")
     item_name = fields.Char(string='Item Name', compute="fetch_info_item")
     supplier_item_code = fields.Char(string='Supplier Item Code', compute="fetch_info_item", readonly=False, store=True)
+    item_catalog = fields.Many2one('item.catalog', string='Item Catalog')
+
+    @api.onchange('product_id')
+    def _set_supplier_item_code(self):
+        for rec in self:
+            if rec.product_id and rec.order_id.partner_id:
+                for i in rec.product_id.seller_ids:
+                    if i.name.id == rec.order_id.partner_id.id:
+                        rec.supplier_item_code = i.product_code
+
+    @api.onchange('item_catalog')
+    def get_value_base_on_item_catalog(self):
+        for rec in self:
+            if rec.item_catalog:
+                rec.price_unit = rec.item_catalog.price
 
     @api.depends('purchase_request_lines')
     def get_from_pr(self):
