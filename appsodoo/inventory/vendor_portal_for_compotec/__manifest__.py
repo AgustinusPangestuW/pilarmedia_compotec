@@ -14,7 +14,15 @@
     'maintainer': 'Pilarmedia',
     'license': 'OPL-1',
     'support':'info@solog.id',
-    'depends': ['stock', 'purchase', 'purchase_request', 'purchase_requisition'],
+    'depends': [
+        'base', 
+        'stock', 
+        'purchase', 
+        'crm', 
+        'product',  
+        'purchase_request', 
+        'purchase_requisition'
+    ],
     'data': [
         "security/ir.model.access.csv",
         "views/inherit_res_partner.xml",
