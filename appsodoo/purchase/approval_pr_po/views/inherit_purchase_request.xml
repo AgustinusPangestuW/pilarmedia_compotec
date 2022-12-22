@@ -9,6 +9,9 @@
                 <xpath expr="//button[@name='button_rejected']" position="after">
                     <field name="with_approval"/>
                     <field name="need_approval_current_user"/>
+                    <field name="cannot_to_draft"/>
+                    <button name="action_reject_without_set_to_draft" string="Reject Without set To Draft" type="object" class="btn-danger"
+                        attrs="{'invisible': ['|','|',('state', 'not in', ('to_approve')),('with_approval', '=', False),('need_approval_current_user', '=', False)]}"/>
                 </xpath>
                 <xpath expr="//field[@name='is_editable']" position="attributes">
                     <attribute name="invisible"></attribute>
@@ -38,7 +41,8 @@
                 </xpath>
                 <xpath expr="//button[@name='button_draft']" position="attributes">
                     <attribute name="states"></attribute>
-                    <attribute name="attrs">{'invisible': [ '&amp;',
+                    <attribute name="attrs">{'invisible': [ '|','&amp;',
+                        ('cannot_to_draft', '=', True),
                         ('with_approval', '=', True),
                         ('state', 'not in', ('rejected')), '|', 
                         ('state', 'in', ('to_approve','approved','rejected','done')), '&amp;',

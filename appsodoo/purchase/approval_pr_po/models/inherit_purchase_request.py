@@ -40,6 +40,7 @@ class InheritPurchaseRequest(models.Model):
     )
     total_action_approve = fields.Integer("Total Action", compute="get_total_action")
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", readonly=True, store=True)
     
     def get_department_base_on_user_login(self):
         user = self.env.user
@@ -143,6 +144,11 @@ class InheritPurchaseRequest(models.Model):
             res = super().button_rejected()
             return res
 
+    def action_reject_without_set_to_draft(self):
+        self.button_rejected()
+        for rec in self:
+            rec.cannot_to_draft = 1
+
     def button_confirm(self):
         for order in self:
             if order.state not in ['draft', 'sent', 'approved']:
@@ -189,12 +195,14 @@ class InheritPurchaseRequest(models.Model):
 
         return res
 
-    @api.depends("state")
+    @api.depends("state", 'cannot_to_draft')
     def _compute_is_editable(self):
         for rec in self:
             if rec.with_approval:
-                if rec.need_approval_current_user or \
-                    rec.state not in ("to_approve", "approved", "rejected", "done"):
+                if (
+                        rec.need_approval_current_user or \
+                        rec.state not in ("to_approve", "approved", "rejected", "done")
+                    ) and not rec.cannot_to_draft:
                     rec.is_editable = True
                 else: rec.is_editable = False
             else:
@@ -226,6 +234,12 @@ class InheritPurchaseRequestLines(models.Model):
     _inherit = "purchase.request.line"
 
     is_editable = fields.Boolean(default=1)
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", compute="set_cannot_to_draft", store=True)
+
+    @api.depends('request_id', 'request_id.cannot_to_draft')
+    def set_cannot_to_draft(self):
+        for rec in self:
+            rec.cannot_to_draft = 1 if rec.request_id and rec.request_id.cannot_to_draft else 0
 
     @api.depends(
         "product_id",
@@ -236,12 +250,15 @@ class InheritPurchaseRequestLines(models.Model):
         "date_required",
         "specifications",
         "purchase_lines",
+        "cannot_to_draft"
     )
     def _compute_is_editable(self):
         for rec in self:
             if rec.request_id.with_approval:
-                if rec.request_id.need_approval_current_user or \
-                    rec.request_id.state not in ("to_approve", "approved", "rejected", "done"):
+                if (
+                        rec.request_id.need_approval_current_user or \
+                        rec.request_id.state not in ("to_approve", "approved", "rejected", "done")
+                    ) and not rec.request_id.cannot_to_draft:
                     rec.is_editable = True
                 else: rec.is_editable = False
             else:
