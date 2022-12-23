@@ -92,6 +92,7 @@
                 </xpath>
                 <xpath expr="//field[@name='date_approve']" position="after">
                     <field name="with_confirm_date" invisible="1"/>
+                    <field name="is_editable" invisible="1"/>
                     <field name="posting_date" attrs="{'readonly': [('is_editable', '=', False)]}"/>
                     <field name="document_date" attrs="{'readonly': [('is_editable', '=', False)]}"/>
                     <field name="delivery_date" attrs="{'readonly': [('is_editable', '=', False)]}"/>

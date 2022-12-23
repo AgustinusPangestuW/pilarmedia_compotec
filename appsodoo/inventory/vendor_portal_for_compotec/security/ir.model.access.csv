@@ -1,8 +1,8 @@
 "id","name","model_id:id","group_id:id","perm_read","perm_write","perm_create","perm_unlink"
-"access_catalog_category_user","catalog_category","model_catalog_category","purchase.group_purchase_user",1,1,1,0
-"access_catalog_category_administrator","catalog_category","model_catalog_category","purchase.group_purchase_manager",1,1,1,1
-"access_item_catalog_user","item_catalog","model_item_catalog","purchase.group_purchase_user",1,1,1,0
-"access_item_catalog_administrator","item_catalog","model_item_catalog","purchase.group_purchase_manager",1,1,1,1
-"access_tender_user","tender","model_tender","purchase.group_purchase_user",1,1,1,0
-"access_tender_administrator","tender","model_tender","purchase.group_purchase_manager",1,1,1,1
-"access_tender_line_user","tender_line","model_tender_line","purchase.group_purchase_user",1,1,1,1
+"access_catalog_category_user","access_catalog_category_user","model_catalog_category","purchase.group_purchase_user",1,1,1,0
+"access_catalog_category_administrator","access_catalog_category_administrator","model_catalog_category","purchase.group_purchase_manager",1,1,1,1
+"access_item_catalog_user","access_item_catalog_user","model_item_catalog","purchase.group_purchase_user",1,1,1,0
+"access_item_catalog_administrator","access_item_catalog_administrator","model_item_catalog","purchase.group_purchase_manager",1,1,1,1
+"access_tender_user","access_tender_user","model_tender","purchase.group_purchase_user",1,1,1,0
+"access_tender_administrator","access_tender_administrator","model_tender","purchase.group_purchase_manager",1,1,1,1
+"access_tender_line_user","access_tender_line_user","model_tender_line","purchase.group_purchase_user",1,1,1,1
