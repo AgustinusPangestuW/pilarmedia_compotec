@@ -3,6 +3,8 @@ access_pilar_pricelist,access.pilar.pricelist,model_pilar_pricelist,stock.group_
 access_pilar_pricelist_man,access.pilar.pricelist.man,model_pilar_pricelist,stock.group_stock_manager,1,1,1,1
 access_pilar_pricelist_line,access.pilar.pricelist.line,model_pilar_pricelist_line,stock.group_stock_user,1,1,1,1
 access_pilar_vehicle_man,access.pilar.vehicle.man,model_pilar_vehicles,stock.group_stock_manager,1,1,1,1
+access_pilar_vehicle_user,access.pilar.vehicle.user,model_pilar_vehicles,stock.group_stock_user,1,0,0,0
 access_pilar_driver_man,access.pilar.driver.man,model_pilar_driver,stock.group_stock_manager,1,1,1,1
+access_pilar_driver_user,access.pilar.driver.user,model_pilar_driver,stock.group_stock_user,1,0,0,0
 
 
