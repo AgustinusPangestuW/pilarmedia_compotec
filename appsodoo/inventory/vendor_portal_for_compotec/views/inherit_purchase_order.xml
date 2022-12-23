@@ -81,6 +81,8 @@
                     <field name="remarks"/>
                     <field name="expense"/>
                     <field name="item_catalog"/>
+                </xpath>
+                <xpath expr="//field[@name='price_unit']" position="after">
                     <field name="catalog_price"/>
                 </xpath>
                 <xpath expr="//field[@name='order_line']/form/group//field[@name='company_id']" position="attributes">
