@@ -9,6 +9,7 @@ class InheritPurchaseOrder(models.Model):
     base_on_purchase_requests = fields.Text('Base on Purchase Requests', 
         compute="get_purchase_requests", store=True)
     posting_date = fields.Date(string='Posting Date', default=date.today())
+    is_editable = fields.Boolean(string='Is Editable?', readonly=1)
     document_date = fields.Date(string='Document Date')
     delivery_date = fields.Date(string='Delivery Date')
     with_confirm_date = fields.Boolean(string='with confirm date?', store=1, compute="get_from_res_partner")
@@ -89,6 +90,7 @@ class INheritPurchaseOrderLine(models.Model):
 
     expense = fields.Selection([("opex","OPEX"),("capex","CAPEX")], string='Expense', 
         compute='get_from_pr', store=True, readonly=False)
+    is_editable = fields.Boolean(string='Is Editable?', readonly=1)
     remarks = fields.Text(string='Remarks')
     base_on_purchase_requests = fields.Text(string='PR Code', compute="get_from_pr", store=True)
     item_code = fields.Char(string='Item Code', compute="fetch_info_item")
