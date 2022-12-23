@@ -11,7 +11,7 @@
     'maintainer': 'Pilarmedia Indonesia',
     'license': 'OPL-1',
     'support':'info@solog.id',
-    'depends': ['hr', 'purchase', 'purchase_request', 'vendor_portal_for_compotec'],
+    'depends': ['hr', 'purchase', 'purchase_request'],
     'data': [
         "security/ir.model.access.csv",
         "views/inherit_purchase_order.xml",
