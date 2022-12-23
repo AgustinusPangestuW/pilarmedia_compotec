@@ -16,7 +16,7 @@ class ItemCatalog(models.Model):
     _description = "Item Catalog"
     _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
-    name = fields.Char(string='Name', copy=False)
+    name = fields.Char(string='Name', copy=False, required=True)
     description = fields.Text(string='Description')
     price = fields.Float(string='Price', readonly=True)
     tender_date = fields.Date(string='Tender Date', readonly=1)
