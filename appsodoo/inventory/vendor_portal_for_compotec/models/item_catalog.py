@@ -14,6 +14,7 @@ class ItemCatalogCategory(models.Model):
 class ItemCatalog(models.Model):
     _name = 'item.catalog'
     _description = "Item Catalog"
+    _inherit = ['portal.mixin', 'mail.thread', 'mail.activity.mixin']
 
     name = fields.Char(string='Name', copy=False)
     description = fields.Text(string='Description')
