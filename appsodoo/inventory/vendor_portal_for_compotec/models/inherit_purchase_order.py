@@ -50,7 +50,7 @@ class InheritPurchaseOrder(models.Model):
     def create_receipt_base_on_po(self, ret_raise=False):
         receipt_created = []
         for rec in self:
-            if rec.state == "purchase" and not rec.receipt_done:
+            if rec.state == "purchase" and not rec.picking_count:
                 rec.make_receipt()
                 sp = self.env['stock.picking'].sudo().search([('origin', '=', rec.display_name)])
                 if sp:
