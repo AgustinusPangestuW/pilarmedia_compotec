@@ -34,3 +34,22 @@ class ItemCatalog(models.Model):
     _sql_constraints = [
         ('unique_name_catalog_supplier', 'unique(name, supplier_id)', 'Catalog must be unique per Supplier!'),
     ]
+
+    def name_get(self):
+        new_res = []
+        for rec in self:
+            name = ("%s - %s" % (rec.name, rec.description)) if rec.description else ""
+            if rec.price:
+                name += " [%s] " % ("{:,}".format(rec.price))
+            new_res.append((rec.id, name))
+
+        return new_res
+
+    @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        if not args:
+            args = []
+        domain = args + [('description',operator,name)]
+        res = super().search(domain, limit=limit).name_get()
+        return res
+
