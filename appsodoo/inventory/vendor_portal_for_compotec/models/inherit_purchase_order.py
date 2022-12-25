@@ -75,6 +75,16 @@ class InheritPurchaseOrder(models.Model):
                 }
             }
 
+    def _create_picking(self):
+        res = super()._create_picking()
+        
+        for rec in self:
+            stock_picking_ids = self.env['stock.picking'].sudo().search([('origin', '=', rec.display_name)])
+            for sp in stock_picking_ids:
+                sp.vendor_purchase = rec.partner_id.id
+
+        return res
+
     @api.onchange('partner_id')
     def _set_supplier_item_code(self):
         for rec in self:

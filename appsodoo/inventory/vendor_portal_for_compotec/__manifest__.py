@@ -21,7 +21,8 @@
         'crm', 
         'product',  
         'purchase_request', 
-        'purchase_requisition'
+        'purchase_requisition',
+        'stock_picking_auto_create_lot'
     ],
     'data': [
         "security/ir.model.access.csv",
@@ -34,6 +35,7 @@
         "views/inherit_purchase_requisition.xml",
         "views/item_catalog.xml",
         "views/tender.xml",
+        "views/inherit_stock_picking_type.xml",
         "data/ir_sequence.xml"
     ],
     # 'demo': ['data/sale_order_demo.xml'],
