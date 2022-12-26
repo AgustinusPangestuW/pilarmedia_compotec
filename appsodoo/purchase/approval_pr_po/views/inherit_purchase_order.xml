@@ -53,8 +53,8 @@
                 <xpath expr="//page[@name='purchase_delivery_invoice']" position="after">
                     <page string="History Approval">
                         <group>
-                            <field name="user_approval" widget="many2many_tags" force_save="1"/>
                             <field name="department_approvals" widget="many2many_tags" force_save="1"/>
+                            <field name="job_approvals" widget="many2many_tags" force_save="1"/>
                             <field name="history_approval_ids">
                                 <tree update="0" create="0" delete="0">
                                     <field name ="user_id"/>

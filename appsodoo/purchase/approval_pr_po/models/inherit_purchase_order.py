@@ -22,17 +22,17 @@ class InheritPurchaseOrder(models.Model):
     with_approval = fields.Boolean("With Approval", compute="get_approval_setting")
     history_approval_ids = fields.One2many('history.approval', 'po_id', 'History Approvals')
     total_value_approve = fields.Integer(string='Value Approve', compute="calculate_total_val_approve", store=True)
-    user_approval = fields.Many2many(
-        comodel_name='res.users', 
-        string='User Approval',
+    department_approvals = fields.Many2many(
+        comodel_name='hr.department', 
+        string='Department Approval',
         compute="get_user_approval",
         readonly=1,
         store=True,
         copy=False
     )
-    department_approvals = fields.Many2many(
-        comodel_name='hr.department', 
-        string='Department Approval',
+    job_approvals = fields.Many2many(
+        comodel_name='hr.job', 
+        string='Job Approval',
         compute="get_user_approval",
         readonly=1,
         store=True,
@@ -42,7 +42,7 @@ class InheritPurchaseOrder(models.Model):
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
     receipt_done = fields.Boolean(string='Receipt Done ?', compute="set_receipt_done", store=True, readonly=True, default=0, copy=False)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
-    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", readonly=True, store=True)
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", readonly=True, store=True, copy=False)
     
     def get_department_base_on_user_login(self):
         user = self.env.user
@@ -68,12 +68,15 @@ class InheritPurchaseOrder(models.Model):
             else: 
                 rec.is_editable = False
 
-    @api.depends('with_approval', 'department_approvals')
+    @api.depends('with_approval', 'department_approvals', 'job_approvals')
     def _need_approval_current_user(self):
         for rec in self:
             approved_users = [i.user_id.id for i in rec.history_approval_ids if i.value == 1]
             rec.need_approval_current_user = 1 if self.env.user not in approved_users and \
-                self.env.user.employee_id.department_id in rec.department_approvals else 0
+                (
+                    self.env.user.employee_id.department_id in rec.department_approvals or
+                    self.env.user.employee_id.job_id in rec.job_approvals
+                ) else 0
 
     @api.depends('with_approval', 'state', 'department')
     def get_total_action(self):
@@ -105,7 +108,7 @@ class InheritPurchaseOrder(models.Model):
     @api.depends('with_approval', 'state', 'total_value_approve')
     def get_user_approval(self):
         for rec in self:
-            rec.department_approvals = [(6,0,[])]
+            rec.department_approvals = rec.job_approvals = [(6,0,[])]
 
             list_approval_po = self._get_approval_base_on_department()
             approval_setting = self._get_approval_setting()
@@ -118,7 +121,8 @@ class InheritPurchaseOrder(models.Model):
                 for l in aprv.approval_ids:
                     accumulate_value += l.total_action
                     if accumulate_value > rec.total_value_approve:
-                        rec.department_approvals = [(4,l.department.id)]
+                        if l.department: rec.department_approvals = [(4,l.department.id)]
+                        if l.job: rec.job_approvals = [(4,l.job.id)]    
                         break
                     
     @api.depends('history_approval_ids.value')
@@ -152,19 +156,33 @@ class InheritPurchaseOrder(models.Model):
 
     def action_req_approval(self):
         for rec in self:
-            rec.state = 'to_approve'
+            rec.action_approve(first=True)
+        
+    def action_approve(self, first=False):
+        def get_value_action_base_on_user_login():
+            value_approve = 0
+            list_approval_pr = self._get_approval_base_on_department()
+            for line in list_approval_pr.approval_ids:
+                user_login = self.env.user
+                if user_login.employee_id.department_id.id == line.department.id or \
+                user_login.employee_id.job_id.id == line.job.id:
+                    value_approve = line.value_first_action if first else 1
 
-    def action_approve(self):
+            return value_approve
+
         for rec in self:
             # validation 
-            if not rec.need_approval_current_user:
+            if not first and not rec.need_approval_current_user:
                 raise UserError("""You donot have permission for approve this document. please refresh this page for get current state of the document.""")
 
-            rec.history_approval_ids = [(0,0, {
-                'user_id': self.env.user.id,
-                'approve': 1,
-                'value': 1
-            })]
+            value_approve = get_value_action_base_on_user_login()
+
+            if value_approve:
+                rec.history_approval_ids = [(0,0, {
+                    'user_id': self.env.user.id,
+                    'approve': value_approve,
+                    'value': value_approve
+                })]
 
             if rec.total_action_approve == rec.total_value_approve:
                 rec.state = "approved"
@@ -282,7 +300,7 @@ class InheritPurchaseOrder(models.Model):
 class InheritPurchaseOrderLine(models.Model):
     _inherit = "purchase.order.line"
 
-    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", compute="set_cannot_to_draft", store=True)
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", compute="set_cannot_to_draft", store=True, copy=False)
     is_editable = fields.Boolean(string='Is Editable?', compute="_compute_is_editable")
 
     @api.depends('order_id', 'order_id.cannot_to_draft')

@@ -40,7 +40,7 @@ class InheritPurchaseRequest(models.Model):
     )
     total_action_approve = fields.Integer("Total Action", compute="get_total_action")
     need_approval_current_user = fields.Boolean(string='Need Approval User?', compute="_need_approval_current_user")
-    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", readonly=True, store=True)
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", readonly=True, store=True, copy=False)
     
     def get_department_base_on_user_login(self):
         user = self.env.user
@@ -257,7 +257,7 @@ class InheritPurchaseRequestLines(models.Model):
     _inherit = "purchase.request.line"
 
     is_editable = fields.Boolean(default=1)
-    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", compute="set_cannot_to_draft", store=True)
+    cannot_to_draft = fields.Boolean(string="Can't set to Draft?", compute="set_cannot_to_draft", store=True, copy=False)
 
     @api.depends('request_id', 'request_id.cannot_to_draft')
     def set_cannot_to_draft(self):
