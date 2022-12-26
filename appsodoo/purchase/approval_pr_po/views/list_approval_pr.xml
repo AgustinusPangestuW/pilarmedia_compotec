@@ -37,7 +37,9 @@
                                 <field name="approval_ids">
                                     <tree editable="bottom">
                                         <field name="sequence" widget="handle"/>
-                                        <field name="department"/>
+                                        <field name="department" attrs="{'required': [('job', '=', False)]}"/>
+                                        <field name="job" attrs="{'required': [('job', '=', False)]}"/>
+                                        <field name="value_first_action"/>
                                         <field name="total_action"/>
                                     </tree>
                                 </field>

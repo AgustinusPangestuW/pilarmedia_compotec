@@ -1,4 +1,5 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 
 class SettingApprovalPR(models.Model):
     _name = 'list.approval.pr'
@@ -47,5 +48,7 @@ class ApprovalLine(models.Model):
     list_approval_po_id = fields.Many2one('list.approval.po', string='List Approval PO ID', 
         index=True, ondelete='cascade')
     sequence = fields.Integer(string='Sequence')
-    department = fields.Many2one('hr.department', string='Department', required=True)
+    job = fields.Many2one('hr.job', string='Job', required=True)
+    department = fields.Many2one('hr.department', string='Department')
     total_action = fields.Integer(string='Total Action', default="1")
+    value_first_action = fields.Float(string='Value First Action', required=True)
