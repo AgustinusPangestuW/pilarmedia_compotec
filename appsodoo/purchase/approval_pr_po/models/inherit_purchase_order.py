@@ -164,8 +164,8 @@ class InheritPurchaseOrder(models.Model):
             list_approval_pr = self._get_approval_base_on_department()
             for line in list_approval_pr.approval_ids:
                 user_login = self.env.user
-                if user_login.employee_id.department_id.id == line.department.id or \
-                user_login.employee_id.job_id.id == line.job.id:
+                if (user_login.employee_id.department_id.id == line.department.id and line.department.id) or \
+                (user_login.employee_id.job_id.id == line.job.id and line.job.id):
                     value_approve = line.value_first_action if first else 1
 
             return value_approve
