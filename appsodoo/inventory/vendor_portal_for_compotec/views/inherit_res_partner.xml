@@ -6,8 +6,14 @@
             <field name="model">res.partner</field>
             <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
+                <xpath expr="/form/sheet" position="before">
+                    <header>
+                        <button type="object" string="Approve" class="btn-primary" name="approve_vendor"
+                            attrs="{'invisible': [('is_approve', '=', True)]}"/>
+                    </header>
+                </xpath>
                 <xpath expr="//field[@name='company_type']" position="after">
-                    <div class="o_row">
+                    <div class="o_row">                
                         <label for="is_approve" string="is Approve?"/>
                         <field name="is_approve"/>
                     </div>
