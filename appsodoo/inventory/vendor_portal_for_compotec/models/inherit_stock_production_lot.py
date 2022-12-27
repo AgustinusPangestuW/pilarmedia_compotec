@@ -12,14 +12,14 @@ class InheritStockProductionLot(models.Model):
                 SELECT MAX(name) as max_name
                 FROM stock_production_lot sm
                 WHERE name like '{}%'
-            """.format(supplier_code+'-'+date+'-'))
+            """.format(str(supplier_code)+'-'+str(date)+'-'))
             res = self.env.cr.dictfetchone()
             index = 0
             if res:
                 index = int(res['max_name'][-4:] if res['max_name'] else 0) + 1
             else:
                 index += 1
-            return supplier_code+'-'+date+'-'+(str(index).rjust(4,'0'))
+            return str(supplier_code)+'-'+str(date)+'-'+(str(index).rjust(4,'0'))
 
         for l in vals_list:
             active_picking_id = self.env.context.get('active_picking_id', False)
