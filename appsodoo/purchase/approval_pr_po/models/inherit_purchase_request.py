@@ -129,6 +129,26 @@ class InheritPurchaseRequest(models.Model):
                     value_approve = line.value_first_action if first else 1
 
             return value_approve
+            
+        def get_list_user_for_approve(departement_approvals, job_approvals):
+            approved_users = [str(i.user_id.id) for i in rec.history_approval_ids if i.value == 1]
+            approved_users.append(str(self.env.user.id))
+            departement_ids = [str(i.id) for i in departement_approvals]
+            job_ids = [str(i.id) for i in job_approvals]
+
+            conditions = " and u.id not in (%s) and " % (",".join(approved_users)) if approved_users else ""
+            conditions_department = " e.department_id IN (%s) " % (",".join(departement_ids)) if departement_ids else ""
+            condition_job = "e.job_id IN (%s) " % (".".join(job_ids)) if job_ids else "" 
+            if conditions_department: condition_job = " or "+condition_job
+
+            res = self.env.cr.execute("""
+                SELECT u.id as id
+                FROM hr_employee e, res_users u
+                WHERE u.id = e.user_id  %s %s %s
+            """ % (conditions, conditions_department, condition_job))
+            res = self.env.cr.dictfetchall()
+            user_ids = [i['id'] for i in res]
+            return user_ids
 
         for rec in self:
             # validation 
@@ -148,6 +168,19 @@ class InheritPurchaseRequest(models.Model):
                 rec.state = "approved"
             else:
                 rec.state = "to_approve"
+                # internal notification (ToDo)
+                user_ids = get_list_user_for_approve(rec.department_approvals, rec.job_approvals)
+                for i in user_ids:
+                    ir_models = self.env['ir.model'].sudo().search([('model', '=', 'purchase.request')])
+                    model_id = ir_models[0].id if ir_models else None
+                    mail = self.env['mail.activity'].sudo().create({
+                        'activity_type_id': 4,
+                        'date_deadline': datetime.today().strftime("%Y-%m-%d"),
+                        'note': "<p>tolong segera konfirmasi</p>",
+                        'res_id': rec.id,
+                        'user_id': i,
+                        'res_model_id': model_id
+                    })
 
     def button_rejected(self):
         for rec in self:
