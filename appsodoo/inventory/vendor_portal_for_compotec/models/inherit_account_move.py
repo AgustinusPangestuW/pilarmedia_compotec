@@ -2,6 +2,8 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
+import requests
+from bs4 import BeautifulSoup
 
 class InheritAccountMove(models.Model):
     _inherit = 'account.move'
@@ -11,11 +13,46 @@ class InheritAccountMove(models.Model):
         store=True)
     tax_link = fields.Text(string='Tax Link')
     delivery_date = fields.Date(string='Delivery Date', compute="set_base_on_po", store=1)
+    is_pkp = fields.Boolean(string='is pkp?', compute="get_from_supplier")
+    no_faktur = fields.Char(string='No. Faktur', size=13)
+    npwp = fields.Char(string='NPWP', compute="get_from_supplier", readonly=0, store=1)
+    valid_faktur = fields.Boolean(string='Valid Faktur ?', readonly=1)
+    document_date = fields.Date(string='Document Date')
+    @api.onchange('tax_link', 'invoice_line_ids', 'invoice_line_ids.quantity', 'invoice_line_ids.price_unit')
+    def check_tax_link(self):
+        for rec in self:
+            if rec.tax_link:
+                try:
+                    res = requests.get(rec.tax_link)
+                    if res and res.text:
+                        res = BeautifulSoup(res.text, "xml")
+                        rec.no_faktur = res.resValidateFakturPm.nomorFaktur.text or ""
+                        rec.document_date = datetime.strptime(res.resValidateFakturPm.tanggalFaktur.text, '%d/%m/%Y').date() or ""
+                        if float(res.resValidateFakturPm.jumlahDpp.text) == float(rec.amount_untaxed):
+                            rec.valid_faktur = 1
+                except Exception as e:
+                    pass
+            else:
+                rec.valid_faktur = 0
+                rec.no_faktur = ""
+
+    def redirect_tax_link(self):
+        for rec in self:
+            if rec.tax_link:
+                return {
+                    'type': 'ir.actions.act_url',
+                    'url': rec.tax_link,
+                    'target': 'new',
+                }
+
 
     @api.depends('partner_id')
     def get_from_supplier(self):
         for rec in self:
             rec.payment_periode = rec.partner_id.payment_periode or "non_10/25"
+            rec.is_pkp = 1 if rec.partner_id.l10n_id_pkp else 0
+            if not rec.npwp:
+                rec.npwp = rec.partner_id.npwp
 
     @api.onchange(
         'invoice_payment_term_id', 

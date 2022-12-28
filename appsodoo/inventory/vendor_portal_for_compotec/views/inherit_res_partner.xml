@@ -29,7 +29,7 @@
                     <field name="code" placeholder="Code Supplier"/>
                 </xpath>
                 <xpath expr="//field[@name='l10n_id_pkp']" position="after">
-                    <field name="npwp" attrs="{'required': ['l10n_id_pkp', '=', True]}"/>
+                    <field name="npwp" attrs="{'required': [('l10n_id_pkp', '!=', False)]}"/>
                     <field name="npwp_name"/>
                     <field name="npwp_address"/>
                 </xpath>

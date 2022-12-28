@@ -23,6 +23,33 @@
                 <xpath expr="/form/sheet/group/group[2]//div[hasclass('d-flex')]//span[hasclass('o_form_label')]" position="attributes">
                     <attribute name="invisible">1</attribute>
                 </xpath>
+
+                <!-- is pkp? -->
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="is_pkp"/>
+                </xpath>
+
+                <!-- readonly product id if item base on purchase order -->
+                <xpath expr="//field[@name='invoice_line_ids']//field[@name='product_id']" position="before">
+                    <field name="purchase_line_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//field[@name='invoice_line_ids']//field[@name='product_id']" position="attributes">
+                    <attribute name="attrs">{'readonly': [('purchase_line_id', '!=', False)]}</attribute>
+                </xpath>
+
+                <xpath expr="//group[@name='payments_info_group']" position="after">
+                    <group name="faktur" string="Faktur">
+                        <label for="tax_link"/>
+                        <div class="d-flex col-xs-12">
+                            <field placeholder="Tax Link" name="tax_link" attrs="{'required': [('is_pkp', '!=', False)]}"/>
+                            <button type="object" string="open link" name="redirect_tax_link" class="btn-primary"/>
+                        </div>
+                        <field name="no_faktur" attrs="{'required': [('is_pkp', '!=', False)]}"/>
+                        <field name="document_date"/>
+                        <field name="valid_faktur"/>
+                        <field name="npwp"/>
+                    </group>
+                </xpath>
             </field>
         </record>
     </data>
