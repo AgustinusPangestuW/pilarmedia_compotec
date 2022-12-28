@@ -8,7 +8,6 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='company_id']" position="before">
                     <field name="payment_periode"/>
-                    <field name="tax_link" attrs="{'required': [('')]}"/>
                 </xpath>
                 <xpath expr="//field[@name='invoice_date']" position="after">
                     <field name="delivery_date"/>
@@ -38,6 +37,10 @@
                 </xpath>
 
                 <xpath expr="//group[@name='payments_info_group']" position="after">
+                    <group name="Hpp23" string="Hpp 23">
+                        <field name="is_hpp_23"/>
+                        <field name="hpp23" attrs="{'invisible': [('is_hpp_23', '=', False)]}"/>
+                    </group>
                     <group name="faktur" string="Faktur">
                         <label for="tax_link"/>
                         <div class="d-flex col-xs-12">

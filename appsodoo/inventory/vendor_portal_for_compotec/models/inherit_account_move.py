@@ -18,6 +18,9 @@ class InheritAccountMove(models.Model):
     npwp = fields.Char(string='NPWP', compute="get_from_supplier", readonly=0, store=1)
     valid_faktur = fields.Boolean(string='Valid Faktur ?', readonly=1)
     document_date = fields.Date(string='Document Date')
+    is_hpp_23 = fields.Boolean(string='Hpp 23 ?')
+    hpp23 = fields.Float(string='Hpp 23')
+
     @api.onchange('tax_link', 'invoice_line_ids', 'invoice_line_ids.quantity', 'invoice_line_ids.price_unit')
     def check_tax_link(self):
         for rec in self:
@@ -45,6 +48,11 @@ class InheritAccountMove(models.Model):
                     'target': 'new',
                 }
 
+    @api.onchange('is_hpp_23', 'invoice_line_ids', 'invoice_line_ids.quantity', 'invoice_line_ids.price_unit')
+    def calculate_hpp_23(self):
+        for rec in self:
+            if rec.is_hpp_23:
+                rec.hpp23 = rec.amount_untaxed * 0.02
 
     @api.depends('partner_id')
     def get_from_supplier(self):
