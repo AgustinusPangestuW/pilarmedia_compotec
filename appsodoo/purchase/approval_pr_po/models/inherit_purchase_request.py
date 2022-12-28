@@ -136,7 +136,7 @@ class InheritPurchaseRequest(models.Model):
             departement_ids = [str(i.id) for i in departement_approvals]
             job_ids = [str(i.id) for i in job_approvals]
 
-            conditions = " and u.id not in (%s) and " % (",".join(approved_users)) if approved_users else ""
+            conditions = " and u.id not in (%s) " % (",".join(approved_users)) if approved_users else ""
             conditions_department = " e.department_id IN (%s) " % (",".join(departement_ids)) if departement_ids else ""
             condition_job = "e.job_id IN (%s) " % (".".join(job_ids)) if job_ids else "" 
             if conditions_department: condition_job = " or "+condition_job
@@ -145,7 +145,8 @@ class InheritPurchaseRequest(models.Model):
                 SELECT u.id as id
                 FROM hr_employee e, res_users u
                 WHERE u.id = e.user_id  %s %s %s
-            """ % (conditions, conditions_department, condition_job))
+            """ % (conditions, " and " if (conditions_department or condition_job) else "",
+            conditions_department, condition_job))
             res = self.env.cr.dictfetchall()
             user_ids = [i['id'] for i in res]
             return user_ids
