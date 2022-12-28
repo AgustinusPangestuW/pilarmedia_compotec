@@ -98,7 +98,7 @@
                     <field name="is_editable" invisible="1"/>
                     <field name="posting_date" attrs="{'readonly': [('is_editable', '=', False)]}"/>
                     <field name="document_date" attrs="{'readonly': [('is_editable', '=', False)]}"/>
-                    <field name="delivery_date" attrs="{'readonly': [('is_editable', '=', False)]}"/>
+                    <field name="delivery_date"/>
                 </xpath>
 
                 <!-- HIDDEN FIELD -->

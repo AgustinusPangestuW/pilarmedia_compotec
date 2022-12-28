@@ -36,6 +36,9 @@
                 <xpath expr="//field[@name='category_id']" position="after">
                     <field name="product_categories" widget="many2many_tags"/>
                 </xpath>
+                <xpath expr="//field[@name='property_supplier_payment_term_id']" position="after">
+                    <field name="payment_periode"/>
+                </xpath>
             </field>
         </record>
     </data>

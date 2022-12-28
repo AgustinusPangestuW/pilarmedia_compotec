@@ -17,8 +17,10 @@
     'depends': [
         'base', 
         'stock', 
+        'account',
         'purchase', 
         'crm', 
+        'sale',
         'product',  
         'purchase_request', 
         'purchase_requisition',
@@ -27,6 +29,7 @@
     'data': [
         "security/ir.model.access.csv",
         "views/inherit_res_partner.xml",
+        "views/inherit_account_move.xml",
         "views/inherit_product.xml",
         "views/inherit_perm_purchase.xml",
         "views/inherit_purchase_request.xml",

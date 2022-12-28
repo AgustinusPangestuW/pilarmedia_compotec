@@ -11,7 +11,7 @@ class InheritPurchaseOrder(models.Model):
     posting_date = fields.Date(string='Posting Date', default=date.today())
     is_editable = fields.Boolean(string='Is Editable?', readonly=1)
     document_date = fields.Date(string='Document Date')
-    delivery_date = fields.Date(string='Delivery Date')
+    delivery_date = fields.Date(string='Delivery Date', readonly=True)
     with_confirm_date = fields.Boolean(string='with confirm date?', store=1, compute="get_from_res_partner")
     payment_method = fields.Selection([("cash","Cash"),("card","Card")], string='Payment Method')
     pr_state = fields.Selection([

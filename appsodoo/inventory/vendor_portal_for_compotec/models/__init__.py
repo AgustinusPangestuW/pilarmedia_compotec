@@ -1,4 +1,5 @@
 from . import (
+    inherit_account_payment_term,
     inherit_res_partner,
     inherit_product,
     inherit_stock_picking_type,
@@ -8,6 +9,7 @@ from . import (
     inherit_purchase_request, 
     inherit_purchase_order,
     inherit_purchase_requisition,
+    inherit_account_move,
     item_catalog,
     tender
 )

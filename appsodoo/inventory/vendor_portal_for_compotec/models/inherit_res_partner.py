@@ -16,6 +16,7 @@ class InheritResPartner(models.Model):
         relation='prod_categ_res_partner',
         string='Product Categories'
     )
+    payment_periode = fields.Selection([("10/25","10/25"),("non_10/25","Bukan 10/25")], string='Payment Periode',default="non_10/25")
 
     _sql_constraints = [
         ('vendor_code_uniq', 'unique(code)', 'Code Vendor must be unique!'),
