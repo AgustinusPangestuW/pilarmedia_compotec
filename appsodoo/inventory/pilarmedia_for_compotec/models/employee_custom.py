@@ -56,7 +56,7 @@ class EmployeeCustom(inheritModel):
                 index += 1
             return str(year+month+'-'+(str(index).rjust(4,'0')))
         
-        if type(vals_list.get('join_date')) == "str":
+        if type(vals_list.get('join_date')) == str:
             join_date = datetime.strptime(vals_list.get('join_date'), '%Y-%m-%d').date()
         else:
             join_date = vals_list.get('join_date')
