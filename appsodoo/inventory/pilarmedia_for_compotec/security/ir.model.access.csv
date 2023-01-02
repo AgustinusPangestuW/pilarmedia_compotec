@@ -33,3 +33,5 @@
 "access_generator_mosp_line","generator_mosp_line","model_generator_mosp_line","stock.group_stock_user",1,1,1,1
 "access_required_items","required_items","model_required_items","stock.group_stock_user",1,1,1,1
 "access_gen_mosp_comp_line","gen_mosp_comp_line","model_gen_mosp_comp_line","stock.group_stock_user",1,1,1,1
+"access_subcon_report","subcon_report","model_subcon_report","stock.group_stock_user",1,1,1,1
+"access_subcon_report_wizzard","subcon_report_wizzard","model_subcon_report_wizzard","stock.group_stock_user",1,1,1,1

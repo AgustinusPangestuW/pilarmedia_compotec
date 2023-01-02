@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="inherit_mrp_bom_form">
+            <field name="name">inherit.mrp.bom.form</field>
+            <field name="model">mrp.bom</field>
+            <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='picking_type_id']" position="before">
+                    <field name="initial_bom"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

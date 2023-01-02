@@ -30,6 +30,8 @@ class inheritStockMove(models.Model):
                     "vendor": rec.picking_id.vendor.id or None,
                     "lines": []
                 })  
+                ps.get_qty_component_base_on_bom()
+                ps.calculate_qty_total()
 
             if not rec.picking_id.surat_jalan_id:
                 ps.lines = [(5,0,0)]

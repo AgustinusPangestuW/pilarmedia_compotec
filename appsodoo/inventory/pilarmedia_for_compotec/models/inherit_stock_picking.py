@@ -22,8 +22,8 @@ class StockPicking(models.Model):
         copy=False
     )
     vendor = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor", store=True)
-    vendor_dest_loc = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc")
-    vendor_dest_loc_subcon = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc_subcon")
+    vendor_dest_loc = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc", store=True)
+    vendor_dest_loc_subcon = fields.Many2one('res.partner', string='Vendor', compute="_fill_vendor_dest_loc_subcon", store=True)
     location_dest_id_subcon = fields.Many2one(
         'stock.location', 
         string='Destination Location', 

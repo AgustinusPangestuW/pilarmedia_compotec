@@ -31,6 +31,7 @@
                     <field name="surat_jalan_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('master_sj','=',True)]}"/>
                     <field name="vehicle_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('cek_subcon','=',False)]}"/>
                     <field name="driver_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" attrs="{'invisible':[('cek_subcon','=',False)]}" domain="[('perusahaan_id','=',subkon_id)]" />
+                    <field name="pricelist_id" attrs="{'invisible':[('vehicle_id', '=', False)]}" domain="[]"/>
                 </xpath>
                 <xpath expr="//field[@name='location_dest_id']" position="after">
                     <field name="master_sj" attrs="{'invisible':[('cek_subcon','=',False)]}"/>

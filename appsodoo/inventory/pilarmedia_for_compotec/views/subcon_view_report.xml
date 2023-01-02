@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="subcon_report_tree" model="ir.ui.view">
+		<field name="name">Laporan Subcon Tree</field>
+		<field name="model">subcon.report</field>
+		<field name="arch" type="xml">
+			<tree string="Laporan Harian Check" create="0" edit="0">
+				<field name="pricelist_subcon_id"/>
+				<field name="date"/>
+				<field name="date_transfer"/>
+				<field name="product_id"/>
+				<field name="service_id"/>
+				<field name="customer"/>
+				<field name="subcon"/>
+				<field name="subcon_dest"/>
+				<field name="no_sj"/>
+				<field name="tot_price_service"/>
+				<field name="tot_price_transport"/>
+				<field name="total_price"/>
+			</tree>
+		</field>
+	</record> 
+
+	<record id="subcon_report_form" model="ir.ui.view">
+		<field name="name">Laporan Harian Check Form</field>
+		<field name="model">subcon.report</field>
+		<field name="arch" type="xml">
+			<form create="0" edit="0">
+				<group>
+					<group>
+                        <field name="pricelist_subcon_id"/>
+                        <field name="pricelist_subcon_line_id"/>
+                        <field name="move_id"/>
+                        <field name="picking_id"/>
+                        <field name="date"/>
+                        <field name="product_id"/>
+                        <field name="service_id"/>
+					</group>
+					<group>
+						<field name="date_transfer"/>
+						<field name="name_service"/>
+                        <field name="customer"/>
+                        <field name="subcon"/>
+                        <field name="subcon_dest"/>
+						<field name="no_sj"/>
+					</group>
+					<group>
+						<field name="qty"/>
+						<field name="qty_component"/>
+						<field name="price_service"/>
+						<field name="tot_price_service"/>
+					</group>
+					<group>
+						<field name="price_transport"/>
+						<field name="tot_price_transport"/>
+					</group>
+				</group>
+				<group>
+					<field name="total_price"/>
+				</group>
+			</form>
+		</field>
+	</record>
+
+	<record id="subcon_report_action" model="ir.actions.act_window">
+		<field name="name">Laporan Subcon</field>
+		<field name="type">ir.actions.act_window</field>
+		<field name="res_model">subcon.report</field>
+		<field name="view_mode">tree,form</field>
+	</record>
+</odoo>

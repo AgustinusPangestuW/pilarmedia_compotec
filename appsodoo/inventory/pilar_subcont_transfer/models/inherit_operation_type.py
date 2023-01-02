@@ -33,12 +33,19 @@ class InheritStockPicking(models.Model):
         )
     vehicle_id = fields.Many2one('pilar.vehicles', string='Kendaraan')
     driver_id = fields.Many2one('pilar.driver', string='Driver')
-    
-
     cek_master = fields.Boolean(compute='_compute_master', string='Master DO', store=False)
     cek_subcon = fields.Boolean(compute='_compute_master', string='Subcon', store=False)
     subkon_id = fields.Many2one(comodel_name='res.partner',compute='_compute_company', string='Company Id', store=False)
+    pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist Transport', domain="[('transport', '=', True)]")
     
+    @api.onchange('vehicle_id')
+    def _onchange_vehicle_id(self):
+        for rec in self:
+            return {'domain': {'pricelist_id': [
+                ('transport', '=', True),
+                ('partner_id', '=', rec.vehicle_id.pemilik_id.id)
+            ]}}
+
     @api.depends('picking_type_id')
     def _compute_master(self):
         for doc in self:

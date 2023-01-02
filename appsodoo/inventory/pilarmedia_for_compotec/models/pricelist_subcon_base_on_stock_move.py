@@ -46,6 +46,10 @@ class PricelistSubconBaseonStockMove(models.Model):
         'pricelist_subcon_id', 
         'Line'
     )
+    qty_component = fields.Float(string='Qty Component', readonly=1)
+    pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist', domain="[('partner_id', '=', vendor)]")
+    qty_total = fields.Float(string='Qty Total')
+    invoice_created = fields.Boolean(string='Invoice Created ?')
    
     @api.depends('lines.price_total')
     def _calculate_total_price(self):
@@ -89,6 +93,52 @@ class PricelistSubconBaseonStockMove(models.Model):
                 uom_name = rec.move_id.product_uom.name
             rec.update({'uom_in_stock_move_line': uom_name})
 
+    def get_initial_product(self, product_id:object, return_component_qty=False):
+        product_tmpl_id = product_id.product_tmpl_id
+        bom = self.env['mrp.bom'].sudo().search([
+            ('product_tmpl_id', '=', product_tmpl_id.id), 
+            ('code', 'like', 'ASSY')])
+        for i in bom:
+            if i.initial_bom:
+                if not return_component_qty: return bom 
+                else:
+                    comp_qty = sum([bl.product_qty for bl in bom.bom_line_ids])
+                    return comp_qty
+            else:
+                for bl in bom.bom_line_ids:
+                    return self.get_initial_product(bl.product_id, return_component_qty)
+
+        if not bom:
+            return 1
+
+    def get_qty_component_base_on_bom(self):
+        for rec in self:
+            if rec.product_id:
+                rec.qty_component = self.get_initial_product(rec.product_id, True)
+
+    @api.onchange('pricelist_id')
+    def fetch_services(self):
+        for rec in self:
+            rec.lines = [(5,0,0)]
+            if not rec.pricelist_id.pricelist_ids:
+                rec.lines = [(0,0, {
+                    'pricelist_id': rec.pricelist_id.id,
+                    'price': rec.pricelist_id.price,
+                    'qty': rec.qty_in_stock_move_line * rec.qty_component
+                })]
+            
+            for i in rec.pricelist_id.pricelist_ids:
+                rec.lines = [(0,0, {
+                    'pricelist_id': i.product_id.id,
+                    'price': i.unit_price,
+                    'qty': rec.qty_in_stock_move_line * rec.qty_component
+                })]
+
+    @api.onchange('qty_in_stock_move_line', 'qty_component')
+    def calculate_qty_total(self):
+        for rec in self:
+            rec.qty_total = rec.qty_in_stock_move_line * rec.qty_component
+
 
 class PricelistSubconBaseonStockMoveLine(models.Model):
     _name = 'pricelist.subcon.baseon.stockmove.line'
@@ -105,13 +155,18 @@ class PricelistSubconBaseonStockMoveLine(models.Model):
         reuqired=True
     )
     price = fields.Float(string='Price', compute="_get_price", store=True, readonly=False)
-    qty = fields.Float(string='Quantity', default="1")
+    qty = fields.Float(string='Quantity', default="1", compute="compute_qty_base_on_qty_total", store=1)
     price_total = fields.Float(
         string='Price Total', 
         readonly=True,
         compute="_calculate_total_price",
         store=True
     )
+
+    @api.depends('pricelist_subcon_id', 'pricelist_subcon_id.qty_total')
+    def compute_qty_base_on_qty_total(self):
+        for rec in self:
+            rec.qty = rec.pricelist_subcon_id.qty_total
 
     @api.model
     def default_get(self, fields_list):

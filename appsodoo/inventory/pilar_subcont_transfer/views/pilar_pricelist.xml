@@ -28,25 +28,25 @@
                             <group>
                                 <field name="name"/>
                                 <field name="product_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" required="1"/>
-                                <field name="partner_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" required="1"/>
                                 <field name="price"/>
                             </group>
                             <group>
+                                <field name="partner_id"/>
+                                <field name="transport"/>
+                                <field name="dest_vendor" attrs="{'invisible': [('transport', '=', False)]}"/>
+                                <field name="service_description"/>
                             </group>
                         </group>    
                             <notebook>
                                 <page string="Detail">
                                     <field name="pricelist_ids">
                                         <tree editable="bottom">
-                                            <field name="product_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}" required="1"/>
+                                            <field name="product_id" options="{'no_create': True, 'no_create_edit':True,'no_open': True}"/>
                                             <field name="unit_price" required="1"/>  
-                                            <field name="uom_id" widget="selection" required="1"/>
-                                                  
                                         </tree>
                                     </field>
                                 </page>
                             </notebook>
-                        
                     </sheet>
                 </form>
             </field>
@@ -55,7 +55,6 @@
         <record model="ir.actions.act_window" id="pilar_pricelist_action">
             <field name="name">Pricelist Subcon</field>
             <field name="res_model">pilar.pricelist</field>
-            <!-- <field name="view_type">form</field> -->
             <field name="view_mode">tree,form</field>
         </record>
 

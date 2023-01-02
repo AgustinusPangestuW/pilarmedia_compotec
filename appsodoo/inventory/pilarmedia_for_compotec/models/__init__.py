@@ -1,6 +1,7 @@
 from . import (
     inherit_models_model,
     inherit_product,
+    inherit_mrp_bom,
     inherit_stock_picking_type,
     inherit_stock_inventory,
     wrapping, 
@@ -20,5 +21,6 @@ from . import (
     pricelist_subcon_base_on_stock_move,
     inherit_product_template,
     inherit_stock_move,
-    generator_mo_or_sp
+    generator_mo_or_sp,
+    subcon_report
 )

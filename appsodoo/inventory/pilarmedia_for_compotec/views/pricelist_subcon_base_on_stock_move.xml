@@ -26,10 +26,13 @@
                             <group>
                                 <field name="product_id"/>
                                 <field name="vendor" invisible="1"/>
+                                <field name="pricelist_id"/>
                             </group>
                             <group>
                                 <field name="qty_in_stock_move_line"/>
                                 <field name="uom_in_stock_move_line"/>
+                                <field name="qty_component"/>
+                                <field name="qty_total"/>
                                 <field name="price_total"/>
                             </group>
                         </group>
@@ -37,11 +40,11 @@
                             <page string="Pricelist Subcon">
                                 <field name="lines" 
                                 context="{'product_id':product_id, 'qty':qty_in_stock_move_line, 'uom':uom_in_stock_move_line}">
-                                    <tree editable="bottom" >
-                                        <field name="pricelist_id" domain="[('partner_id', '=', parent.vendor)]"/>
-                                        <field name="price"/>
-                                        <field name="qty"/>
-                                        <field name="price_total"/>
+                                    <tree editable="bottom" create="0" edit="0" delete="0" force_save="1">
+                                        <field name="pricelist_id" force_save="1" domain="[('partner_id', '=', parent.vendor)]"/>
+                                        <field name="price" force_save="1"/>
+                                        <field name="qty" force_save="1"/>
+                                        <field name="price_total" force_save="1"/>
                                     </tree>
                                 </field>
                             </page>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="subcon_report_wizard_form" model="ir.ui.view">
+        <field name="name">Laporan Subcon</field>
+        <field name="model">subcon.report.wizzard</field>
+        <field name="arch" type="xml">
+		<form>
+			<group>
+				<field name="date_start"/>
+				<field name="date_end"/>
+			</group>
+			<group>
+                <group>
+                    <field name="vendor"/>
+                </group>
+			</group>
+			<footer>
+				<button name='call_subcon_report' string='Submit' type='object' class='btn-primary'/>
+				<button string='Cancel' class='btn-secondary' special='cancel'/>
+			</footer>
+		</form>
+	</field>
+    </record>
+
+    <record id="subcon_report_wizard_action" model="ir.actions.act_window">
+        <field name="name">Masukan Periode</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">subcon.report.wizzard</field>
+        <field name="view_id" ref='subcon_report_wizard_form'/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="subcon_report_menu_item" name="Subcon Report" parent="report_conpotec_menu_root"  groups="stock.group_stock_user"
+			  action="subcon_report_wizard_action"/>
+</odoo>
