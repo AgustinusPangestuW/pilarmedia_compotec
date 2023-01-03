@@ -67,6 +67,14 @@
                                 <field name="operation_type_id_ng"/>
                             </group>
                         </group>
+                        <group>
+                            <field name="pricelist_lines">
+                                <tree editable="bottom">
+                                    <field name="pricelist_id"/>
+                                    <field name="price" force_save="1"/>
+                                </tree>
+                            </field>
+                        </group>
                         <notebook>
                             <page string="Lot">
                                 <field name="wholesale_job_lines" context="{'job': job}" attrs="{'readonly': [('job', '=', False)]}">

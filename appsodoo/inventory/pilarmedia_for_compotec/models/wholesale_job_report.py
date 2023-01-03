@@ -24,6 +24,10 @@ class WholesaleJobReport(models.Model):
     total_pcs= fields.Float(string='Total Pcs')
     checked_coordinator = fields.Many2one('employee.custom', string='Checked Coordinator', domain=_get_domain_user)
     checked_qc = fields.Many2one('employee.custom', string='Checked QC', domain=_get_domain_user)
+    pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist ID')
+    price = fields.Float(string='Price')
+    price_total = fields.Float(string='Price Total')
+
 
     def init(self):
         self.env.cr.execute("""
@@ -35,10 +39,16 @@ class WholesaleJobReport(models.Model):
             csr cursor for
             SELECT 
                 wj.id as wj_id, wj.date, j.id as job, wjl.product_id as product_id, u.id as user_id, wjl.total_set, wjl.total_ng, 
-                wjl.total_ok, wjl.factor, wj.checked_coordinator, wj.checked_qc, wjl.factor, wjl.total_pcs, wjl.biggest_lot
+                wjl.total_ok, wjl.factor, wj.checked_coordinator, wj.checked_qc, wjl.factor, wjl.total_pcs, wjl.biggest_lot,
+                pl.pricelist_id, pl.price, 
+                CASE
+                    WHEN wjl.total_pcs > 0 THEN (pl.price * wjl.total_pcs)
+                    WHEN wjl.total_set > 0 THEN (pl.price * wjl.total_set)
+                END as price_total
             FROM wholesale_job wj
             LEFT JOIN wholesale_job_line wjl ON wjl.wholesale_job_id = wj.id
             LEFT JOIN job j ON j.id = wj.job
+            LEFT JOIN wjob_pricelist_line pl ON pl.wholesale_job_id = wj.id 
             -- LEFT JOIN product_product p ON p.id = wjl.product_id
             -- LEFT JOIN product_template pt ON pt.id = p.product_tmpl_id
             LEFT JOIN res_partner u ON u.id = wjl.operator
@@ -54,10 +64,12 @@ class WholesaleJobReport(models.Model):
             
             for rec in csr loop
                 insert into wholesale_job_report (id_wj, date, job, product_id, operator, total_set, 
-                    total_ng, total_ok, checked_coordinator, checked_qc, factor, total_pcs, biggest_lot) 
+                    total_ng, total_ok, checked_coordinator, checked_qc, factor, total_pcs, biggest_lot, 
+                    pricelist_id, price, price_total) 
                     values (rec.wj_id, rec.date, rec.job, rec.product_id, rec.user_id, 
                         rec.total_set, rec.total_ng, rec.total_ok, rec.checked_coordinator, 
-                        rec.checked_qc, rec.factor, rec.total_pcs, rec.biggest_lot);
+                        rec.checked_qc, rec.factor, rec.total_pcs, rec.biggest_lot, rec.pricelist_id, 
+                        rec.price, rec.price_total);
 	        end loop;
         END;
 

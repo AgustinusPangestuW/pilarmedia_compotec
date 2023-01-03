@@ -17,6 +17,7 @@
 "access_peel_diss_assy_fg_line","peel_diss_assy_fg_line","model_peel_diss_assy_fg_line","stock.group_stock_user",1,1,1,1
 "access_wholesale_job","wholesale_job","model_wholesale_job","stock.group_stock_user",1,1,1,1
 "access_wholesale_job_line","wholesale_job_line","model_wholesale_job_line","stock.group_stock_user",1,1,1,1
+"access_wjob_pricelist_line","wjob_pricelist_line","model_wjob_pricelist_line","stock.group_stock_user",1,1,1,1
 "access_wholesale_job_lot_line","wholesale_job_lot_line","model_wholesale_job_lot_line","stock.group_stock_user",1,1,1,1
 "access_wholesale_job_component_line","wholesale_job_component_line","model_wholesale_job_component_line","stock.group_stock_user",1,1,1,1
 "access_details_ng","details_ng","model_details_ng","stock.group_stock_user",1,1,1,1

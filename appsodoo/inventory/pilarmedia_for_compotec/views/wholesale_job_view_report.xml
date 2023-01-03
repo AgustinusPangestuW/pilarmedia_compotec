@@ -16,6 +16,9 @@
 				<field name="total_ng"/>
 				<field name="total_set"/>
 				<field name="total_pcs"/>
+				<field name="pricelist_id"/>
+				<field name="price"/>
+				<field name="price_total"/>
 				<field name="checked_coordinator"/>
 				<field name="checked_qc"/>
 			</tree>
@@ -44,6 +47,11 @@
                         <field name="total_ng"/>
                         <field name="total_set"/>
 						<field name="total_pcs"/>
+					</group>
+					<group>
+						<field name="pricelist_id"/>
+						<field name="price"/>
+						<field name="price_total"/>
 					</group>
 				</group>
 			</form>

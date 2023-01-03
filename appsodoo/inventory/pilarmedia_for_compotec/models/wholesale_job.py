@@ -40,6 +40,19 @@ class Lot(inheritModel):
                 raise ValidationError(_("name must be Integer"))
 
 
+class PricelistLine(models.Model):
+    _name = "wjob.pricelist.line"
+
+    wholesale_job_id = fields.Many2one('wholesale.job', string='Wholesale Job ID', ondelete='cascade', index=1, readonly=1)
+    pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist ID')
+    price = fields.Float(string='Price', readonly=1)
+
+    @api.onchange('pricelist_id')
+    def get_price(self):
+        for rec in self:
+            rec.price = rec.pricelist_id.price or 0
+
+
 class WholesaleJob(inheritModel):
     _name = 'wholesale.job'
     _description = "Wholesale Job"
@@ -113,6 +126,7 @@ class WholesaleJob(inheritModel):
         readonly=True)
     company_id = fields.Many2one('res.company', string='Company', readonly=True)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
+    pricelist_lines = fields.One2many('wjob.pricelist.line', 'wholesale_job_id', string='Pricelist Lines')
 
     @api.model
     def create(self, vals):
