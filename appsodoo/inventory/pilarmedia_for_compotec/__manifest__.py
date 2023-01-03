@@ -43,6 +43,7 @@
         "views/lot_view.xml",
         "views/employee_custom_view.xml",
         "views/wholesale_job_view_report.xml",
+        "views/inherit_mrp_bom.xml",
         "views/inherit_stock_picking_view.xml",
         "views/inherit_stock_warehouse_view.xml",
         "views/inherit_res_users_view.xml",
