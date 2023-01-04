@@ -68,6 +68,26 @@ class APIStockInventory(http.Controller):
             request.env.cr.rollback()
             return ApiController().response_failed(e, kwargs, "/stockopname/create")
 
+    @http.route(['/stockopname/startinventory'], type="json", auth="public", method="POST", csrf=False)
+    def validate_inventory(self, ids):
+        """
+        validate `stock.inventory` startinventory
+        """
+        request.env.cr.savepoint()
+        try:
+            si_success = []
+            model = request.env['stock.inventory']
+            for i in ids:
+                inv = model.sudo().search([('id', '=', i)])
+                inv.action_start()
+                si_success.append(self.mapping_stock_inventory(inv))
+            request.env.cr.commit()
+
+            return ApiController().response_sucess(si_success, ids, "/stockopname/startinventory")
+        except Exception as e:
+            request.env.cr.rollback()
+            return ApiController().response_failed(e, ids, "/stockopname/startinventory")
+
     @http.route(['/stockopname/validate'], type="json", auth="public", method="POST", csrf=False)
     def validate_inventory(self, ids):
         """
