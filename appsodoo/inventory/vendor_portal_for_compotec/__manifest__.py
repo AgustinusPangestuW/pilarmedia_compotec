@@ -28,6 +28,7 @@
     ],
     'data': [
         "security/ir.model.access.csv",
+        "views/inherit_template_css.xml",
         "views/inherit_res_partner.xml",
         "views/inherit_account_move.xml",
         "views/inherit_product.xml",

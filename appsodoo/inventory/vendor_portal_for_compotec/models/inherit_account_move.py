@@ -14,16 +14,26 @@ class InheritAccountMove(models.Model):
     tax_link = fields.Text(string='Tax Link')
     delivery_date = fields.Date(string='Delivery Date', compute="set_base_on_po", store=1)
     is_pkp = fields.Boolean(string='is pkp?', compute="get_from_supplier")
-    no_faktur = fields.Char(string='No. Faktur', size=13)
+    no_faktur = fields.Char(string='No. Faktur', size=13, readonly=1)
     npwp = fields.Char(string='NPWP', compute="get_from_supplier", readonly=0, store=1)
-    valid_faktur = fields.Boolean(string='Valid Faktur ?', readonly=1)
-    document_date = fields.Date(string='Document Date')
-    is_hpp_23 = fields.Boolean(string='Hpp 23 ?')
-    hpp23 = fields.Float(string='Hpp 23')
+    valid_faktur = fields.Boolean(string='Valid Faktur ?', readonly=1, help="it will be true if dpp equal with field untaxed amount.")
+    document_date = fields.Date(string='Document Date', readonly=1)
+    is_pph = fields.Boolean(string='PPh 23 ?')
+    pph23 = fields.Float(string='PPh 23')
+    ppn = fields.Float(string='Ppn', readonly=1)
+    dpp = fields.Float(string='DPP', readonly=1)
 
     @api.onchange('tax_link', 'invoice_line_ids', 'invoice_line_ids.quantity', 'invoice_line_ids.price_unit')
     def check_tax_link(self):
         for rec in self:
+            # default value
+            rec.update({
+                'dpp': 0,
+                'ppn': 0,
+                'document_date': None,
+                'no_faktur': "",
+                'valid_faktur': 0
+            })
             if rec.tax_link:
                 try:
                     res = requests.get(rec.tax_link)
@@ -31,13 +41,19 @@ class InheritAccountMove(models.Model):
                         res = BeautifulSoup(res.text, "xml")
                         rec.no_faktur = res.resValidateFakturPm.nomorFaktur.text or ""
                         rec.document_date = datetime.strptime(res.resValidateFakturPm.tanggalFaktur.text, '%d/%m/%Y').date() or ""
+                        rec.dpp = res.resValidateFakturPm.jumlahDpp.text or 0
+                        rec.ppn = res.resValidateFakturPm.jumlahPpn.text or 0
                         if float(res.resValidateFakturPm.jumlahDpp.text) == float(rec.amount_untaxed):
                             rec.valid_faktur = 1
                 except Exception as e:
                     pass
-            else:
-                rec.valid_faktur = 0
-                rec.no_faktur = ""
+    
+    def action_post(self):
+        for rec in self:
+            if rec.is_pkp and not rec.valid_faktur:
+               raise UserError('cannot post Bill when faktur is not valid cause current supplier / vendor is PKP.')
+        
+        return super().action_post()
 
     def redirect_tax_link(self):
         for rec in self:
@@ -48,11 +64,11 @@ class InheritAccountMove(models.Model):
                     'target': 'new',
                 }
 
-    @api.onchange('is_hpp_23', 'invoice_line_ids', 'invoice_line_ids.quantity', 'invoice_line_ids.price_unit')
-    def calculate_hpp_23(self):
+    @api.onchange('is_pph', 'invoice_line_ids', 'invoice_line_ids.quantity', 'invoice_line_ids.price_unit')
+    def calculate_pph_23(self):
         for rec in self:
-            if rec.is_hpp_23:
-                rec.hpp23 = rec.amount_untaxed * 0.02
+            if rec.is_pph:
+                rec.pph23 = rec.amount_untaxed * 0.02
 
     @api.depends('partner_id')
     def get_from_supplier(self):

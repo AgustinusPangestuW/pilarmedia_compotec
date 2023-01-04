@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="asset_custom_css" inherit_id="web.assets_frontend" name="max_width_text_field">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="vendor_portal_for_compotec/static/src/css/custom.css"/>
+        </xpath>
+    </template>
+</odoo>

@@ -37,19 +37,26 @@
                 </xpath>
 
                 <xpath expr="//group[@name='payments_info_group']" position="after">
-                    <group name="Hpp23" string="Hpp 23">
-                        <field name="is_hpp_23"/>
-                        <field name="hpp23" attrs="{'invisible': [('is_hpp_23', '=', False)]}"/>
+                    <group name="PPh23" string="PPh 23">
+                        <field name="is_pph"/>
+                        <field name="pph23" attrs="{'invisible': [('is_pph', '=', False)]}" readonly="1"/>
                     </group>
                     <group name="faktur" string="Faktur">
                         <label for="tax_link"/>
-                        <div class="d-flex col-xs-12">
-                            <field placeholder="Tax Link" name="tax_link" attrs="{'required': [('is_pkp', '!=', False)]}"/>
-                            <button type="object" string="open link" name="redirect_tax_link" class="btn-primary"/>
+                        <div class="col-xs-12">
+                            <div class="col-xs-6" id="tax_link">
+                                <field placeholder="Tax Link" name="tax_link" attrs="{'required': [('is_pkp', '!=', False)]}"/>
+                            </div>
+                            <div class="col-xs-6" style="padding:10px;">
+                                <button type="object" string="open link" name="redirect_tax_link" class="btn-primary"/>
+                                <button type="object" string="Validate Link" name="check_tax_link" class="btn-primary"/>
+                            </div>
                         </div>
                         <field name="no_faktur" attrs="{'required': [('is_pkp', '!=', False)]}"/>
-                        <field name="document_date"/>
-                        <field name="valid_faktur"/>
+                        <field name="document_date" force_save="1"/>
+                        <field name="valid_faktur" force_save="1"/>
+                        <field name="dpp" force_save="1"/>
+                        <field name="ppn" force_save="1"/>
                         <field name="npwp"/>
                     </group>
                 </xpath>
