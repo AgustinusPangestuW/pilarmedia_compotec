@@ -22,6 +22,7 @@ class ConfigCompotecApi(http.Controller):
         """
         try:
             employees = [{
+                "id": i.id,
                 "name": i.name,
                 "position": i.position,
                 "vendor_id": i.vendor.id,
