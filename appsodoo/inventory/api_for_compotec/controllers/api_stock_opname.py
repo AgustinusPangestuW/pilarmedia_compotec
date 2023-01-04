@@ -33,6 +33,41 @@ class APIStockInventory(http.Controller):
         
         return res
 
+    @http.route(['/stockopname/create/'], type="json", auth="public", method="POST", csrf=False)
+    def create(self, warehouse_ids, **kwargs):
+        """
+        REST API POST for create table `stock.inventory` 
+        """
+        request.env.cr.savepoint()
+        try:
+            required_field = ['name']
+            start_inventory = False
+
+            if warehouse_ids:
+                location_ids = ApiController().get_location_base_on_warehouses(warehouse_ids)
+                kwargs['location_ids'] = location_ids
+
+            if kwargs.get('start_inventory'):
+                start_inventory = True
+                del kwargs['start_inventory']
+
+            res = ApiController().create_document('stock.inventory', required_field, kwargs)
+            if start_inventory: 
+                for rec in res:
+                    rec.action_start()
+            stock_inventory = self.mapping_stock_inventory(res)
+            if len(stock_inventory) > 0: stock_inventory = stock_inventory[0]
+            request.env.cr.commit()            
+
+            if kwargs.get('location_ids'):
+                kwargs['warehouse_ids'] = warehouse_ids
+                del kwargs['location_ids']
+
+            return ApiController().response_sucess(stock_inventory, kwargs, "/stockopname/create")
+        except Exception as e:
+            request.env.cr.rollback()
+            return ApiController().response_failed(e, kwargs, "/stockopname/create")
+
     @http.route(['/stockopname/validate'], type="json", auth="public", method="POST", csrf=False)
     def validate_inventory(self, ids):
         """
@@ -52,6 +87,26 @@ class APIStockInventory(http.Controller):
         except Exception as e:
             request.env.cr.rollback()
             return ApiController().response_failed(e, ids, "/stockopname/validate")
+
+    @http.route(['/stockopname/startinventory'], type="json", auth="public", method="POST", csrf=False)
+    def validate_inventory(self, ids):
+        """
+        validate `stock.inventory` start
+        """
+        request.env.cr.savepoint()
+        try:
+            si_success = []
+            model = request.env['stock.inventory']
+            for i in ids:
+                inv = model.sudo().search([('id', '=', i)])
+                inv.action_start()
+                si_success.append(self.mapping_stock_inventory(inv))
+            request.env.cr.commit()
+
+            return ApiController().response_sucess(si_success, ids, "/stockopname/startinventory")
+        except Exception as e:
+            request.env.cr.rollback()
+            return ApiController().response_failed(e, ids, "/stockopname/startinventory")
 
     @http.route(['/stockopname/delete'], type="json", auth="public", method="POST", csrf=False)
     def delete_stock_inventory(self, ids):
