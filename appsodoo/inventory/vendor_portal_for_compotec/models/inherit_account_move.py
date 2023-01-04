@@ -97,11 +97,14 @@ class InheritAccountMove(models.Model):
             newdate_due = date.replace(day=day_due)
             return newdate_due
 
-        def set_due_base_working_time(date):
+        def set_due_base_working_time(date:datetime.date):
             working_time = self.env['resource.resource'].sudo().search([('user_id', '=', self.env.user.id)])
+            # validate date in working time
+            dayofweeks = [i.dayofweek for i in working_time.calendar_id.attendance_ids]
+            
             # validate date not in holiday
             for i in working_time.calendar_id.global_leave_ids:
-                if i.date_from.date() <= date <= i.date_to.date():
+                if i.date_from.date() <= date <= i.date_to.date() or str(date.weekday()) not in dayofweeks:
                     date = date + relativedelta(days=1)
                     date = set_due_base_working_time(date)
 
