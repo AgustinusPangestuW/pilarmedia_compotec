@@ -8,14 +8,19 @@ from bs4 import BeautifulSoup
 class InheritAccountMove(models.Model):
     _inherit = 'account.move'
 
+    READONLY_STATES = {
+        'posted': [('readonly', True)],
+        'cancel': [('readonly', True)]
+    }
+
     payment_periode = fields.Selection([("10/25","10/25"),("non_10/25","Bukan 10/25")], 
         string='Payment Periode', default="non_10/25", compute="get_from_supplier", readonly=False,
-        store=True)
-    tax_link = fields.Text(string='Tax Link')
+        store=True, states=READONLY_STATES)
+    tax_link = fields.Text(string='Tax Link', states=READONLY_STATES)
     delivery_date = fields.Date(string='Delivery Date', compute="set_base_on_po", store=1)
     is_pkp = fields.Boolean(string='is pkp?', compute="get_from_supplier")
     no_faktur = fields.Char(string='No. Faktur', size=13, readonly=1)
-    npwp = fields.Char(string='NPWP', compute="get_from_supplier", readonly=0, store=1)
+    npwp = fields.Char(string='NPWP', compute="get_from_supplier", readonly=0, store=1, states=READONLY_STATES)
     valid_faktur = fields.Boolean(string='Valid Faktur ?', readonly=1, help="it will be true if dpp equal with field untaxed amount.")
     document_date = fields.Date(string='Document Date', readonly=1)
     is_pph = fields.Boolean(string='PPh 23 ?')
