@@ -117,7 +117,11 @@ class InheritProductProduct(models.Model):
             kedua = ''
             if rec.product_tmpl_id.nama_alias :
                 kedua = ' - ' + rec.product_tmpl_id.nama_alias
-            res.append((rec.id,'[%s] %s %s' % (rec.default_code,rec.product_tmpl_id.name, kedua )))
+
+            if rec.default_code:
+                res.append((rec.id,'[%s] %s %s' % (rec.default_code,rec.product_tmpl_id.name, kedua )))
+            else:
+                res.append((rec.id,'%s %s' % (rec.product_tmpl_id.name, kedua )))
         return res
 
     @api.model
