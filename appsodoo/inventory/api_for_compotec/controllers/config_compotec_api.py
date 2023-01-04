@@ -52,6 +52,29 @@ class ConfigCompotecApi(http.Controller):
         except Exception as e:
             return ApiController().response_failed(e, kwargs, "/getlot/")
 
+    @http.route(['/getproduct/'], type="json", auth="public", method=['GET'])
+    def getProduct(self, **kwargs):
+        """
+        REST API for get product.product
+        """
+        def mapping(si:object):
+            res = []
+            model_obj = request.env['product.product']
+            for i in si:
+                temp_res = i.read(list(set(model_obj._fields)))
+                res.append(temp_res[0])
+            return res
+
+        try:
+            limit = kwargs.get('limit') or None
+            offset = kwargs.get('offset') or 0
+            products = request.env['product.product'].sudo().search(kwargs.get('search') or [], limit=limit, offset=offset)
+            products = mapping(products)
+
+            return ApiController().response_sucess(products, kwargs, "/getproduct/")
+        except Exception as e:
+            return ApiController().response_failed(e, kwargs, "/getproduct/")
+
     @http.route(['/getshift/'], type="json", auth="public", method=["GET"])
     def getShift(self, **kwargs):
         """
