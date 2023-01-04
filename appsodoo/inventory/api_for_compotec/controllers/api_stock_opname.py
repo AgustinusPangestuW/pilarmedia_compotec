@@ -177,8 +177,9 @@ class APIStockInventory(http.Controller):
             ex: [['id', '=', '1']]
         """
         try:
+            ret_lines = kwargs.get('ret_lines') or False
             res = request.env['stock.inventory'].sudo().search(kwargs.get('search') or [])
-            stock_inventorys = self.mapping_stock_inventory(res, ret_stock_inventory_lines=True)
+            stock_inventorys = self.mapping_stock_inventory(res, ret_stock_inventory_lines=ret_lines)
             return ApiController().response_sucess(stock_inventorys, kwargs, "/stockopname/get")
         except Exception as e:
             return ApiController().response_failed(e, kwargs, "/stockopname/get")
