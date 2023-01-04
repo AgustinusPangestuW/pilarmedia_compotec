@@ -195,9 +195,11 @@ class APIStockInventory(http.Controller):
             ex: [['id', '=', '1']]
         """
         try:
+            limit = kwargs.get('limit') or None
+            offset = kwargs.get('offset') or 0
             # DEFAULT search
             kwargs['search'] += [["location_id.usage", "in", ["internal", "transit"]]]
-            res = request.env['stock.inventory.line'].sudo().search(kwargs.get('search') or [])
+            res = request.env['stock.inventory.line'].sudo().search(kwargs.get('search') or [], offset=offset, limit=limit)
             stock_inventorys = self.mapping_stock_inventory_lines(res)
             return ApiController().response_sucess(stock_inventorys, kwargs, "/stockopname/inv")
         except Exception as e:
