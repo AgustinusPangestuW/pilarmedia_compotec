@@ -30,6 +30,12 @@ class StockPicking(models.Model):
         readonly=True,
         copy=False
     )
+    count_bill = fields.Integer(
+        string='Count Bill', 
+        compute="_count_bill", 
+        store=True,
+        readonly=1
+    )
 
     def button_validate(self):
         self._get_outstanding_qty()
@@ -197,3 +203,50 @@ class StockPicking(models.Model):
                 self.get_warehouse(parent_loc)
 
         return ""
+
+    def _count_bill(self):
+        for rec in self:
+            line_ids = [str(i.id) for i in rec.move_ids_without_package]
+            res = None
+            if line_ids:
+                self._cr.execute(""" 
+                    SELECT count(move_id::integer) as get_count 
+                    FROM account_move_line 
+                    WHERE stock_move_id in (%s)
+                    GROUP BY move_id 
+                """ % (",".join(line_ids)))
+                res = self.env.cr.dictfetchone()
+                
+            count = 0
+            if res:
+                count = res['get_count'] if 'get_count' in res else 0
+
+            rec.count_bill = count
+
+    def action_see_bill(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            stock_move_ids = self.env['stock.move'].sudo().search([
+                ('picking_id', '=', self.env.context['active_id'])
+            ])
+            stock_move_ids = [str(i.id) for i in stock_move_ids]
+            list_domain = []
+
+            if stock_move_ids:
+                self._cr.execute(""" 
+                    SELECT move_id  
+                    FROM account_move_line 
+                    WHERE stock_move_id in (%s)
+                    GROUP BY move_id 
+                """ % (",".join(stock_move_ids)))
+                bill_ids = self.env.cr.fetchall()
+                bill_ids = [i[0] for i in bill_ids]
+                list_domain.append(('id', 'in', bill_ids))
+        
+        return {
+            'name':_('Bill'),
+            'domain':list_domain,
+            'res_model':'account.move',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }

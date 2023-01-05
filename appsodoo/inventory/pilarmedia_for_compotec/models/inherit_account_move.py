@@ -10,6 +10,12 @@ class InheritAccountMoveLine(models.Model):
         ondelete='restrict',
         help="created base on Wholesale Job"
     )
+    stock_move_id = fields.Many2one(
+        'stock.move', 
+        string='Stock Move ID', 
+        ondelete='restrict',
+        help="created base on Stock Move ID"
+    )
 
 
 

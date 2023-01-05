@@ -27,6 +27,13 @@
                 <button name="action_show_pricelist_subcon" string="Register Pricelist Subcon" type="object" icon="fa-dollar" width="0.1"
                     attrs="{'invisible': [('parent.surat_jalan_id', '=', False), ('parent.master_sj', '=', False)]}" options='{"warn": true}'/>
             </xpath>
+
+            <xpath expr="//button[@name='action_picking_move_tree']" position="before">
+                <button name="action_see_bill" type="object" class="oe_stat_button" 
+                    icon="fa-pencil-square-o" attrs="{'invisible': [('state', '!=', 'done')]}" context="{'active_id': id}">
+                    <field name="count_bill" widget="statinfo" string="Bill"/>
+                </button>
+            </xpath>
         </field>
     </record>
 

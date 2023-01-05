@@ -11,6 +11,7 @@ class inheritStockMove(models.Model):
         store=True,
         copy=False
     )
+    created_bill = fields.Boolean(string='Created Bill ?', copy=False)
 
     def write(self, vals):
         res = super().write(vals)

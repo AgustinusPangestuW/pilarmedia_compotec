@@ -68,4 +68,12 @@
 		<field name="res_model">subcon.report</field>
 		<field name="view_mode">tree,form</field>
 	</record>
+	
+	<record id="multi_create_bill_from_subcon_report" model="ir.actions.server">
+		<field name="name">Create Bill</field>
+		<field name="model_id" ref="pilarmedia_for_compotec.model_subcon_report"/>
+		<field name="binding_model_id" ref="pilarmedia_for_compotec.model_subcon_report"/>
+		<field name="state">code</field>
+		<field name="code">action = records.create_bill_base_subcon_report(ret_raise=True)</field>
+	</record>
 </odoo>
