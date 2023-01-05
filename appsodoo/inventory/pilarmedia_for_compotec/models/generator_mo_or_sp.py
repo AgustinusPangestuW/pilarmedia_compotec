@@ -2,7 +2,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from datetime import date
 from .inherit_models_model import inheritModel
-from .utils import validate_reserved_qty, fill_done_qty, _get_todo
+from .utils import validate_reserved_qty, fill_done_qty, _get_todo, return_sp
 
 class GeneratorMOorSP(inheritModel):
     _name = 'generator.mo.or.sp'    
@@ -136,7 +136,19 @@ class GeneratorMOorSP(inheritModel):
         return vals
 
     def action_cancel(self):
-        self.state = "cancel"
+        # cancel all MO & Stock Picking (SP)
+        for rec in self:
+            mo_ids = self.env['mrp.production'].sudo().search([('generator_mosp_id', '=', rec.id)])
+            for i in mo_ids:
+                i.action_cancel()
+                rec._count_mo()
+            
+            picking_ids = self.env['stock.picking'].sudo().search([('generator_mosp_id', '=', rec.id)])
+            for i in picking_ids:
+                return_sp(i)
+                rec._count_stock_picking()
+
+            rec.state = "cancel"
 
     def action_draft(self):
         self.state = "draft"

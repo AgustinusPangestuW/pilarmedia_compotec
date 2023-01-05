@@ -4,6 +4,7 @@ from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
 from .wrapping import _get_todo
 from .inherit_models_model import inheritModel
+from .utils import return_sp
 
 
 class PeelDissAssy(inheritModel):
@@ -126,7 +127,19 @@ class PeelDissAssy(inheritModel):
         return vals
         
     def action_cancel(self):
-        self.state = "cancel"
+        # cancel all MO & Stock Picking (SP)
+        for rec in self:
+            mo_ids = self.env['mrp.production'].sudo().search([('peel_diss_assy_id', '=', rec.id)])
+            for i in mo_ids:
+                i.action_cancel()
+                rec._count_mo()
+            
+            picking_ids = self.env['stock.picking'].sudo().search([('peel_diss_assy_id', '=', rec.id)])
+            for i in picking_ids:
+                return_sp(i)
+                rec._count_stock_picking()
+
+            rec.state = "cancel"
 
     def action_draft(self):
         self.state = "draft"

@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError, UserError
 import json
 from .employee_custom import _get_domain_user
 from .inherit_models_model import inheritModel
+from .utils import return_sp
 
 
 class Shift(inheritModel):
@@ -207,7 +208,19 @@ class Wrapping(inheritModel):
         return super().write(vals)
         
     def action_cancel(self):
-        self.state = "cancel"
+        # cancel all MO & Stock Picking (SP)
+        for rec in self:
+            mo_ids = self.env['mrp.production'].sudo().search([('wrapping_id', '=', rec.id)])
+            for i in mo_ids:
+                i.action_cancel()
+                rec._count_mo()
+            
+            picking_ids = self.env['stock.picking'].sudo().search([('wrapping_id', '=', rec.id)])
+            for i in picking_ids:
+                return_sp(i)
+                rec._count_stock_picking()
+
+            rec.state = "cancel"
 
     def action_draft(self):
         self.state = "draft"
