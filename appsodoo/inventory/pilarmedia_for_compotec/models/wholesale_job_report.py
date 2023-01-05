@@ -31,7 +31,7 @@ class WholesaleJobReport(models.Model):
     price_total = fields.Float(string='Price Total')
     
     def create_bill_base_wjob(self,ret_raise=False):
-        invoice_line_ids = []
+        invoice_line_ids, wholesale_job_ids = [], []
         for rec in self:
             if not rec.id_wjl.created_bill:
                 invoice_line_ids.append((0,0,{
@@ -42,7 +42,9 @@ class WholesaleJobReport(models.Model):
                     'tax_ids': []
                 }))
                 rec.id_wjl.created_bill = 1
-                rec.id_wj._count_bill()
+
+            if rec.id_wj.id not in [i.id for i in wholesale_job_ids]:
+                wholesale_job_ids.append(rec.id_wj)
         
         bill = None
         if invoice_line_ids:
@@ -52,12 +54,15 @@ class WholesaleJobReport(models.Model):
                 'type': 'in_invoice',
                 'invoice_line_ids': invoice_line_ids
             })
+            # count billed
+            for i in wholesale_job_ids:
+                i._count_bill()
 
         if ret_raise:
             view = self.env.ref('account.view_move_form')
 
             if not bill:
-                raise UserError('Checksheet is already created bill.')
+                raise UserError('Checksheet with ID [%s] is already created bill.' % (rec.id_wj.name))
 
             return {
                 'name': _('Bill'),
