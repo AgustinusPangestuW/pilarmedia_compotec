@@ -124,6 +124,11 @@ class WholesaleJob(inheritModel):
         compute="_count_stock_picking", 
         store=True, 
         readonly=True)
+    count_bill = fields.Integer(
+        string='Count Bill', 
+        compute="_count_bill", 
+        store=True, 
+        readonly=True)
     company_id = fields.Many2one('res.company', string='Company', readonly=True)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
     pricelist_lines = fields.One2many('wjob.pricelist.line', 'wholesale_job_id', string='Pricelist Lines')
@@ -239,6 +244,53 @@ class WholesaleJob(inheritModel):
     def _count_stock_picking(self):
         for rec in self:
             rec.count_stock_picking = rec.env['stock.picking'].sudo().search_count([('wholesale_job_id', '=', rec.id)])
+
+    def _count_bill(self):
+        for rec in self:
+            line_ids = [str(i.id) for i in rec.wholesale_job_lines]
+            res = None
+            if line_ids:
+                self._cr.execute(""" 
+                    SELECT count(move_id::integer) as get_count 
+                    FROM account_move_line 
+                    WHERE wholesale_job_line_id in (%s)
+                    GROUP BY move_id 
+                """ % (",".join(line_ids)))
+                res = self.env.cr.dictfetchone()
+                
+            count = 0
+            if res:
+                count = res['get_count'] if 'get_count' in res else 0
+
+            rec.count_bill = count
+
+    def action_see_bill(self):
+        list_domain = []
+        if 'active_id' in self.env.context:
+            wholesale_job_line_ids = self.env['wholesale.job.line'].sudo().search([
+                ('wholesale_job_id', '=', self.env.context['active_id'])
+            ])
+            wholesale_job_line_ids = [str(i.id) for i in wholesale_job_line_ids]
+            list_domain = []
+
+            if wholesale_job_line_ids:
+                self._cr.execute(""" 
+                    SELECT aml.move_id  
+                    FROM account_move_line aml
+                    WHERE aml.wholesale_job_line_id in (%s)
+                    GROUP BY aml.move_id 
+                """ % (",".join(wholesale_job_line_ids)))
+                bill_ids = self.env.cr.fetchall()
+                bill_ids = [i[0] for i in bill_ids]
+                list_domain.append(('id', 'in', bill_ids))
+        
+        return {
+            'name':_('Bill'),
+            'domain':list_domain,
+            'res_model':'account.move',
+            'view_mode':'tree,form',
+            'type':'ir.actions.act_window',
+        }
 
     def action_see_stock_picking(self):
         list_domain = []
@@ -522,6 +574,7 @@ class WholesaleJobLine(inheritModel):
         'wholesale.job.component.line', 'wholesale_job_line_id', 'Lines', compute="get_component",
         store=True, readonly=False)
     bom_id = fields.Many2one('mrp.bom', string='BOM', compute="get_first_bom", store=True, readonly=False)
+    created_bill = fields.Boolean(string='Created Bill ?', copy=False)
 
     @api.depends('job')
     def fetch_from_job(self):

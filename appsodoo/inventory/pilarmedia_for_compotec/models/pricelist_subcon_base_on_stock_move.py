@@ -44,7 +44,8 @@ class PricelistSubconBaseonStockMove(models.Model):
     lines = fields.One2many(
         'pricelist.subcon.baseon.stockmove.line', 
         'pricelist_subcon_id', 
-        'Line'
+        'Line',
+        readonly=1
     )
     qty_component = fields.Float(string='Qty Component', readonly=1)
     pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist', domain="[('partner_id', '=', vendor)]")

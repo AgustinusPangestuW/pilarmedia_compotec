@@ -1,6 +1,7 @@
 import logging
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
+from odoo.exceptions import UserError
 from .employee_custom import _get_domain_user
 
 _logger = logging.getLogger(__name__)
@@ -12,6 +13,7 @@ class WholesaleJobReport(models.Model):
     _rec_name = 'date'
 
     id_wj = fields.Many2one('wholesale.job', string='ID')
+    id_wjl = fields.Many2one('wholesale.job.line', string='ID')
     date = fields.Date(string='Date')
     job = fields.Many2one('job', string='Job')
     product_id = fields.Many2one('product.product', string='Product')
@@ -27,7 +29,49 @@ class WholesaleJobReport(models.Model):
     pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist ID')
     price = fields.Float(string='Price')
     price_total = fields.Float(string='Price Total')
+    
+    def create_bill_base_wjob(self,ret_raise=False):
+        invoice_line_ids = []
+        for rec in self:
+            if not rec.id_wjl.created_bill:
+                invoice_line_ids.append((0,0,{
+                    'product_id': rec.pricelist_id.product_id.id,
+                    'quantity': rec.total_pcs or rec.total_set or 0,
+                    'price_unit': rec.price,
+                    'wholesale_job_line_id': rec.id_wjl.id,
+                    'tax_ids': []
+                }))
+                rec.id_wjl.created_bill = 1
+                rec.id_wj._count_bill()
+        
+        bill = None
+        if invoice_line_ids:
+            bill = self.env['account.move'].sudo().create({
+                'name': '/',
+                'invoice_payment_state': 'not_paid',
+                'type': 'in_invoice',
+                'invoice_line_ids': invoice_line_ids
+            })
 
+        if ret_raise:
+            view = self.env.ref('account.view_move_form')
+
+            if not bill:
+                raise UserError('Checksheet is already created bill.')
+
+            return {
+                'name': _('Bill'),
+                'type': 'ir.actions.act_window',
+                'view_mode': 'form',
+                'res_model': 'account.move',
+                'views': [(view.id, 'form')],
+                'view_id': view.id,
+                'target': 'new',
+                'res_id': bill.id,
+                'context': dict(
+                    self.env.context
+                ),
+            }
 
     def init(self):
         self.env.cr.execute("""
@@ -35,10 +79,9 @@ class WholesaleJobReport(models.Model):
         CREATE OR REPLACE FUNCTION wholesale_job_report(date_start DATE, date_end DATE, input_company CHAR, input_job CHAR, input_shift CHAR)
         RETURNS VOID AS $BODY$ 
         DECLARE
-            
             csr cursor for
             SELECT 
-                wj.id as wj_id, wj.date, j.id as job, wjl.product_id as product_id, u.id as user_id, wjl.total_set, wjl.total_ng, 
+                wj.id as wj_id, wjl.id as wjl_id, wj.date, j.id as job, wjl.product_id as product_id, u.id as user_id, wjl.total_set, wjl.total_ng, 
                 wjl.total_ok, wjl.factor, wj.checked_coordinator, wj.checked_qc, wjl.factor, wjl.total_pcs, wjl.biggest_lot,
                 pl.pricelist_id, pl.price, 
                 CASE
@@ -53,20 +96,21 @@ class WholesaleJobReport(models.Model):
             -- LEFT JOIN product_template pt ON pt.id = p.product_tmpl_id
             LEFT JOIN res_partner u ON u.id = wjl.operator
             WHERE 
-                wj.date BETWEEN date_start AND date_end 
-                    AND input_job in ('', CAST(j.id AS CHAR))
-                    AND input_shift in ('', CAST(wj.shift AS CHAR))
-                    AND input_company in ('', CAST(wj.company_id AS CHAR))
+                wj.state='submit' AND (wjl.created_bill is null OR wjl.created_bill = false)
+                AND wj.date BETWEEN date_start AND date_end 
+                AND input_job in ('', CAST(j.id AS CHAR))
+                AND input_shift in ('', CAST(wj.shift AS CHAR))
+                AND input_company in ('', CAST(wj.company_id AS CHAR))
             ORDER BY wj.date;
 
         BEGIN
             delete from wholesale_job_report;
             
             for rec in csr loop
-                insert into wholesale_job_report (id_wj, date, job, product_id, operator, total_set, 
+                insert into wholesale_job_report (id_wj, id_wjl, date, job, product_id, operator, total_set, 
                     total_ng, total_ok, checked_coordinator, checked_qc, factor, total_pcs, biggest_lot, 
                     pricelist_id, price, price_total) 
-                    values (rec.wj_id, rec.date, rec.job, rec.product_id, rec.user_id, 
+                    values (rec.wj_id, rec.wjl_id, rec.date, rec.job, rec.product_id, rec.user_id, 
                         rec.total_set, rec.total_ng, rec.total_ok, rec.checked_coordinator, 
                         rec.checked_qc, rec.factor, rec.total_pcs, rec.biggest_lot, rec.pricelist_id, 
                         rec.price, rec.price_total);

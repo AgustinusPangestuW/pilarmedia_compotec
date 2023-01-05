@@ -1,67 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-	<record id="wholesale_job_report_tree" model="ir.ui.view">
-		<field name="name">Laporan Harian Check Tree</field>
-		<field name="model">wholesale.job.report</field>
-		<field name="arch" type="xml">
-			<tree string="Laporan Harian Check" create="0" edit="0">
-				<field name="id_wj"/>
-				<field name="date"/>
-				<field name="job"/>
-				<field name="product_id"/>
-				<field name="operator"/>
-				<field name="factor"/>
-				<field name="biggest_lot"/>
-				<field name="total_ok"/>
-				<field name="total_ng"/>
-				<field name="total_set"/>
-				<field name="total_pcs"/>
-				<field name="pricelist_id"/>
-				<field name="price"/>
-				<field name="price_total"/>
-				<field name="checked_coordinator"/>
-				<field name="checked_qc"/>
-			</tree>
-		</field>
-	</record> 
+	<data>
+		<record id="wholesale_job_report_tree" model="ir.ui.view">
+			<field name="name">Laporan Harian Check Tree</field>
+			<field name="model">wholesale.job.report</field>
+			<field name="arch" type="xml">
+				<tree string="Laporan Harian Check" create="0">
+					<field name="id_wj"/>
+					<field name="date"/>
+					<field name="job"/>
+					<field name="product_id"/>
+					<field name="operator"/>
+					<field name="factor"/>
+					<field name="biggest_lot"/>
+					<field name="total_ok"/>
+					<field name="total_ng"/>
+					<field name="total_set"/>
+					<field name="total_pcs"/>
+					<field name="pricelist_id"/>
+					<field name="price"/>
+					<field name="price_total"/>
+					<field name="checked_coordinator"/>
+					<field name="checked_qc"/>
+				</tree>
+			</field>
+		</record> 
 
-	<record id="wholesale_job_report_form" model="ir.ui.view">
-		<field name="name">Laporan Harian Check Form</field>
-		<field name="model">wholesale.job.report</field>
-		<field name="arch" type="xml">
-			<form create="0" edit="0">
-				<group>
+		<record id="wholesale_job_report_form" model="ir.ui.view">
+			<field name="name">Laporan Harian Check Form</field>
+			<field name="model">wholesale.job.report</field>
+			<field name="arch" type="xml">
+				<form create="0" edit="0">
 					<group>
-                        <field name="id"/>
-                        <field name="date"/>
-                        <field name="job"/>
-                        <field name="product_id"/>
-                        <field name="operator"/>
-                        <field name="checked_coordinator"/>
-                        <field name="checked_qc"/>
+						<group>
+							<field name="id"/>
+							<field name="date"/>
+							<field name="job"/>
+							<field name="product_id"/>
+							<field name="operator"/>
+							<field name="checked_coordinator"/>
+							<field name="checked_qc"/>
+						</group>
+						<group>
+							<field name="factor"/>
+							<field name="biggest_lot"/>
+							<field name="total_ok"/>
+							<field name="total_ng"/>
+							<field name="total_set"/>
+							<field name="total_pcs"/>
+						</group>
+						<group>
+							<field name="pricelist_id"/>
+							<field name="price"/>
+							<field name="price_total"/>
+						</group>
 					</group>
-					<group>
-						<field name="factor"/>
-						<field name="biggest_lot"/>
-                        <field name="total_ok"/>
-                        <field name="total_ng"/>
-                        <field name="total_set"/>
-						<field name="total_pcs"/>
-					</group>
-					<group>
-						<field name="pricelist_id"/>
-						<field name="price"/>
-						<field name="price_total"/>
-					</group>
-				</group>
-			</form>
-		</field>
-	</record>
+				</form>
+			</field>
+		</record>
 
-	<record id="wholesale_job_report_action" model="ir.actions.act_window">
-		<field name="name">Laporan Harian Check</field>
-		<field name="type">ir.actions.act_window</field>
-		<field name="res_model">wholesale.job.report</field>
-		<field name="view_mode">tree,form</field>
-	</record>
+		<record id="wholesale_job_report_action" model="ir.actions.act_window">
+			<field name="name">Laporan Harian Check</field>
+			<!-- <field name="type">ir.actions.act_window</field> -->
+			<field name="res_model">wholesale.job.report</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+		
+		<record id="multi_create_bill_from_wholesale_job" model="ir.actions.server">
+			<field name="name">Create Bill</field>
+			<field name="model_id" ref="pilarmedia_for_compotec.model_wholesale_job_report"/>
+			<field name="binding_model_id" ref="pilarmedia_for_compotec.model_wholesale_job_report"/>
+			<field name="state">code</field>
+			<field name="code">action = records.create_bill_base_wjob(ret_raise=True)</field>
+		</record>
+	</data>
 </odoo>

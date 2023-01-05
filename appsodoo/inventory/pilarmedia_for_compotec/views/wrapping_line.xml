@@ -34,7 +34,8 @@
                             <group>
                                 <field name="operator_ids" widget="many2many_tags"/>
                                 <field name="note"/>
-                                <field name="list_id_wt" invisible="1"/>
+                                <button id="button_add" name="action_add_list_id_wt" string="Add"/>
+                                <field name="list_id_wt" force_save="1"/>
                             </group>
                         </group>
                         <notebook>

@@ -38,6 +38,10 @@
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
+                            <button name="action_see_bill" type="object" class="oe_stat_button" 
+                                icon="fa-pencil-square-o" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
+                                <field name="count_bill" widget="statinfo" string="Bill"/>
+                            </button>
                             <button name="action_see_mo" type="object" class="oe_stat_button" 
                                 icon="fa-list-alt" attrs="{'invisible': [('state', '!=', 'submit')]}" context="{'active_id': id}">
                                 <field name="count_mo" widget="statinfo" string=" MO"/>
@@ -109,6 +113,14 @@
             <field name="res_model">wholesale.job</field>
             <field name="view_mode">tree,form</field>
         </record>
+
+		<record id="multi_create_bill_from_wholesale_job" model="ir.actions.server">
+			<field name="name">Create Bill</field>
+			<field name="model_id" ref="pilarmedia_for_compotec.wholesale_job_action"/>
+			<field name="binding_model_id" ref="pilarmedia_for_compotec.wholesale_job_action"/>
+			<field name="state">code</field>
+			<field name="code">action = records.create_bill_base_wjob()</field>
+		</record>
 
         <menuitem id="main_wholesale_job" name="Check Sheet Hasil Borongan" parent="compotec_root_menu" action="wholesale_job_action" sequence="4"/>
 

@@ -25,7 +25,7 @@
             
             <xpath expr="//button[@name='action_assign_serial']" position="after">
                 <button name="action_show_pricelist_subcon" string="Register Pricelist Subcon" type="object" icon="fa-dollar" width="0.1"
-                    attrs="{'invisible': [('parent.surat_jalan_id', '=', False)]}" options='{"warn": true}'/>
+                    attrs="{'invisible': [('parent.surat_jalan_id', '=', False), ('parent.master_sj', '=', False)]}" options='{"warn": true}'/>
             </xpath>
         </field>
     </record>

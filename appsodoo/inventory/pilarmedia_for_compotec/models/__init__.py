@@ -22,5 +22,6 @@ from . import (
     inherit_product_template,
     inherit_stock_move,
     generator_mo_or_sp,
-    subcon_report
+    subcon_report,
+    inherit_account_move
 )

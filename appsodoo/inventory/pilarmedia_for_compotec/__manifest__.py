@@ -18,7 +18,7 @@
     'maintainer': 'Pilarmedia',
     'license': 'OPL-1',
     'support':'info@solog.id',
-    'depends': ['base', 'stock', 'pilar_subcont_transfer'],
+    'depends': ['base', 'stock', 'account', 'pilar_subcont_transfer', 'purchase'],
     'data': [
         "security/ir.model.access.csv",
         # "views/inherit_perm_purchase.xml",
