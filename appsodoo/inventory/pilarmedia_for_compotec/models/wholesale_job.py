@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError, UserError
 from .employee_custom import _get_domain_user
 from .inherit_models_model import inheritModel
 from .wrapping import _get_todo
+from .utils import return_sp
 
 
 class Lot(inheritModel):
@@ -221,8 +222,26 @@ class WholesaleJob(inheritModel):
         vals = super().write(vals)
         return vals
         
-    def action_cancel(self):
-        self.state = "cancel"
+    def action_cancel(self):            
+        # cancel all MO & Stock Picking (SP)
+        for rec in self:
+            # restrict when have bill
+            wholesale_job_line_ids = [i.id for i in rec.wholesale_job_lines]
+            bill_ids = self.env['account.move.line'].sudo().search([('wholesale_job_line_id', 'in', wholesale_job_line_ids)])
+            if bill_ids:
+               raise UserError('Cannot cancel this document, cause this document have created bill.')
+
+            mo_ids = self.env['mrp.production'].sudo().search([('wholesale_job_id', '=', rec.id)])
+            for i in mo_ids:
+                i.action_cancel()
+                rec._count_mo()
+            
+            picking_ids = self.env['stock.picking'].sudo().search([('wholesale_job_id', '=', rec.id)])
+            for i in picking_ids:
+                return_sp(i)
+                rec._count_stock_picking()
+
+            rec.state = "cancel"
 
     def action_draft(self):
         self.state = "draft"

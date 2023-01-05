@@ -1,7 +1,8 @@
 from odoo import _
 from odoo.http import request
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.addons.stock.models.stock_move import StockMove
+from odoo.tests import Form
 
 def domain_location_by_vendor(self):
     domain = []
@@ -70,3 +71,35 @@ def _get_todo(self, production):
             ]).id
     
     return todo_quantity, todo_uom, serial_finished
+
+def return_sp(picking_id:object):
+    stock_return_picking_form = Form(request.env['stock.return.picking']
+        .with_context(active_ids=picking_id.ids, active_id=picking_id.ids[0],
+        active_model='stock.picking'))
+    stock_return_picking = stock_return_picking_form.save()
+    stock_return_picking._onchange_picking_id()
+
+    qty_stock_move = {}
+    for prm in stock_return_picking.product_return_moves:
+        sm = request.env['stock.move'].search([('id', '=', prm.move_id.id), ('product_id', '=', prm.product_id.id)])
+        qty_stock_move[prm.product_id.id] = (qty_stock_move.get(prm.product_id.id) or 0) + prm.quantity
+
+    stock_return_picking_action = stock_return_picking.create_returns()
+    return_pick = request.env['stock.picking'].browse(stock_return_picking_action['res_id'])
+    return_pick.action_assign()
+
+    # Validate Qty return base on Stock Picking
+    for sm in return_pick.move_lines:
+        if float(sm.reserved_availability) < float(qty_stock_move[sm.product_id.id] or 0):
+            raise ValidationError(_("item {item} membutuhkan Qty {qty} {uom} pada location {loc} untuk melanjutkan proses. Stock tersedia {reserved_qty} {uom}.").format(
+                item=sm.product_id.name,
+                qty=sm.product_uom_qty,
+                uom=sm.product_uom.name,
+                loc=(sm.location_id.location_id.name or "") + '/' + sm.location_id.name,
+                reserved_qty=sm.reserved_availability
+            ))
+        else:
+            for sml in sm.move_line_ids:
+                sml.qty_done = sml.product_uom_qty
+
+    return_pick.action_done()
