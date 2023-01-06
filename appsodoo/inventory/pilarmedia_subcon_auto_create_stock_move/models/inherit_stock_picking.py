@@ -19,6 +19,12 @@ class StockPicking(models.Model):
         readonly=True,
         copy=False
     )
+    vendor_src_id_subcon = fields.Many2many(
+        'res.partner', 
+        string='Vendor src Subcon', 
+        compute="_fill_vendor_from_src_id_subcon", 
+        store=True
+    )
     location_dest_id_subcon = fields.Many2one(
         'stock.location', 
         string='Destination Location', 
@@ -32,6 +38,16 @@ class StockPicking(models.Model):
         store=1,
         copy=False
     )
+
+    @api.depends('location_src_id_subcon')
+    def _fill_vendor_from_src_id_subcon(self):
+        vendor = None
+        for rec in self:
+            if rec.location_src_id_subcon:
+                warehouse = self.get_warehouse(rec.location_src_id_subcon)
+                if warehouse:
+                    vendor = warehouse.vendor.id
+            rec.vendor_src_id_subcon = vendor
 
     state = fields.Selection(selection_add =[
         ('reject', 'Rejected'), ('waiting',),
