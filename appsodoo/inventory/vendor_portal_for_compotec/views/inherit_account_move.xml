@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <!-- FORM -->
         <record model="ir.ui.view" id="inherit_account_move_form">
             <field name="name">account.move.form</field>
             <field name="model">account.move</field>
@@ -48,11 +49,11 @@
                                 <field placeholder="Tax Link" name="tax_link" attrs="{'required': [('is_pkp', '!=', False)]}"/>
                             </div>
                             <div class="col-xs-6" style="padding:10px;">
-                                <button type="object" string="open link" name="redirect_tax_link" class="btn-primary"/>
-                                <button type="object" string="Validate Link" name="check_tax_link" class="btn-primary"/>
+                                <!-- <button type="object" string="open link" name="redirect_tax_link" class="btn-primary"/>
+                                <button type="object" string="Validate Link" name="check_tax_link" class="btn-primary"/> -->
                             </div>
                         </div>
-                        <field name="no_faktur" attrs="{'required': [('is_pkp', '!=', False)]}"/>
+                        <field name="no_faktur" force_save="1" attrs="{'required': [('is_pkp', '!=', False)]}"/>
                         <field name="document_date" force_save="1"/>
                         <field name="valid_faktur" force_save="1"/>
                         <field name="dpp" force_save="1"/>
