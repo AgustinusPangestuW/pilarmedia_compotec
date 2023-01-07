@@ -148,7 +148,8 @@ class PricelistSubconBaseonStockMoveLine(models.Model):
         'pricelist.subcon.baseon.stockmove', 
         'Pricelist Subcon ID',
         index=True, 
-        ondelete='cascade'
+        ondelete='cascade',
+        readonly=1,
     )
     pricelist_id = fields.Many2one(
         'pilar.pricelist', 

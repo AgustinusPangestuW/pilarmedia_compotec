@@ -46,6 +46,20 @@
                                         <field name="qty" force_save="1"/>
                                         <field name="price_total" force_save="1"/>
                                     </tree>
+                                    <!-- FORM -->
+                                    <form>
+                                        <header></header>
+                                        <sheet>
+                                            <group>
+                                                <group>
+                                                    <field name="pricelist_id" force_save="1" domain="[('partner_id', '=', parent.vendor)]"/>
+                                                    <field name="price" force_save="1"/>
+                                                    <field name="qty" force_save="1"/>
+                                                    <field name="price_total" force_save="1"/>
+                                                </group>
+                                            </group>
+                                        </sheet>
+                                    </form>
                                 </field>
                             </page>
                         </notebook>
