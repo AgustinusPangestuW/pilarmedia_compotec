@@ -16,7 +16,7 @@ class EmployeeCustom(inheritModel):
         domain=[('is_subcon', '=', 1)], 
         help="relation with res parner, with is_subcon = 1"
     )
-    no_ktp = fields.Char(string='No KTP', required=True, copy=0)
+    no_ktp = fields.Char(string='No KTP', required=True, copy=0, size=16)
     join_date = fields.Date(string='Join Date', default=fields.Date.today(), required=True)
     address = fields.Text(string='Address')
 
