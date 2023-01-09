@@ -47,11 +47,24 @@ class PricelistLine(models.Model):
     wholesale_job_id = fields.Many2one('wholesale.job', string='Wholesale Job ID', ondelete='cascade', index=1, readonly=1)
     pricelist_id = fields.Many2one('pilar.pricelist', string='Pricelist ID')
     price = fields.Float(string='Price', readonly=1)
+    billed_ids = fields.One2many('wholesale.job.billed', 'wjpl_id', 'Line Billed')
 
     @api.onchange('pricelist_id')
     def get_price(self):
         for rec in self:
             rec.price = rec.pricelist_id.price or 0
+
+    @api.model
+    def create(self, vals):
+        res = super().create(vals)
+        for rec in res:
+            for line in rec.wholesale_job_id.wholesale_job_lines:
+                rec['billed_ids'] = [(0,0,{
+                    'wjpl_id': rec.id,
+                    'wjl_id': line.id,
+                    'created_bill': False
+                })]
+        return res
 
 
 class WholesaleJob(inheritModel):
@@ -132,7 +145,7 @@ class WholesaleJob(inheritModel):
         readonly=True)
     company_id = fields.Many2one('res.company', string='Company', readonly=True)
     count_mo = fields.Integer(string='Count MO', compute="_count_mo", store=True, readonly=True)
-    pricelist_lines = fields.One2many('wjob.pricelist.line', 'wholesale_job_id', string='Pricelist Lines')
+    pricelist_lines = fields.One2many('wjob.pricelist.line', 'wholesale_job_id', string='Pricelist Lines', copy=True)
 
     @api.model
     def create(self, vals):
@@ -495,8 +508,8 @@ class WholesaleJob(inheritModel):
                 }))
             
             # Create
-            sm_ng = self.env['stock.picking'].create(sm_ng)
-            sm_ok = self.env['stock.picking'].create(sm_ok)
+            sm_ng = self.env['stock.picking'].sudo().create(sm_ng)
+            sm_ok = self.env['stock.picking'].sudo().create(sm_ok)
 
             # Mark as To Do
             sm_ng.action_confirm()
@@ -560,10 +573,10 @@ class WholesaleJobLine(inheritModel):
     product_id = fields.Many2one('product.product', string='Produk', required=True)
     product_template_id = fields.Many2one('product.template', string='Product Template', compute="get_product_template")
     operator = fields.Many2one('employee.custom', string='Operator', required=True, domain=_get_domain_user)
-    total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True)
+    total_set = fields.Float(string="Total SET", readonly=True, compute="_calc_total_ok_n_set", store=True, copy=True)
     total_ng = fields.Float(string="Total NG", compute="_calc_total_ng_ok", readonly=False, store=True, copy=True)
-    total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True)
-    total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True)
+    total_ok = fields.Float(string="Total OK", readonly=True, compute="_calc_total_ng_ok", store=True, copy=True)
+    total_pcs = fields.Float(string='Total PCS', readonly=True, compute="_calc_total_ng_ok", store=True, copy=True)
     factor = fields.Float(string='Isi Kantong', compute="_get_pocket_factor_in_product", store=True, readonly=False, copy=True)
     biggest_lot = fields.Many2one(
         'lot', 
@@ -593,7 +606,20 @@ class WholesaleJobLine(inheritModel):
         'wholesale.job.component.line', 'wholesale_job_line_id', 'Lines', compute="get_component",
         store=True, readonly=False)
     bom_id = fields.Many2one('mrp.bom', string='BOM', compute="get_first_bom", store=True, readonly=False)
-    created_bill = fields.Boolean(string='Created Bill ?', copy=False)
+    billed_ids = fields.One2many('wholesale.job.billed', 'wjl_id', 'Line Billed')
+
+    @api.model
+    def create(self, vals):
+        res = super().create(vals)
+        for rec in res:
+            for line in rec.wholesale_job_id.pricelist_lines:
+                rec['billed_ids'] = [(0,0,{
+                    'wjpl_id': line.id,
+                    'wjl_id': rec.id,
+                    'created_bill': False
+                })]
+
+        return res
 
     @api.depends('job')
     def fetch_from_job(self):
@@ -792,6 +818,12 @@ class WholesaleJobLine(inheritModel):
             new_factor = self.product_id.product_tmpl_id.pocket_factor
         self.factor = new_factor
 
+class WholesaleJobBilled(models.Model):
+    _name = "wholesale.job.billed"
+
+    wjl_id = fields.Many2one('wholesale.job.line', string='Wholesale Job Lile ID', ondelete='cascade', index=1)
+    wjpl_id = fields.Many2one('wjob.pricelist.line', string='WJOB Pricelist Line ID', ondelete='cascade', index=1)
+    created_bill = fields.Boolean(string='Created Bill ?')
 
 class WholesaleJobLotLine(inheritModel):
     _name = "wholesale.job.lot.line"
