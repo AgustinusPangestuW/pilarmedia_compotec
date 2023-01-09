@@ -346,8 +346,8 @@ class GeneratorMOorSP(inheritModel):
                 }))
             
             # Create
-            sm_ng = self.env['stock.picking'].sudo().create(sm_ng)
-            sm_ok = self.env['stock.picking'].sudo().create(sm_ok)
+            sm_ng = self.env['stock.picking'].create(sm_ng)
+            sm_ok = self.env['stock.picking'].create(sm_ok)
 
             # Mark as To Do
             sm_ng.action_confirm()

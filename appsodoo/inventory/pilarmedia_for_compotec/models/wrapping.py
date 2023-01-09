@@ -389,8 +389,8 @@ class Wrapping(inheritModel):
                 }))
             
             # Create
-            sp_ng = self.env['stock.picking'].sudo().create(sp_ng)
-            sp_ok = self.env['stock.picking'].sudo().create(sp_ok)
+            sp_ng = self.env['stock.picking'].create(sp_ng)
+            sp_ok = self.env['stock.picking'].create(sp_ok)
 
             # Mark as To Do
             sp_ng.action_confirm()
