@@ -27,7 +27,7 @@ class EmployeeCustom(inheritModel):
     def name_get(self):
         new_res = []
         for rec in self:
-            name = ("%s - %s" % (rec.no, rec.name)) if rec.no else ""
+            name = ("[%s] - %s" % (rec.no, rec.name)) if rec.no else rec.name
             new_res.append((rec.id, name))
 
         return new_res
