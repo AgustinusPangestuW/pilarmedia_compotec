@@ -1,7 +1,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 from itertools import groupby
-from datetime import date
+from datetime import date, datetime
 
 class InheritPurchaseOrder(models.Model):
     _inherit = 'purchase.order'
@@ -102,6 +102,57 @@ class InheritPurchaseOrder(models.Model):
                     for i in line.product_id.seller_ids:
                         if i.name.id == rec.partner_id.id:
                             line.supplier_item_code = i.product_code
+
+    def _add_supplier_to_product(self):
+        def get_avg_price_purchase(id_product:int, partner_id:int, date:str):
+            self.env.cr.execute("""
+                SELECT AVG(pol.product_qty * pol.price_unit) as avg_price
+                FROM purchase_order_line pol
+                LEFT JOIN purchase_order po ON  po.id = pol.order_id
+                WHERE pol.product_id = %s AND po.partner_id = %s AND po.date_approve <= '%s'
+            """ % (id_product, partner_id, date))
+            return self.env.cr.fetchone()[0] or 0.0
+
+        ICPSudo = self.env['ir.config_parameter'].sudo()
+        vendor_pricelist_base_on = ICPSudo.get_param('vendor_pricelist_base_on')
+        first_pricelist = False
+
+        if vendor_pricelist_base_on in ('last_purchase', 'average_purchase'):
+            for rec in self:
+                for line in rec.order_line:
+                    # Do not add a contact as a supplier
+                    partner = rec.partner_id if not rec.partner_id.parent_id else rec.partner_id.parent_id
+                    seller = line.product_id._select_seller(
+                        partner_id=line.partner_id,
+                        quantity=line.product_qty,
+                        date=line.order_id.date_order and line.order_id.date_order.date(),
+                        uom_id=line.product_uom
+                    )
+
+                    # if have pricelist for update new price 
+                    if seller:
+                        # Convert the price in the right currency.
+                        currency = partner.property_purchase_currency_id or self.env.company.currency_id
+                        price = self.currency_id._convert(line.price_unit, currency, line.company_id, line.date_order or fields.Date.today(), round=False)
+                        # Compute the price for the template's UoM, because the supplier's UoM is related to that UoM.
+                        if line.product_id.product_tmpl_id.uom_po_id != line.product_uom:
+                            default_uom = line.product_id.product_tmpl_id.uom_po_id
+                            price = line.product_uom._compute_price(price, default_uom)
+
+                        if vendor_pricelist_base_on == "last_purchase":
+                            seller.price = price
+                        elif vendor_pricelist_base_on == "average_purchase":
+                            seller.price = get_avg_price_purchase(
+                                line.product_id.id, 
+                                partner.id, 
+                                datetime.today().date().strftime('%Y-%m-%d')
+                            )
+                    else:
+                        first_pricelist = True
+                                   
+        if vendor_pricelist_base_on in ('', False, "standard") or first_pricelist:
+            # STD ODOO with first purchase only
+            return super()._add_supplier_to_product()
 
 
 class INheritPurchaseOrderLine(models.Model):

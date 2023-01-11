@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="res_config_settings_view_form_purchase_extends_add_sale_purchase_history_configuration"
+			model="ir.ui.view">
+			<field name="name">res.config.settings.view.for.pricelist.higest.settings</field>
+			<field name="model">res.config.settings</field>
+			<field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase" />
+			<field name="arch" type="xml">
+				<xpath expr="//div[@data-key='purchase']" position="inside">
+					<h2>Pricelist Purchase</h2>
+					<div class="row mt16 o_settings_container">
+						<div class="col-12 col-lg-6 o_setting_box">
+							<div class="o_setting_right_pane">
+                                <label string="Vendor Pricelist base on" for="vendor_pricelist_base_on"/>
+                                <div class="content-group">
+                                    <div class="mt16">
+                                        <field name="vendor_pricelist_base_on"/>
+                                    </div>
+                                </div>
+                            </div>
+						</div>
+					</div>
+				</xpath>
+			</field>
+		</record>
+	</data>
+</odoo>

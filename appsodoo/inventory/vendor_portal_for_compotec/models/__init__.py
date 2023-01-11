@@ -1,4 +1,5 @@
 from . import (
+    inherit_res_config_settings,
     inherit_account_payment_term,
     inherit_res_partner,
     inherit_product,
