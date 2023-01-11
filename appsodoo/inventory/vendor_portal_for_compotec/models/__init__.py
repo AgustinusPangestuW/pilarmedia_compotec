@@ -13,5 +13,6 @@ from . import (
     inherit_account_move,
     item_catalog,
     tender,
-    report_vendor_pricelist
+    vendor_pricelist_adjustment,
+    report_vendor_pricelist,
 )

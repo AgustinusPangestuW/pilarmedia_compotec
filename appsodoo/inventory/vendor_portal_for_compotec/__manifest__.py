@@ -41,6 +41,7 @@
         "views/tender.xml",
         "views/inherited_res_config_setting.xml",
         "views/inherit_stock_picking_type.xml",
+        "views/vendor_pricelist_adjustment.xml",
         "views/report_vendor_pricelist_view.xml",
         "data/ir_sequence.xml"
     ],
