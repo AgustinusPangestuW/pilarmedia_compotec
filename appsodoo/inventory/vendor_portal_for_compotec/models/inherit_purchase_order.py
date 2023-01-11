@@ -19,6 +19,15 @@ class InheritPurchaseOrder(models.Model):
             ("partial","Receipt Partially"), 
             ('full', 'Receipt Finished')
         ], string='Receipt Status', compute="_compute_pr_state", store=True, default="no_receipt")
+    custom_css = fields.Html(string='CSS', sanitize=False, compute='_compute_css', store=False)
+
+    @api.depends('state')
+    def _compute_css(self):
+        for rec in self:
+            if rec.state in ['purchase', 'done', 'lock']:
+                rec.custom_css = '<style>.o_form_button_edit {display: none !important;}</style>'
+            else:
+                rec.custom_css = False
 
     @api.depends('order_line', 'order_line.qty_received')
     def _compute_pr_state(self):
@@ -85,7 +94,7 @@ class InheritPurchaseOrder(models.Model):
 
         return res
 
-    @api.onchange('partner_id')
+    @api.onchange('partner_id', 'order_line.product_id')
     def _set_supplier_item_code(self):
         for rec in self:
             for line in rec.order_line:
