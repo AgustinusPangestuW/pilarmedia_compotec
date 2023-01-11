@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- List View -->
+        <record model="ir.ui.view" id="report_vendor_pricelist_tree">
+            <field name="name">report.vendor.pricelist.tree</field>
+            <field name="model">report.vendor.pricelist</field>
+            <field name="arch" type="xml">
+                <tree default_order="name desc">
+                    <field name="name"/>
+                    <field name="partner_id"/>
+                    <field name="user_id"/>
+                    <field name="product_tmpl_id"/>
+                    <field name="variant_id"/>
+                    <field name="purchase_order_id"/>
+                    <field name="purchase_order_date"/>
+                    <field name="product_uom_qty"/>
+                    <field name="unit_price"/>
+                    <field name="currency_id"/>
+                    <field name="total_price"/>
+                </tree>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record model="ir.ui.view" id="report_vendor_pricelist_form">
+            <field name="name">report.vendor.pricelist.form</field>
+            <field name="model">report.vendor.pricelist</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="partner_id"/>
+                                <field name="user_id"/>
+                                <field name="product_tmpl_id"/>
+                                <field name="variant_id"/>
+                            </group>
+                            <group>
+                                <field name="purchase_order_id"/>
+                                <field name="purchase_order_date"/>
+                                <field name="product_uom_qty"/>
+                                <field name="unit_price"/>
+                                <field name="currency_id"/>
+                                <field name="total_price"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="report_vendor_pricelist_action">
+            <field name="name">Report vendor Pricelist</field>
+            <field name="res_model">report.vendor.pricelist</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="report_vendor_pricelist_menu_item" name="Report Vendor Pricelist" parent="purchase.purchase_report"
+                action="report_vendor_pricelist_action"/>
+
+    </data>
+</odoo>

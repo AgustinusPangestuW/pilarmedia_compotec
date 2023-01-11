@@ -6,3 +6,4 @@
 "access_tender_user","access_tender_user","model_tender","purchase.group_purchase_user",1,1,1,0
 "access_tender_administrator","access_tender_administrator","model_tender","purchase.group_purchase_manager",1,1,1,1
 "access_tender_line_user","access_tender_line_user","model_tender_line","purchase.group_purchase_user",1,1,1,1
+"access_report_vendor_pricelist_user","access_report_vendor_pricelist_user","model_report_vendor_pricelist","purchase.group_purchase_user",1,0,0,0
