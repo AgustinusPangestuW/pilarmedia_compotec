@@ -10,7 +10,8 @@ class ReportVendorPricelist(models.Model):
     product_tmpl_id = fields.Many2one("product.template",string="Template Id")
     variant_id = fields.Many2one("product.product",string="Product")
     purchase_order_id = fields.Many2one("purchase.order",string="Purchase Order")
-    purchase_order_date = fields.Datetime(string="Purchase Order Date")
+    confirm_date = fields.Datetime(string="Confirm Date")
+    vendor_pricelist_adjustment_id = fields.Many2one('vendor.pricelist.adjustment', string='Vendor Pricelist Adjustment')
     product_uom_qty = fields.Float(string="Quantity")
     unit_price = fields.Float(string="Price")
     currency_id = fields.Many2one("res.currency",string="Currency Id")
@@ -31,7 +32,8 @@ class ReportVendorPricelist(models.Model):
                     pt.id as product_tmpl_id,
                     p.id as variant_id,
                     po.id as purchase_order_id,
-                    po.date_order as purchase_order_date,
+                    Null as vendor_pricelist_adjustment_id,
+                    po.date_order as confirm_date,
                     pol.product_qty as product_uom_qty,
                     pol.price_unit as unit_price,
                     pol.currency_id as currency_id,
@@ -43,14 +45,38 @@ class ReportVendorPricelist(models.Model):
                 LEFT JOIN product_template pt ON pt.id = p.product_tmpl_id
                 WHERE po.state in ('purchase', 'done') AND NOT EXISTS(
                     SELECT 1 FROM report_vendor_pricelist WHERE name = pol.id
-                );
+                )
+                
+                UNION
 
+                SELECT 
+                    Null as name,
+                    vpa.create_uid as user_id, 
+                    u.id as partner_id, 
+                    pt.id as product_tmpl_id,
+                    p.id as variant_id,
+                    Null as purchase_order_id,
+                    vpa.id as vendor_pricelist_adjustment_id,
+                    vpa.confirm_date as confirm_date,
+                    vpa.qty as product_uom_qty,
+                    vpa.price as unit_price,
+                    vpa.currency_id as currency_id,
+                    vpa.price as total_price
+                FROM vendor_pricelist_adjustment vpa
+                LEFT JOIN res_users u ON u.id = vpa.partner_id
+                LEFT JOIN product_product p ON p.id = vpa.product_id
+                LEFT JOIN product_template pt ON pt.id = p.product_tmpl_id
+                WHERE vpa.state in ('approve') AND NOT EXISTS(
+                    SELECT 1 FROM report_vendor_pricelist WHERE 
+                        vendor_pricelist_adjustment_id = vpa.id
+                );
             BEGIN            
                 for rec in csr loop
                     insert into report_vendor_pricelist (name, user_id, partner_id, product_tmpl_id, variant_id, purchase_order_id,
-                        purchase_order_date, product_uom_qty, unit_price, currency_id, total_price) 
+                        confirm_date, product_uom_qty, unit_price, currency_id, total_price, vendor_pricelist_adjustment_id) 
                         values (rec.name, rec.user_id, rec.partner_id, rec.product_tmpl_id, rec.variant_id, rec.purchase_order_id, 
-                            rec.purchase_order_date, rec.product_uom_qty, rec.unit_price, rec.currency_id, rec.total_price);
+                            rec.confirm_date, rec.product_uom_qty, rec.unit_price, rec.currency_id, rec.total_price, 
+                            rec.vendor_pricelist_adjustment_id);
                 end loop;
             END;
 

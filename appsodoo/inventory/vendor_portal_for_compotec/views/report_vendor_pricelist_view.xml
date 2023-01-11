@@ -12,8 +12,9 @@
                     <field name="user_id"/>
                     <field name="product_tmpl_id"/>
                     <field name="variant_id"/>
+                    <field name="vendor_pricelist_adjustment_id"/>
                     <field name="purchase_order_id"/>
-                    <field name="purchase_order_date"/>
+                    <field name="confirm_date"/>
                     <field name="product_uom_qty"/>
                     <field name="unit_price"/>
                     <field name="currency_id"/>
@@ -40,8 +41,9 @@
                                 <field name="variant_id"/>
                             </group>
                             <group>
+                                <field name="vendor_pricelist_adjustment_id"/>
                                 <field name="purchase_order_id"/>
-                                <field name="purchase_order_date"/>
+                                <field name="confirm_date"/>
                                 <field name="product_uom_qty"/>
                                 <field name="unit_price"/>
                                 <field name="currency_id"/>
